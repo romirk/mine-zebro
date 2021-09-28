@@ -13,6 +13,7 @@ Usb:
 
 - `ssh` into pi (pi@raspberrypi.local)
 - Change password using `passwd`
+- Make sure to note down the password somewhere!
 - Update system: `sudo apt update`
 
 Setup file system in /home/pi
@@ -23,5 +24,11 @@ Setup file system in /home/pi
   - `unzip main.zip`
   - `mv mine-rover-main global`
   - `rm main.zip`
+  - `cd global`
+  - `bash download-global.sh` This will automatically download everything (again) and setup some things
 
-- Turn on I2C??? `sudo raspi-config` > Interfacing Options > Advanced > I2C > Enable and reboot
+
+## Future steps we probably need
+Turn on I2C:
+- `sudo raspi-config` > Interfacing Options > Advanced > I2C > Enable
+- Reboot
