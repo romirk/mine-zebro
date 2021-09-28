@@ -15,4 +15,13 @@ Usb:
 - Change password using `passwd`
 - Update system: `sudo apt update`
 
+Setup file system in /home/pi
+- Make folder for locally stored data (such as rover specific settings): `mkdir local`
+- Get global data from main github branch:
+  - (If it exists) `rm -r global`
+  - `wget https://github.com/The-Redstar/mine-zebro/archive/main.zip`
+  - `unzip main.zip`
+  - `mv mine-rover-main global`
+  - `rm main.zip`
+
 - Turn on I2C??? `sudo raspi-config` > Interfacing Options > Advanced > I2C > Enable and reboot
