@@ -11,6 +11,7 @@ Wifi:
 Usb:
 - ???
 
+Basic system stuff:
 - `ssh` into pi (pi@raspberrypi.local)
 - Change password using `passwd`
 - Make sure to note down the password somewhere!
