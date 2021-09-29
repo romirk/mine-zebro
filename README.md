@@ -1,5 +1,5 @@
-# mine-zebro
-System for the mine rover side project of the Lunar Zebro team.
+# setup
+This branch contains information and files to set up the system
 
 # Steps to get the rover working
 - Create bootable SD ([Tutorial](https://www.raspberrypi.org/documentation/computers/getting-started.html))
@@ -19,7 +19,7 @@ Basic system stuff:
 
 Setup file system in /home/pi
 - Make folder for locally stored data (such as rover specific settings): `mkdir local`
-- Get global data from main github branch:
+- Get global data from main github branch (or use download-global.sh):
   - (If it exists) `rm -r global`
   - `wget https://github.com/The-Redstar/mine-zebro/archive/main.zip`
   - `unzip main.zip`
