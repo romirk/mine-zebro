@@ -29,7 +29,8 @@ Setup file system in /home/pi
   - `bash download-global.sh` This will automatically download everything (again) and setup some things
 
 
-## Future steps we probably need
+## I2C
 Turn on I2C:
-- `sudo raspi-config` > Interfacing Options > Advanced > I2C > Enable
+- `sudo raspi-config` > Interfacing Options > I2C > Enable
 - Reboot
+- `sudo apt install i2c-tools` (so we can see connected devices using `sudo i2cdetect -y 1`)
