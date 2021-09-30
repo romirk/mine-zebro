@@ -13,7 +13,7 @@ cd /home/pi
 
 #download latest version
 wget --tries=2 https://github.com/The-Redstar/mine-zebro/archive/$BRANCH.zip
-if [[ -f "$BRANCH.zip"]]
+if [[ -f "$BRANCH.zip" ]]
 then
 	unzip "$BRANCH.zip"
 	rm "$BRANCH.zip"
