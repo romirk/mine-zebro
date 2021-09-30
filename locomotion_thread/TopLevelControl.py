@@ -14,7 +14,7 @@ import CPG
 MAX_TEMPERATURE = 45
 START_TEMP = 35
 NUMBER_OF_LEGS = 6
-DEBUG = 1
+DEBUG = 0
 
 LegArray = []
 bus = SMBus(1)

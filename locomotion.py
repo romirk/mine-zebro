@@ -90,13 +90,13 @@ if __name__ == "__main__":
 		elif command=="r":
 			locomotion.right()
 		elif command=="s":
-			locomotion.stop()
+			locomotion.stand_up()
 		elif command=="^":
 			locomotion.stand_up()
 		elif command in "_v":
 			locomotion.lay_down()
 		else:
-			locomotion.stop()
+			locomotion.lay_down()
 			print("Available commands: fblr s ^v_")
 		#testcase 1
 
