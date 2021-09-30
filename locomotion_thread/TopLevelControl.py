@@ -22,7 +22,7 @@ bus = SMBus(1)
 # blocking read, waits for other end of socket to connect
 # (could come from the ZebroPiController2.py file)
 address = ('localhost', 6000)
-listener = Listener(address, authkey='zebro')
+listener = Listener(address, authkey=b'zebro')
 conn = listener.accept()
 print("Connection accepted from: ", listener.last_accepted)
 

@@ -21,7 +21,7 @@ class locomotion_manager:
 	def setup(self):
 		#opening socket
 		self.address = ('localhost', 6000)
-		self.connection = Client(self.address, authkey = 'zebro')
+		self.connection = Client(self.address, authkey = b'zebro')
 
 	def flush_socket(self):
 		garbage = self.connection.recv()

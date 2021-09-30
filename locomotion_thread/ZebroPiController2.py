@@ -21,7 +21,7 @@ zoneWallConsider = 85.0
 zoneWallMinimum = 45.0
 if SOCKET_ON:
     address= ('localhost', 6000)
-    conn = Client(address, authkey='zebro')
+    conn = Client(address, authkey=b'zebro')
 
 def zebroMapping(zebroSpeed, zebroRotation):
     # zebroRotation mapping to {-1, 1} to comply with interface
