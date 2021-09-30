@@ -30,6 +30,7 @@ Setup file system in /home/pi
 
 Python3:
 - `sudo apt install python3-pip`
+- `pip3 install numpy`
 
 I2C:
 - Turn on I2C in `sudo raspi-config` > Interfacing Options > I2C > Enable
