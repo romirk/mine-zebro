@@ -21,16 +21,20 @@ Setup file system in /home/pi
 - Make folder for locally stored data (such as rover specific settings): `mkdir local`
 - Get global data from main github branch (or use download-global.sh):
   - (If it exists) `rm -r global`
-  - `wget https://github.com/The-Redstar/mine-zebro/archive/main.zip`
-  - `unzip main.zip`
-  - `mv mine-rover-main global`
-  - `rm main.zip`
+  - `wget https://github.com/The-Redstar/mine-zebro/archive/global.zip`
+  - `unzip global.zip`
+  - `mv mine-rover-global global`
+  - `rm global.zip`
   - `cd global`
   - `bash download-global.sh` This will automatically download everything (again) and setup some things
 
+Python3:
+- `sudo apt install python3-pip`
 
-## I2C
-Turn on I2C:
-- `sudo raspi-config` > Interfacing Options > I2C > Enable
+I2C:
+- Turn on I2C in `sudo raspi-config` > Interfacing Options > I2C > Enable
 - Reboot
+- `sudo apt install python-smbus`???? (I did this, but don't think we need it)
 - `sudo apt install i2c-tools` (so we can see connected devices using `sudo i2cdetect -y 1`)
+- `pip3 install smbus2`
+
