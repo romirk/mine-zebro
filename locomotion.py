@@ -80,6 +80,24 @@ if __name__ == "__main__":
 	locomotion.stand_up()
 	#time.sleep(delay_tijd*2)
 	while(1):
+        command=input("> ")
+        if command=="f":
+            locomotion.forwards()
+        elif command=="b":
+            locomotion.backwards()
+        elif command=="l":
+            locomotion.left()
+        elif command=="r":
+            locomotion.right()
+        elif command=="s":
+            locomotion.stop()
+        elif command=="^":
+            locomotion.stand_up()
+        elif command in "_v":
+            locomotion.lay_down()
+        else:
+            locomotion.stop()
+            print("Available commands: fblr s ^v_")
 		#testcase 1
 
 		# print("LOC test 2")
@@ -87,7 +105,8 @@ if __name__ == "__main__":
 		# locomotion.stand_up()
 		# #time.sleep(delay_tijd)
 		# print("LOC 2 forwards")
-		locomotion.forwards()
+		#locomotion.forwards()
+        #sleep(2)
 		# #time.sleep(delay_tijd)
 		# print("LOC 2 forwards")
 		# locomotion.forwards()
