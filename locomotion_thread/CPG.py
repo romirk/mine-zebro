@@ -130,7 +130,7 @@ class CPG:
             for i in [0,1]:
                 self.legArray[i].standUp(self.bus)
             for i in range(2,6):
-                self.legArray[i].lieDown()
+                self.legArray[i].lieDown(self.bus)
             time.sleep(2)
             
         elif self.speed == "bow":
@@ -139,7 +139,7 @@ class CPG:
             for i in [4,5]:
                 self.legArray[i].standUp(self.bus)
             for i in range(4):
-                self.legArray[i].lieDown()
+                self.legArray[i].lieDown(self.bus)
             time.sleep(2)
             
     def Hopping(self):
