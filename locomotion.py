@@ -64,13 +64,13 @@ class locomotion_manager:
     
     def sit(self):
         if (DEBUG): print("LOC sitting")
-        self.connection.send(["sit", 0)
+        self.connection.send(["sit", 0])
         reply = self.connection.recv()
         if (DEBUG): print("LOC reply from socket: " + str(reply))
         
     def bow(self):
         if (DEBUG): print("LOC bowing")
-        self.connection.send(["bow", 0)
+        self.connection.send(["bow", 0])
         reply = self.connection.recv()
         if (DEBUG): print("LOC reply from socket: " + str(reply))
 
