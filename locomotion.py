@@ -61,6 +61,18 @@ class locomotion_manager:
 		self.connection.send([int(self.SPEED_STAND_UP), int(self.DIRECTION_STAND_UP)])
 		reply = self.connection.recv()
 		if (DEBUG): print("LOC reply from socket: " + str(reply))
+    
+    def sit(self):
+		if (DEBUG): print("LOC sitting")
+		self.connection.send(["sit", 0)
+		reply = self.connection.recv()
+		if (DEBUG): print("LOC reply from socket: " + str(reply))
+        
+    def bow(self):
+		if (DEBUG): print("LOC bowing")
+		self.connection.send(["bow", 0)
+		reply = self.connection.recv()
+		if (DEBUG): print("LOC reply from socket: " + str(reply))
 
 	def coolDown(self, lay_time):
 		return 0
@@ -95,9 +107,13 @@ if __name__ == "__main__":
 			locomotion.stand_up()
 		elif command in "_v":
 			locomotion.lay_down()
+        elif command=="/":
+			locomotion.sit()
+        elif command=="\\":
+			locomotion.bow()
 		else:
 			locomotion.lay_down()
-			print("Available commands: fblr s ^v_")
+			print("Available commands: fblr s ^v_ /\\")
 		#testcase 1
 
 		# print("LOC test 2")

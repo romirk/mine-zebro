@@ -123,7 +123,25 @@ class CPG:
             for Leg in self.legArray:
                 Leg.standUp(self.bus)
             time.sleep(2)
-
+            
+        elif self.speed == "sit":
+            if DEBUG:
+                print("cpg: sitting")
+            for i in [0,1]:
+                self.legArray[i].standUp(self.bus)
+            for i in range(2,6):
+                self.legArray[i].lieDown()
+            time.sleep(2)
+            
+        elif self.speed == "bow":
+            if DEBUG:
+                print("cpg: bowing")
+            for i in [4,5]:
+                self.legArray[i].standUp(self.bus)
+            for i in range(4):
+                self.legArray[i].lieDown()
+            time.sleep(2)
+            
     def Hopping(self):
         return np.matrix((1, 2, 3, 4, 5, 6))
 
