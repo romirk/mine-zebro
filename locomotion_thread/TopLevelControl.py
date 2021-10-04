@@ -26,9 +26,9 @@ listener = Listener(address, authkey=b'zebro')
 conn = listener.accept()
 print("Connection accepted from: ", listener.last_accepted)
 
-def coolDown(lay_time):
+def coolDown(cooldown_time):
     for leg in LegArray:
-        leg.lieDown(lay_time, bus)
+        leg.lieDown(cooldown_time, bus)
     time.sleep(30)
     return 0
 
@@ -111,7 +111,7 @@ while True:
                     print("TLC-L leg " + str(leg.leg_num) +" in position")
                 legs_done = 1
             else:
-                time_out_counter[leg.leg_num-1] = time_out_counter[leg.leg_num-1] + 1;
+                time_out_counter[leg.leg_num-1] += 1;
                 if DEBUG:
                     print("TLC-L legs not done yet")
                     print("TLC-L LegAngle "+ str(leg.leg_num) +": " + str(leg.legAngle) + ", Desired angle: " + str(leg.desAngle))
@@ -124,7 +124,7 @@ while True:
 
     if DEBUG:
         print("TLC-L step completed")
-    step_number = step_number + 1
+    step_number += 1
     conn.send("done")
 
     readState()

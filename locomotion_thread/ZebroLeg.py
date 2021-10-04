@@ -19,7 +19,7 @@ class ZebroLeg:
         self.delayTime = 0
         self.startDelay = 0
         self.sendAngle = 0
-        self.LAYDOWN_ANGLE = 330
+        self.LIEDOWN_ANGLE = 330
         self.STANDUP_ANGLE = 150
         self.TOUCHDOWN_ANGLE = 125
         self.LIFTOFF_ANGLE = 160
@@ -51,7 +51,7 @@ class ZebroLeg:
         else:
             position = self.LIFTOFF_ANGLE
         if self.leg_num % 2 == 0:
-            position = position + self.deltaRight
+            position += self.deltaRight
         deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3
         self.sendCommand(2, position, deltaTime, bus)
         self.desAngle = position
@@ -82,12 +82,12 @@ class ZebroLeg:
 
     def lieDown(self, bus):
         self.readLegAngle(bus)
-        if self.legAngle < self.LAYDOWN_ANGLE:
-            self.sendCommand(3, self.LAYDOWN_ANGLE, 1, bus)
-            self.desAngle = self.LAYDOWN_ANGLE
+        if self.legAngle < self.LIEDOWN_ANGLE:
+            self.sendCommand(3, self.LIEDOWN_ANGLE, 1, bus)
+            self.desAngle = self.LIEDOWN_ANGLE
         else:
-            self.sendCommand(2, self.LAYDOWN_ANGLE, 1, bus)
-            self.desAngle = self.LAYDOWN_ANGLE
+            self.sendCommand(2, self.LIEDOWN_ANGLE, 1, bus)
+            self.desAngle = self.LIEDOWN_ANGLE
 
     def standUp(self, bus):
         self.readLegAngle(bus)
@@ -100,10 +100,7 @@ class ZebroLeg:
 
 
     def sendCommand(self, direction, position, deltaTime, bus):
-        while position < 0:
-            position = position + 360
-        while position < 0:
-            position = position - 360
+        position %= 360
 
         position = position / 3
 
@@ -114,7 +111,7 @@ class ZebroLeg:
     def sendPosition(self, deltaTime, position, bus):
         self.readLegAngle(bus)
         if self.leg_num % 2 == 0:
-            position = position + self.deltaRight
+            position += self.deltaRight
         deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3
         self.sendCommand(2, position, deltaTime, bus)
         self.desAngle = position
@@ -122,7 +119,7 @@ class ZebroLeg:
     def sendPositionBack(self, deltaTime, position, bus):
         if position > (self.legAngle + self.deltaAngle) or position < (self.legAngle - self.deltaAngle):
             if self.leg_num % 2 == 0:
-                position = position + self.deltaRight
+                position += self.deltaRight
             deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3
             self.sendCommand(3, position, deltaTime, bus)
             self.desAngle = position

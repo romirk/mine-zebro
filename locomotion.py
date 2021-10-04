@@ -9,13 +9,13 @@ DEBUG = 0
 class locomotion_manager:
     SPEED_STOP = 0
     SPEED_FULL = 5
-    SPEED_LAY_DOWN = 0
+    SPEED_LIE_DOWN = 0
     SPEED_STAND_UP = 0
 
     DIRECTION_LEFT = 1
     DIRECTION_RIGHT = 9
     DIRECTION_STRAIGHT = 5
-    DIRECTION_LAY_DOWN = 5
+    DIRECTION_LIE_DOWN = 5
     DIRECTION_STAND_UP = 0
 
     def setup(self):
@@ -50,9 +50,9 @@ class locomotion_manager:
         reply = self.connection.recv()
         if (DEBUG): print("LOC: reply from socket: " + str(reply))
 
-    def lay_down(self):
-        if (DEBUG): print("LOC: laying down")
-        self.connection.send([int(self.SPEED_LAY_DOWN), int(self.DIRECTION_LAY_DOWN)])
+    def lie_down(self):
+        if (DEBUG): print("LOC: lying down")
+        self.connection.send([int(self.SPEED_LIE_DOWN), int(self.DIRECTION_LIE_DOWN)])
         reply = self.connection.recv()
         if (DEBUG): print("LOC: reply from socket: " + str(reply))
 
@@ -106,13 +106,13 @@ if __name__ == "__main__":
         elif command=="^":
             locomotion.stand_up()
         elif command in "_v":
-            locomotion.lay_down()
+            locomotion.lie_down()
         elif command=="/":
             locomotion.sit()
         elif command=="\\":
             locomotion.bow()
         else:
-            locomotion.lay_down()
+            locomotion.lie_down()
             print("Available commands: fblr s ^v_ /\\")
         #testcase 1
 

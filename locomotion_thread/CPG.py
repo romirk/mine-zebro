@@ -110,9 +110,9 @@ class CPG:
         elif self.speed == "jump":
             pass
             # jump for the giggles of it
-        elif self.speed == "laydown" or (self.speed == 0 and self.direction == 5):
+        elif self.speed == "lie_down" or (self.speed == 0 and self.direction == 5):
             if DEBUG:
-                print("cpg: laying down")
+                print("cpg: lying down")
             for Leg in self.legArray:
                 Leg.lieDown(self.bus)
             time.sleep(2)
