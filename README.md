@@ -9,7 +9,7 @@ Wifi:
 - Create wpa_supplicant.conf file in boot partition ([Tutorial](https://www.raspberrypi-spy.co.uk/2017/04/manually-setting-up-pi-wifi-using-wpa_supplicant-conf/), don't include country or scan)
 
 Usb:
-- ???
+- For windows 10 only ([USB Gadget setup](https://drive.google.com/drive/folders/1KMJcboFLP8klrRocMDg49dIdTqC9NOMR?usp=sharing))
 
 Basic system stuff:
 - `ssh` into pi (pi@raspberrypi.local)
