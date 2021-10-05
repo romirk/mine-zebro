@@ -103,9 +103,9 @@ if __name__ == "__main__":
             locomotion.right()
         elif command=="s":
             locomotion.stand_up()
-        elif command=="^":
+        elif command in "u^":
             locomotion.stand_up()
-        elif command in "_v":
+        elif command in "_vd":
             locomotion.lie_down()
         elif command=="/":
             locomotion.sit()
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             locomotion.bow()
         else:
             locomotion.lie_down()
-            print("Available commands: fblr s ^v_ /\\")
+            print("Available commands: fblr ^us dv_ /\\")
         #testcase 1
 
         # print("LOC test 2")
