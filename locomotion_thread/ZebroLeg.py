@@ -11,38 +11,76 @@ def abs_angle_difference(a,b):
     return abs((b-a+180)%360-180) #convert difference to [-180,180] interval
 
 class ZebroLeg:
-    def __init__(self, leg_num, bus):
+    def __init__(self, leg_num, bus, master):
         self.leg_num = leg_num+1
-        self.address = self.address() #ugly code
+        self.address = self._address()
+        self.bus=bus
+        self.master=master
+
+        #addresses
         self.TEMPERATURE_L_ADDRESS = 0x41
         # self.TEMPERATURE_H_ADDRESS = 0x42
         self.LEG_POSITION_ADDRESS = 0x40
         self.DIRECTION_ADDRESS = 0x20
         self.POSITION_ADDRESS = 0x21
         self.TIME_ADDRESS = 0x22
-        self.legAngle = 0
-        self.onGround = True #unused?
-        self.angleCorrect = True #unused?
-        self.legDelayed = False #unused?
-        self.delayTime = 0 #unused?
-        self.startDelay = 0 #unused?
-        self.sendAngle = 0 #unused? (desAngle?)
+
+        #named angles
         self.LIEDOWN_ANGLE = 330
         self.STANDUP_ANGLE = 150
         self.TOUCHDOWN_ANGLE = 125
         self.LIFTOFF_ANGLE = 160
-        self.deltaAngle = 5
-        self.deltaRight = 5
-        self.TIME_DIVISOR = 0.02
-        self.legCheck = True
-        self.desAngle = self.readLegAngle(bus)
 
+        self.SAFE_ANGLE_A=200
+        self.SAFE_ANGLE_B=300
+
+        #speeds (degrees/50Hz tick)
+        self.SPEED_MAX=15#fully round in .48s - a monstrous speed
+        self.SPEED_MIN=2#fully round in 3.6s
+        self.SPEED_FAST=13#based on old walk cycle numbers: 325/(.5*50) #degrees/(ticks=50*seconds)
+        self.SPEED_NORMAL=7#based on old walk cycle numbers:35/(0.1*50)
+        self.SPEED_SLOW=4#some arbitrary value?
+
+
+
+        #correction angles
+        self.DELTA_ANGLE = 5 #leeway
+        self.DELTA_RIGHT = 5 #correction for right leg
+
+        #timing        
+        self.TIME_DIVISOR = 0.02 #50Hz timing
+
+        #leg side
         if self.leg_num % 2 == 0:
             self.legSide = "right"
+            self.DELTA_SIDE=self.DELTA_RIGHT
         else:
             self.legSide = "left"
+            self.DELTA_SIDE=0
 
-    def address(self):
+        #position
+        self.current_angle = self.target_angle = self.readAngle(bus)
+
+        
+        #temperature
+        self.MAX_TEMP=45
+        self.RESTART_TEMP=35
+        self.temperature=25
+        self.overheated=False
+
+        #relaxation
+        self.relaxed=False
+
+        #state
+        self.enabled=True
+        self.forced=False #state override
+
+        #leg stuck detection
+        self.prev_angle=self.current_angle
+        self.delta_time=1
+        self.direction="f"
+
+    def _address(self):
         leg_address = {
             1: 0x48,
             2: 0x58,
@@ -53,94 +91,177 @@ class ZebroLeg:
         }[self.leg_num]
         return leg_address
 
-    def sendEvent(self, deltaTime, type, bus):  # type 0: liftoff, 1 = step; forwards stepping?
+
+
+
+    def sendEvent(self, deltaTime, type):  # type 0: liftoff, 1 = step; forwards stepping?
         if type == 0:
             position = self.TOUCHDOWN_ANGLE
         else:
             position = self.LIFTOFF_ANGLE
-        if self.leg_num % 2 == 0:
-            position += self.deltaRight  #right leg position correction?
-        deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3 #what does deltaTime do?????
-        self.sendCommand(2, position, deltaTime, bus)
-        self.desAngle = position
+        position += self.DELTA_SIDE  #right leg position correction?
+        deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3 #what does -3 do?????
+        self.sendCommand(2, position, deltaTime)
+        self.target_angle = position
 
-    def sendEventBack(self, deltaTime, type, bus):  # type 0: liftoff, 1 = step; backwards stepping?
-        if type == 0:
-            position = self.TOUCHDOWN_ANGLE
-        else:
-            position = self.LIFTOFF_ANGLE
-        if self.leg_num % 2 == 0:
-            position = position + self.deltaRight
-        deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3
-        self.sendCommand(3, position, deltaTime, bus)
-        self.desAngle = position
 
-    def readLegAngle(self, bus): #read leg position
-        self.legAngle = bus.read_byte_data(self.address, self.LEG_POSITION_ADDRESS) * 3 #request angle and convert to degrees
-        #self.onGround = ((self.legAngle < (self.LIFTOFF_ANGLE + self.deltaAngle)) and (self.legAngle > (self.TOUCHDOWN_ANGLE - self.deltaAngle)))
-        self.onGround = (abs_angle_difference(self.legAngle,self.LIFTOFF_ANGLE)<self.deltaAngle) #unused?
-        return self.legAngle
 
-    def measure_temperature(self, bus): #measure motor temperature (why is this not camelCase?)
+    def readAngle(self): #read leg position
+        self.current_angle = self.bus.read_byte_data(self.address, self.LEG_POSITION_ADDRESS) * 3 #request angle and convert to degrees
+
+        self.current_angle-=self.DELTA_SIDE
+        self.current_angle %= 360
+        return self.current_angle
+
+    def readTemperature(self): #measure motor temperature
         #TODO: Add filter?
-        temp = 25
-        meas_temp = bus.read_byte_data(self.address, self.TEMPERATURE_L_ADDRESS) #request and read temperature
+        meas_temp = self.bus.read_byte_data(self.address, self.TEMPERATURE_L_ADDRESS) #request and read temperature
         if meas_temp < 100: #why? do "false readings" show up as high numbers?
-            temp = meas_temp
-        return temp
+            self.temperature = meas_temp
+        return self.temperature
 
-    def lieDown(self, bus): #move leg up - should be changed to prefer moving backwards!
-        self.readLegAngle(bus)
-        if self.legAngle < self.LIEDOWN_ANGLE:
-            self.sendCommand(3, self.LIEDOWN_ANGLE, 1, bus)
-            self.desAngle = self.LIEDOWN_ANGLE
+
+    
+    def isOverheated(self):
+        if self.temperature <= self.RESTART_TEMP:
+            self.overheated=False
+        elif self.temperature >= self.MAX_TEMP:
+            self.overheated=True
+        return self.overheated
+
+
+    def isDone(self): #need a fix for forces commands!
+        return self.relaxed or (not self.forced and not self.enabled) or (abs_angle_difference(self.current_angle,self.target_angle)<=self.DELTA_ANGLE)
+        #if the leg is relaxed, it has not target so it is in place
+        #if the leg is disabled, neglect it, unless force was specified
+        #else, check whether the angle is close to the target angle
+
+    def isStuck(self,time):
+        if time>self.delta_time*1.5: #leg is busy for a long time (obsolete, just for extra safety)
+            return True
+
+        if self.direction=="f":
+            progress=(self.current_angle-self.prev_angle)%360
         else:
-            self.sendCommand(2, self.LIEDOWN_ANGLE, 1, bus)
-            self.desAngle = self.LIEDOWN_ANGLE
+            progress=(self.prev_angle-self.current_angle)%360
 
-    def standUp(self, bus): #move leg down - should be changed to prefer moving forwards!
-        self.readLegAngle(bus)
-        if self.legAngle > self.STANDUP_ANGLE + self.deltaAngle:
-            self.sendCommand(3, self.STANDUP_ANGLE, 1, bus)
-            self.desAngle = self.STANDUP_ANGLE
-        elif self.legAngle < self.STANDUP_ANGLE - self.deltaAngle:
-            self.sendCommand(2, self.STANDUP_ANGLE, 1, bus)
-            self.desAngle = self.STANDUP_ANGLE
+        if progress+30<time/self.delta_time*self.delta_angle*1.5: #leg hasn't progressed as much as it should have
+            return True
+        return False
+        
+        # stuck when either: position<<expected position or time is too large
 
 
-    def sendCommand(self, direction, position, deltaTime, bus): #write data to motor driver
-        position %= 360
+    def enable():
+        self.enabled=True
+    def disable():
+        self.enabled=False
+
+
+    def relax(self):
+        self.sendCommand(0,0,10) #illegal direction results in leg relaxation
+        self.relaxed=True
+
+    def sendCommand(self, position, direction, deltaTime): #write data to motor driver
+        #set self.target_angle
+        position = (position+self.DELTA_SIDE)%360 #correction for right legs
 
         position = position / 3
 
-        bus.write_byte_data(self.address, self.DIRECTION_ADDRESS, int(floor(direction))) #either 2 or 3...? does the leg know it's side?
-        bus.write_byte_data(self.address, self.POSITION_ADDRESS, int(floor(position))) #number between 0-120? (I think the disks have 30 holes)
-        bus.write_byte_data(self.address, self.TIME_ADDRESS, int(floor(deltaTime))) #???
+        self.bus.write_byte_data(self.address, self.DIRECTION_ADDRESS, int(direction)) #2=FD, 3=BD (motors know their direction?!)
+        self.bus.write_byte_data(self.address, self.POSITION_ADDRESS, int(position)) #number between 0-119
+        self.bus.write_byte_data(self.address, self.TIME_ADDRESS, int(deltaTime)) # measure for the time the movement should take. 50/s?
 
-    #unused?
-    def sendPosition(self, deltaTime, position, bus):
-        self.readLegAngle(bus)
-        if self.leg_num % 2 == 0:
-            position += self.deltaRight
-        deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3
-        self.sendCommand(2, position, deltaTime, bus)
-        self.desAngle = position
 
-    #unused?
-    def sendPositionBack(self, deltaTime, position, bus):
-        if position > (self.legAngle + self.deltaAngle) or position < (self.legAngle - self.deltaAngle):
-            if self.leg_num % 2 == 0:
-                position += self.deltaRight
-            deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3
-            self.sendCommand(3, position, deltaTime, bus)
-            self.desAngle = position
-    #unused?
-    def checkDelay(self,Time ,eventList, bus):  # Checks for delays in this leg
-        #if self.legAngle > (self.desAngle - self.deltaAngle) and self.legAngle < (self.deltaAngle + self.desAngle):
-        if abs_angle_difference(self.legAngle,self.desAngle)<self.deltaAngle:
-            self.delayTime = 0
-            self.startDelay = 0
+    def smartCommand(self,position,direction,time=None,speed=None,force=False):
+        #only run disabled motor when forced
+        if not(force or self.enabled):
+            return
+        
+        #position
+        if position=="up":
+            pos=self.LIEDOWN_ANGLE
+        elif position=="down":
+            pos=self.STANDUP_ANGLE
+        elif position=="liftoff":
+            pos=self.LIFTOFF_ANGLE
+        elif position=="touchdown":
+            pos=self.TOUCHDOWN_ANGLE
+        elif position=="current":
+            pos=self.current_position #will this work???
         else:
-            if self.startDelay == 0:
-                self.startDelay = eventList[self.leg_num - 1][0]
-            self.delayTime = Time - self.startDelay
+            pos=position
+
+        #direction
+        if direction=="forwards":
+            dir="f"
+        elif direction=="backwards":
+            dir="b"
+        elif direction=="cw":
+            dir={"left":"b","right":"f"}[self.legSide]
+        elif direction=="ccw":
+            dir={"left":"f","right":"b"}[self.legSide]
+        elif direction=="closest" or direction=="safe":
+            if angle_between(pos,self.current_angle,self.current_angle+180):
+                dir="f"
+            else:
+                dir="b"
+        elif s["direction"]=="safe" and dir=="b":#if the leg moves backwards in some region [A,B], turn forwards instead to prevent high torque
+            if angle_between(pos,self.SAFE_ANGLE_A,self.SAFE_ANGLE_B) or angle_between(self.current_angle,self.SAFE_ANGLE_A,self.SAFE_ANGLE_B) or\
+               angle_between(self.SAFE_ANGLE_A,pos,pos+(self.current_angle-pos)%360): #between pos and current angle, making sure current_angle>pos
+                dir="f"
+
+        #time/speed
+        if dir=="f":
+            delta_angle=(pos-self.current_angle)%360
+        else:
+            delta_angle=(self.current_angle-pos)%360
+        
+        if time!=None:
+            delta_time=time
+        else:
+            if speed==None: speed="normal"
+
+            if speed=="slow":
+                delta_time=delta_angle/self.SPEED_SLOW
+            elif speed=="fast":
+                delta_time=delta_angle/self.SPEED_FAST
+            else:# speed=="normal":
+                delta_time=delta_angle/self.SPEED_NORMAL
+
+
+        #make sure time is a proper time (speed is within bounds)
+        time_min=delta_angle/self.SPEED_MIN
+        time_max=delta_angle/self.SPEED_MAX
+        
+        if delta_time>max_time or delta_time<delta_time_min:
+            self.master.returnf(self.master._warning("Improper leg time for leg %d corrected to fit angle difference"%self.leg_num))#print("Improper timing - corrected")
+
+        delta_time=int(min(time_max,max(time_min,delta_time)))
+        #time -3???? this was in the old code but I don't know why
+        
+
+        #send commands
+        dir2={"f":2,"b":3}[dir]
+
+        self.sendCommand(pos,dir2,delta_time)
+
+        #store command data for checking for stuck legs etc.
+        self.direction=dir
+        self.prev_angle=self.current_angle
+        self.delta_time=delta_time
+        self.delta_angle=delta_angle
+        self.target_angle=pos
+        self.forced=force
+
+        #moving so not relaxed (anymore)
+        self.relaxed=False
+
+
+
+
+
+
+
+        
+

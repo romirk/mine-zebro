@@ -5,154 +5,74 @@ import time
 DEBUG = 0
 
 class CPG:
-    def __init__(self, NoL, NLG, tf, tg, td, legArray, bus, speed, direction):
-        self.NumLegGroups = NLG
-        self.legArray = legArray
-        self.NoL = NoL
-        self.tf = tf
-        self.tg = tg
-        self.td = td
-        self.bus = bus
-        self.speed = speed
-        self.direction = direction
+    def __init__(self, legs):
+        self.legs = legs
+        self.step_number=0
 
-        if self.NumLegGroups == 1:
-            self.gaitOrder = self.Hopping()
-        elif self.NumLegGroups == 2:
-            self.gaitOrder = self.Tripod()  # most reliable, only one implemented for now.
-        elif self.NumLegGroups == 3:
-            self.gaitOrder = self.Quadrapod()
-        elif self.NumLegGroups == 4:
-            self.gaitOrder = self.ZebroGallop()
-        elif self.NumLegGroups == 6:
-            self.gaitOrder = self.Pentapod()
-        else:
-            print("invalid number of leg groups")
+        self.leg_groups=[(1,4,5),(2,3,6)]
 
-    def updateParameters(self, speed, direction):
-        self.speed = speed
-        self.direction = direction
 
-    def send_step(self, step_number):  # TRIPOD ONLY
+    def create_step(self,direction):  # TRIPOD ONLY
         # TODO: Fix for other leg groups
         if DEBUG:
-            print("cpg: step_number = " + str(step_number))
-            print("cpg: speed = " + str(self.speed) + " direction = " + str(self.direction))
+            print("cpg: step_number = " + str(self.step_number))
+        groupA,groupB=leg_groups[self.step_number%2],self.leg_groups[(step_number+1)%2]
+        
+        self.step_number+=1
 
-        if self.speed == 5 and self.direction == 5:
+        #speed="normal"
+
+
+        if direction=="fd":
             if DEBUG:
                 print("cpg: straight ahead")
-            if step_number % self.NumLegGroups == 0:
-                for i in self.gaitOrder[0]:
-                    self.legArray[i - 1].sendEvent(self.tf, 0, self.bus)
-                for i in self.gaitOrder[1]:
-                    self.legArray[i - 1].sendEvent(self.tg, 1, self.bus)
-            else:
-                for i in self.gaitOrder[0]:
-                    self.legArray[i - 1].sendEvent(self.tg, 1, self.bus)
-                for i in self.gaitOrder[1]:
-                    self.legArray[i - 1].sendEvent(self.tf, 0, self.bus)
+            return [dict(motors=groupA,position="touchdown",direction="forwards",speed="fast"),\
+                dict(motors=groupB,position="liftoff",direction="forwards",speed="normal")]
 
-        elif self.speed == 0 and self.direction == 1:
+        if direction=="bd":
+            groupA,groupB=groupB,groupA #reverse groups so that the robot can just walk backwards without having to reset the legs
+            if DEBUG:
+                print("cpg: straight backwards")
+            return [dict(motors=groupA,position="touchdown",direction="backwards",speed="normal"),\
+                dict(motors=groupB,position="liftoff",direction="backwards",speed="fast")]
+
+        elif direction=="left":
             # turn left fully
             if DEBUG:
                 print("cpg: direction is left")
-            if step_number % self.NumLegGroups == 0:
-                for i in self.gaitOrder[0]:
-                    if self.legArray[i - 1].legSide == "right":
-                        self.legArray[i - 1].sendEvent(self.tg, 0, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tf, 1, self.bus)
-                for i in self.gaitOrder[1]:
-                    if self.legArray[i - 1].legSide == "right":
-                        self.legArray[i - 1].sendEvent(self.tf, 1, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tg, 0, self.bus)
-            elif step_number % self.NumLegGroups == 1:
-                for i in self.gaitOrder[0]:
-                    if self.legArray[i - 1].legSide == "right":
-                        self.legArray[i - 1].sendEvent(self.tf, 1, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tg, 0, self.bus)
-                for i in self.gaitOrder[1]:
-                    if self.legArray[i - 1].legSide == "right":
-                        self.legArray[i - 1].sendEvent(self.tg, 0, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tf, 1, self.bus)
+            return [dict(motors=[leg for leg in groupA if self.legs[leg-1].legSide=="left"],position="liftoff",direction="backwards",speed="fast"),\
+                dict(motors=[leg for leg in groupA if self.legs[leg-1].legSide=="right"],position="touchdown",direction="forwards",speed="fast"),\
+                dict(motors=[leg for leg in groupB if self.legs[leg-1].legSide=="left"],position="touchdown",direction="backwards",speed="normal"),\
+                dict(motors=[leg for leg in groupB if self.legs[leg-1].legSide=="right"],position="liftoff",direction="forwards",speed="normal")]  
+                
 
-        elif self.speed == 0 and self.direction == 9:
+        elif direction=="right":
+            groupA,groupB=groupB,groupA #reverse groups so that the robot can just turn
             if DEBUG:
                 print("cpg: direction is right")
             # turn right fully
-            if step_number % self.NumLegGroups == 0:
-                for i in self.gaitOrder[1]:
-                    if self.legArray[i - 1].legSide == "left":
-                        self.legArray[i - 1].sendEvent(self.tg, 0, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tf, 1, self.bus)
-                for i in self.gaitOrder[0]:
-                    if self.legArray[i - 1].legSide == "left":
-                        self.legArray[i - 1].sendEvent(self.tf, 1, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tg, 0, self.bus)
-            elif step_number % self.NumLegGroups == 1:
-                for i in self.gaitOrder[1]:
-                    if self.legArray[i - 1].legSide == "left":
-                        self.legArray[i - 1].sendEvent(self.tf, 1, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tg, 0, self.bus)
-                for i in self.gaitOrder[0]:
-                    if self.legArray[i - 1].legSide == "left":
-                        self.legArray[i - 1].sendEvent(self.tg, 0, self.bus)
-                    else:
-                        self.legArray[i - 1].sendEventBack(self.tf, 1, self.bus)
+            return [dict(motors=[leg for leg in groupA if self.legs[leg-1].legSide=="right"],position="liftoff",direction="backwards",speed="fast"),\
+                dict(motors=[leg for leg in groupA if self.legs[leg-1].legSide=="left"],position="touchdown",direction="forwards",speed="fast"),\
+                dict(motors=[leg for leg in groupB if self.legs[leg-1].legSide=="right"],position="touchdown",direction="backwards",speed="normal"),\
+                dict(motors=[leg for leg in groupB if self.legs[leg-1].legSide=="left"],position="liftoff",direction="forwards",speed="normal")]  
 
-        elif self.speed == "jump":
-            pass
-            # jump for the giggles of it
-        elif self.speed == "lie_down" or (self.speed == 0 and self.direction == 5):
+        elif direction == "down":
             if DEBUG:
                 print("cpg: lying down")
-            for Leg in self.legArray:
-                Leg.lieDown(self.bus)
-            time.sleep(2)
+            return [dict(motors=[1,2,3,4,5,6],position="up")]
 
-        elif self.speed == "stand_up" or (self.speed == 0 and self.direction == 0):
+        elif direction == "up":
             if DEBUG:
                 print("cpg: standing up")
-            for Leg in self.legArray:
-                Leg.standUp(self.bus)
-            time.sleep(2)
+            return [dict(motors=[1,2,3,4,5,6],position="down",direction="safe")]
             
-        elif self.speed == "sit":
+        elif direction == "sit":
             if DEBUG:
                 print("cpg: sitting")
-            for i in [0,1]:
-                self.legArray[i].standUp(self.bus)
-            for i in range(2,6):
-                self.legArray[i].lieDown(self.bus)
-            time.sleep(2)
+            return [dict(motors=[3,4,5,6],position="up"),dict(motors=[1,2],position="down")]
             
-        elif self.speed == "bow":
+        elif direction == "bow":
             if DEBUG:
                 print("cpg: bowing")
-            for i in [4,5]:
-                self.legArray[i].standUp(self.bus)
-            for i in range(4):
-                self.legArray[i].lieDown(self.bus)
-            time.sleep(2)
+            return [dict(motors=[1,2,3,4],position="up"),dict(motors=[5,6],position="down")]
             
-    def Hopping(self):
-        return np.matrix((1, 2, 3, 4, 5, 6))
-
-    def Tripod(self):
-        return np.array(((1, 4, 5), (2, 3, 6)))
-
-    def Quadrapod(self):
-        return np.array(((1, 6), (4, 5), (2, 3)))
-
-    def ZebroGallop(self):
-        return np.matrix(((1), (4, 5), (2, 3), (6)))
-
-    def Pentapod(self):
-        return np.array(((1), (2), (3), (4), (5), (6)))

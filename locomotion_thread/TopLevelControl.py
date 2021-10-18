@@ -3,6 +3,19 @@
 # More information about that version is in his thesis
 # More information about this version is in the readme
 
+# Things the locomotion system should be able to do:
+# - move forwards/backwards/turn left/right/stand up/lie down/sit/bow/relax LOC:FBLRUDSZR
+# - report back information per leg (position, temperature, active) LOC:I[1][2][3][4][5]
+# - individual leg control: relax, go to position (either angle or up/down/touch/liftoff) with direction (fd/bd,closest,closest safe) with certain speed/time LOC:(motors, position[<int>,up/down/touchdown/liftoff], direction[fd/bd/closest], speed[fast/slow/...]/time[number of .02ms intervals/<float>[m]s])(...)
+# - turn off specific legs for standard walking modes #LOC:X[123456]
+# - changing walking modes? LOC:M...
+# - detect legs being stuck and responding by setting the motor to relax
+# - report back errors such as stuck legs
+#
+# - possibly lidar stuff????
+
+
+
 # Author: Frank van Veelen
 # Date: 04/02/19
 from ZebroLeg import ZebroLeg
@@ -28,8 +41,8 @@ print("Connection accepted from: ", listener.last_accepted)
 
 def coolDown(cooldown_time):
     for leg in LegArray:
-        leg.lieDown(cooldown_time, bus)
-    time.sleep(30)
+        leg.relaxLeg(bus)
+    time.sleep(cooldown_time)
     return 0
 
 # creating leg objects
@@ -79,7 +92,7 @@ while True:
         if max_temp > MAX_TEMPERATURE:
             if(DEBUG): print("TLC-L Maximum Motor temperature reached, sleeping for 60 seconds, temperature was; " + str(max_temp))
             while max_temp > START_TEMP:
-                coolDown(60)
+                coolDown(30)
                 for i in LegArray:
                     temp = i.measure_temperature(bus)
                     if temp > max_temp:
@@ -97,7 +110,7 @@ while True:
     time_out_counter = [0] * NUMBER_OF_LEGS
     stuck_leg = False
 
-    time.sleep(0.6) #for if steps are send too fast
+    time.sleep(0.6) #for if steps are sent too fast
     # TODO make sure this cant be called before step is being started as a step will be skipped
     while(not legs_done and not stuck_leg):
         for leg in LegArray:
@@ -118,6 +131,7 @@ while True:
                 time.sleep(0.1)
                 if (leg_is_stuck(time_out_counter[leg.leg_num - 1])):
                     stuck_leg = True
+                    leg.relaxLeg(bus)
                     if DEBUG: print("********TLC-L: leg " + str(leg.leg_num) + "is stuck********")
                     continue
                 break
