@@ -186,10 +186,16 @@ class LocomotionApp:
                         setting=dict(motors=[],position=None,direction=None,speed=None,time=None,relax=None,state=None,force=None)
                         settings.append(setting) #same object; changes to setting will affect the dict in settings
 
-                        setting["motors"]=list(map(int,value))
-                        if len(set(setting["motors"]).intersection(set([1,2,3,4,5,6])))!=len(setting["motors"]):
-                            self.returnf( self._invalid_command("Invalid list of legs: '%s'"%value))
-                            return
+                        if value=="all":
+                            setting["motors"]=[1,2,3,4,5,6]
+                        else:
+                            try:
+                                setting["motors"]=list(map(int,value))
+                                if len(set(setting["motors"]).intersection(set([1,2,3,4,5,6])))!=len(setting["motors"]):
+                                    raise Exception
+                            except:
+                                self.returnf( self._invalid_command("Invalid list of legs: '%s'"%value))
+                                return
                         
                     elif setting: #if not setting, 
                         if not(key in ("r","relax","state")) and setting["relax"]:
@@ -262,7 +268,7 @@ class LocomotionApp:
                                 return
                             if setting["state"]!=None:   return self._invalid_command("Multiple states given")
 
-                            if value in ("enable","disable"):
+                            if value in ("enabled","disabled"):
                                 setting["state"]=value
                             else:
                                 self.returnf(self._invalid_command("Invalid state: '%s'"%value))
@@ -397,9 +403,9 @@ class LocomotionApp:
             if direction in ("left","right"):   d="turn"
             elif direction in ("fd","bd"):  d="straight"
 
-            if d!=self.laststep and d!="down": #move legs to neutral standup position when starting the lext move
+            if d!=self.laststep and d!="down" and d!="up": #move legs to neutral standup position when starting the lext move, unless it was standing up anyway, and don't whey lying down
                 if not self.standUp(): #move legs down
-                    self.returnf(self._warn("Error occured while standing up, halting step execution"))
+                    self.returnf(self._warning("Error occured while standing up, halting step execution"))
                     return
                 sleep(1)
             
@@ -417,7 +423,7 @@ class LocomotionApp:
                 
 
                 if not self.set(instructions,newstate=d): #execute, if it fails, stop and return
-                    self.returnf(self._warn("Error occured, halting step execution"))
+                    self.returnf(self._warning("Error occured, halting step execution"))
                     return
                 self.laststep=d
                 

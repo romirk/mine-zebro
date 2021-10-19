@@ -35,11 +35,11 @@ class ZebroLeg:
         self.SAFE_ANGLE_B=300
 
         #speeds (degrees/50Hz tick)
-        self.SPEED_MAX=15#fully round in .48s - a monstrous speed
+        self.SPEED_MAX=7.2#round in 1sec
         self.SPEED_MIN=2#fully round in 3.6s
-        self.SPEED_FAST=13#based on old walk cycle numbers: 325/(.5*50) #degrees/(ticks=50*seconds)
-        self.SPEED_NORMAL=7#based on old walk cycle numbers:35/(0.1*50)
-        self.SPEED_SLOW=4#some arbitrary value?
+        self.SPEED_FAST=7
+        self.SPEED_NORMAL=5
+        self.SPEED_SLOW=3#some arbitrary value?
 
 
 
@@ -136,7 +136,7 @@ class ZebroLeg:
         #else, check whether the angle is close to the target angle
 
     def isStuck(self,time):
-        if time>self.delta_time*1.5: #leg is busy for a long time (obsolete, just for extra safety)
+        if time-30>self.delta_time*1.5: #leg is busy for a long time (obsolete, just for extra safety)
             return True
 
         if self.direction=="f":
@@ -144,7 +144,13 @@ class ZebroLeg:
         else:
             progress=(self.prev_angle-self.current_angle)%360
 
-        if progress+30<time/self.delta_time*self.delta_angle*1.5: #leg hasn't progressed as much as it should have
+
+        #if progress < intended progress
+        #progress < time*speed
+        #progress < time*(da/dt)
+        #progress*dt < (time-30)*da
+        #if progress<time/self.delta_time*self.delta_angle*1.5: #leg hasn't progressed as much as it should have
+        if progress*self.delta_time*1.5 < (time-30)*(self.delta_angle+1) #+1 to fix 0 angle difference
             return True
         return False
         
@@ -230,9 +236,9 @@ class ZebroLeg:
 
 
         #make sure time is a proper time (speed is within bounds)
-        time_min=delta_angle/self.SPEED_MIN
-        time_max=delta_angle/self.SPEED_MAX
-        print(f"leg:{self.leg_num}\tDA:{delta_angle}\tDT:{delta_time}\tDTN:{time_mine}\tDTX:{time_max}")
+        time_min=delta_angle/self.SPEED_MAX
+        time_max=delta_angle/self.SPEED_MIN
+        print(f"leg:{self.leg_num}\tDA:{delta_angle}\tDT:{delta_time}\tDTN:{time_min}\tDTX:{time_max}")
         
         if delta_time>time_max or delta_time<time_min:
             self.master.returnf(self.master._warning("Improper leg time for leg %d corrected to fit angle difference"%self.leg_num))#print("Improper timing - corrected")
