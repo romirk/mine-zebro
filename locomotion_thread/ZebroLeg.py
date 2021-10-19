@@ -59,9 +59,8 @@ class ZebroLeg:
             self.DELTA_SIDE=0
 
         #position
-        self.current_angle = self.target_angle = self.readAngle(bus)
+        self.current_angle = self.target_angle = self.readAngle()
 
-        
         #temperature
         self.MAX_TEMP=45
         self.RESTART_TEMP=35
@@ -152,9 +151,9 @@ class ZebroLeg:
         # stuck when either: position<<expected position or time is too large
 
 
-    def enable():
+    def enable(self):
         self.enabled=True
-    def disable():
+    def disable(self):
         self.enabled=False
 
 
@@ -233,8 +232,9 @@ class ZebroLeg:
         #make sure time is a proper time (speed is within bounds)
         time_min=delta_angle/self.SPEED_MIN
         time_max=delta_angle/self.SPEED_MAX
+        print(f"leg:{self.leg_num}\tDA:{delta_angle}\tDT:{delta_time}\tDTN:{time_mine}\tDTX:{time_max}")
         
-        if delta_time>max_time or delta_time<delta_time_min:
+        if delta_time>time_max or delta_time<time_min:
             self.master.returnf(self.master._warning("Improper leg time for leg %d corrected to fit angle difference"%self.leg_num))#print("Improper timing - corrected")
 
         delta_time=int(min(time_max,max(time_min,delta_time)))

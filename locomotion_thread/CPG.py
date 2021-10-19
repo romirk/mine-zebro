@@ -16,7 +16,7 @@ class CPG:
         # TODO: Fix for other leg groups
         if DEBUG:
             print("cpg: step_number = " + str(self.step_number))
-        groupA,groupB=leg_groups[self.step_number%2],self.leg_groups[(step_number+1)%2]
+        groupA,groupB=self.leg_groups[self.step_number%2],self.leg_groups[(self.step_number+1)%2]
         
         self.step_number+=1
 

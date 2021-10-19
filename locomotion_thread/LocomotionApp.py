@@ -123,9 +123,7 @@ class LocomotionApp:
 
 
         ####run on startup??
-        for leg in self.legs:
-            leg.standUp(bus)
-
+        self.standUp()
         sleep(1.1)  # must be larger than 1, as each leg gets a a 1 sec hardcoded time in standUp function
 
 
@@ -138,7 +136,7 @@ class LocomotionApp:
 
         try:
         #if 1:
-            if not len(command):    return self._invalid_command("No command specified")
+            if not len(command):    return self.returnf(self._invalid_command("No command specified"))
             if command[0]=="go":
                 func=self.go
 
@@ -162,7 +160,7 @@ class LocomotionApp:
 
                     try:
                         count=int(count)
-                        assert count<1
+                        assert count>=1
                     except:
                         self.returnf( self._invalid_command("Invalid count: '%s'"%count))
                         return
@@ -390,7 +388,7 @@ class LocomotionApp:
         return (0,data)
 
     def standUp(self):
-        self.set([dict(motors=[1,2,3,4,5,6],position="down",direction="safe")])
+        return self.set([dict(motors=[1,2,3,4,5,6],position="down",direction="safe")],newstate="up")
     
     def go(self,args):
 
@@ -400,7 +398,9 @@ class LocomotionApp:
             elif direction in ("fd","bd"):  d="straight"
 
             if d!=self.laststep and d!="down": #move legs to neutral standup position when starting the lext move
-                self.standUp() #move legs down
+                if not self.standUp(): #move legs down
+                    self.returnf(self._warn("Error occured while standing up, halting step execution"))
+                    return
                 sleep(1)
             
             #test for last step direction
@@ -413,10 +413,10 @@ class LocomotionApp:
                 #increment step count
 
                 #generate command pattern
-                instructions=self.CPG.step(direction)
+                instructions=self.CPG.create_step(direction)
                 
 
-                if not self.set(instructions,newstate=direction): #execute, if it fails, stop and return
+                if not self.set(instructions,newstate=d): #execute, if it fails, stop and return
                     self.returnf(self._warn("Error occured, halting step execution"))
                     return
                 self.laststep=d
@@ -424,13 +424,13 @@ class LocomotionApp:
 
         #use CPG or self.set? last one might be the best tbh
         
-        pprint(args)
+        #pprint(args)
         
     def set(self,args,newstate="custom"):
         #fill in all missing parameters using defaults
         defaults=dict(motors=[],position=None,direction="safe",speed=None,time=None,relax=None,state=None,force=None)
         for setting in args:
-            for key,value in d:
+            for key,value in defaults.items():
                 setting.setdefault(key,value)
 
         
@@ -499,7 +499,7 @@ class LocomotionApp:
                     #Check if legs are stuck using time
                     #if they get stuck: relax and disable them, set laststep to custom, continue waiting for other legs
                     #if an error occured, reversed
-                    if self.legs[m-1].isStuck():
+                    if self.legs[m-1].isStuck(t):
                         err=True
                         self.legs[m-1].relax()
                         self.legs[m-1].disable()
@@ -596,5 +596,9 @@ if __name__=="__main__":
     
     loc=LocomotionApp(bus,pprint,int)
     print("Locomotion app testing environment - enter locomotion commands or 'exit'")
-    while (i:=input("> "))!="exit":
-        loc.execute(i)
+    while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
+        i=input("> ").strip()
+        if i=="exit":
+            break
+        if i:
+            loc.execute(i)
