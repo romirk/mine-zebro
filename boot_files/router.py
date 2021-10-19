@@ -1,17 +1,18 @@
 import comms
 
-# Executed once imported
-print("router online")
-
-
 class Router:
 
-    def __init__(self, cooms):
+    def __init__(self):
+        self.__modules = Submodules()
+
+    def boot_modules(self, comms):
         print("Router setup started")
-        modules = Submodules()
+        #Boot all modules and save the essential ones given by the MCP
+        self.__modules.add_by_id(comms.get_id(), comms)#Need an for submodules to inherit from
+        #locomotion = locomotion.locomotion_manager()
 
 
-        return
+
 
 
 class Submodules:
@@ -21,16 +22,16 @@ class Submodules:
     def __init__(self):
         self.__list = [] * self.__predefined_max
 
-    def map_list_index_from_id(self, id):
-        return self.__list.index(id)
+    def map_id_to_index(self, id):
+        return self.__id_list.index(id)
 
-    def add_module_by_index(self, index, module):
+    def add_by_index(self, index, module):
         self.__list.insert(index, module)
 
-    def add_module_by_id(self, id, module):
-        return self.add_module_by_index(self.map_list_index_from_id(id))
+    def add_by_id(self, id, module):
+        return self.add_by_index(self.map_id_to_index(id), module)
 
-    def get_module_from_id(self, id):
+    def get_from_id(self, id):
         return self.__list.index(id)
 
     def get_module_from_index(self, index):

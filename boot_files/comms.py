@@ -1,8 +1,14 @@
 # Dummy comms for testing
+from abc import ABC
+
+import module
 
 
-class CommsManager:
+class CommsManager(module.Module):
+
+    def get_id(self):
+        return "Comms"
 
     def setup(self):
-        print("Cooms function")
+        print("Comms function")
         return

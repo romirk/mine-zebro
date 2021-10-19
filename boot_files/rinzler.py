@@ -8,11 +8,11 @@ import comms
 # setup the router and critical modules : COMMS
 if __name__ == "__main__":
     print("rinzler online")
-    router = router.Router()
     comms = comms.CommsManager()
+    router = router.Router()
 
     # create and start Router thread
-    routerThread = threading.Thread(target=router.setup(comms))
+    routerThread = threading.Thread(target=router.boot_modules(comms))
     routerThread.start()
 
     #TODO start all other modules using this thread
@@ -22,4 +22,4 @@ if __name__ == "__main__":
     #routerThread.join()
 
     # both threads completely executed
-    print("rinzler return 0!")
+    print("rinzler was defeated!")
