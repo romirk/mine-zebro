@@ -1,23 +1,28 @@
 from math import floor
 from time import sleep
 
+from locomotion_constants import *
 
+
+#test if angle is within some range
 def angle_between(x,a,b): #assert a<=b
     while x>b:  x-=360 #ensure x is minimal
     while x<a:  x+=360 #ensure a<=a
     return x<=b #test if a<x<b
 
+#mostly meant for checking of centered range
 def abs_angle_difference(a,b):
     return abs((b-a+180)%360-180) #convert difference to [-180,180] interval
 
+
 class ZebroLeg:
     def __init__(self, leg_num, bus, master):
-        self.leg_num = leg_num+1
+        self.leg_num = leg_num+1 #own num is 1-based, init thing is 0-based
         self.address = self._address()
         self.bus=bus
         self.master=master
 
-        #addresses
+        #i2c addresses
         self.TEMPERATURE_L_ADDRESS = 0x41
         # self.TEMPERATURE_H_ADDRESS = 0x42
         self.LEG_POSITION_ADDRESS = 0x40
@@ -31,7 +36,7 @@ class ZebroLeg:
         self.TOUCHDOWN_ANGLE = 125
         self.LIFTOFF_ANGLE = 160
 
-        self.SAFE_ANGLE_A=200
+        self.SAFE_ANGLE_A=200 #within this range, the leg should avoid turning backwards because that could require immense torque
         self.SAFE_ANGLE_B=300
 
         #speeds (degrees/50Hz tick)
@@ -43,9 +48,9 @@ class ZebroLeg:
 
 
 
-        #correction angles
-        self.DELTA_ANGLE = 5 #leeway
-        self.DELTA_RIGHT = 5 #correction for right leg
+        #correction angles - multiples of 3 are preferred because they correspond to whole position changes, making them consistent
+        self.DELTA_ANGLE = 6 #leeway
+        self.DELTA_RIGHT = 6 #correction for right leg
 
         #timing        
         self.TIME_DIVISOR = 0.02 #50Hz timing
@@ -74,11 +79,14 @@ class ZebroLeg:
         self.enabled=True
         self.forced=False #state override
 
-        #leg stuck detection
+        #variables for leg stuck detection
         self.prev_angle=self.current_angle
         self.delta_time=1
         self.direction="f"
+        self.LEG_STUCK_DELAY=30 #fixed allowed delay
+        self.LEG_STUCK_FACTOR=1.5 #scalor for progress/speed (i.e. 2 means it will be marked stuck if the leg moves slower than half speed)
 
+    #pick right i2c address
     def _address(self):
         leg_address = {
             1: 0x48,
@@ -91,36 +99,23 @@ class ZebroLeg:
         return leg_address
 
 
-
-
-    def sendEvent(self, deltaTime, type):  # type 0: liftoff, 1 = step; forwards stepping?
-        if type == 0:
-            position = self.TOUCHDOWN_ANGLE
-        else:
-            position = self.LIFTOFF_ANGLE
-        position += self.DELTA_SIDE  #right leg position correction?
-        deltaTime = floor(deltaTime / self.TIME_DIVISOR) - 3 #what does -3 do?????
-        self.sendCommand(2, position, deltaTime)
-        self.target_angle = position
-
-
-
-    def readAngle(self): #read leg position
+    #read leg position
+    def readAngle(self):
         self.current_angle = self.bus.read_byte_data(self.address, self.LEG_POSITION_ADDRESS) * 3 #request angle and convert to degrees
 
-        self.current_angle-=self.DELTA_SIDE
+        self.current_angle-=self.DELTA_SIDE #correction for right side legs
         self.current_angle %= 360
         return self.current_angle
 
-    def readTemperature(self): #measure motor temperature
+    #measure motor temperature
+    def readTemperature(self):
         #TODO: Add filter?
         meas_temp = self.bus.read_byte_data(self.address, self.TEMPERATURE_L_ADDRESS) #request and read temperature
         if meas_temp < 100: #why? do "false readings" show up as high numbers?
             self.temperature = meas_temp
         return self.temperature
 
-
-    
+    #adds hysteresis to the overheating - should only continue after having cooled down considerably
     def isOverheated(self):
         if self.temperature <= self.RESTART_TEMP:
             self.overheated=False
@@ -129,14 +124,16 @@ class ZebroLeg:
         return self.overheated
 
 
-    def isDone(self): #need a fix for forces commands!
+    #check whether leg has finished its movement
+    def isDone(self):
         return self.relaxed or (not self.forced and not self.enabled) or (abs_angle_difference(self.current_angle,self.target_angle)<=self.DELTA_ANGLE)
-        #if the leg is relaxed, it has not target so it is in place
+        #if the leg is relaxed, it has not target so it is always in place
         #if the leg is disabled, neglect it, unless force was specified
         #else, check whether the angle is close to the target angle
 
+    #check if leg is stuck by looking at the current and expected position and timing
     def isStuck(self,time):
-        if time-30>self.delta_time*1.5: #leg is busy for a long time (obsolete, just for extra safety)
+        if time-self.LEG_STUCK_DELAY>self.delta_time*self.LEG_STUCK_FACTOR: #leg is busy for a long time (obsolete, just for extra safety)
             return True
 
         if self.direction=="f":
@@ -150,23 +147,25 @@ class ZebroLeg:
         #progress < time*(da/dt)
         #progress*dt < (time-30)*da
         #if progress<time/self.delta_time*self.delta_angle*1.5: #leg hasn't progressed as much as it should have
-        if progress*self.delta_time*1.5 < (time-30)*(self.delta_angle+1) #+1 to fix 0 angle difference
+        if progress*self.delta_time*self.LEG_STUCK_FACTOR < (time-self.LEG_STUCK_DELAY)*(self.delta_angle): #0 angle difference means delta_time must be 0 as well, and it won't fail
             return True
         return False
         
-        # stuck when either: position<<expected position or time is too large
+        # stuck when either: position<<expected position or time>>max time
 
 
+    #in disabled state, the leg won't move unless specifying force
     def enable(self):
         self.enabled=True
     def disable(self):
         self.enabled=False
 
-
+    #relax - turn off motor completely
     def relax(self):
         self.sendCommand(0,0,10) #illegal direction results in leg relaxation
         self.relaxed=True
 
+    #send commands to the leg driver
     def sendCommand(self, position, direction, deltaTime): #write data to motor driver
         #set self.target_angle
         position = (position+self.DELTA_SIDE)%360 #correction for right legs
@@ -177,41 +176,41 @@ class ZebroLeg:
         self.bus.write_byte_data(self.address, self.POSITION_ADDRESS, int(position)) #number between 0-119
         self.bus.write_byte_data(self.address, self.TIME_ADDRESS, int(deltaTime)) # measure for the time the movement should take. 50/s?
 
-
+    #for sending more complex commands (with named positions, speeds, etc)
     def smartCommand(self,position,direction,time=None,speed=None,force=False):
         #only run disabled motor when forced
         if not(force or self.enabled):
-            return
+            return #disabled leg is neglected without force
         
         #position
-        if position=="up":
+        if position==LEG_POS_UP:
             pos=self.LIEDOWN_ANGLE
-        elif position=="down":
+        elif position==LEG_POS_DOWN:
             pos=self.STANDUP_ANGLE
-        elif position=="liftoff":
+        elif position==LEG_POS_LIFTOFF:
             pos=self.LIFTOFF_ANGLE
-        elif position=="touchdown":
+        elif position==LEG_POS_TOUCHDOWN:
             pos=self.TOUCHDOWN_ANGLE
-        elif position=="current":
+        elif position==LEG_POS_CURRENT:
             pos=self.current_position #will this work???
         else:
             pos=position
 
         #direction
-        if direction=="forwards":
+        if direction==LEG_DIR_FORWARDS:
             dir="f"
-        elif direction=="backwards":
+        elif direction==LEG_DIR_BACKWARDS:
             dir="b"
-        elif direction=="cw":
+        elif direction==LEG_DIR_CW:
             dir={"left":"b","right":"f"}[self.legSide]
-        elif direction=="ccw":
+        elif direction==LEG_DIR_CCW:
             dir={"left":"f","right":"b"}[self.legSide]
-        elif direction=="closest" or direction=="safe":
+        elif direction==LEG_DIR_CLOSEST or direction==LEG_DIR_SAFE:
             if angle_between(pos,self.current_angle,self.current_angle+180):
                 dir="f"
             else:
                 dir="b"
-        elif s["direction"]=="safe" and dir=="b":#if the leg moves backwards in some region [A,B], turn forwards instead to prevent high torque
+        elif s["direction"]==LEG_DIR_SAFE and dir=="b":#if the leg moves backwards in some region [A,B], turn forwards instead to prevent high torque
             if angle_between(pos,self.SAFE_ANGLE_A,self.SAFE_ANGLE_B) or angle_between(self.current_angle,self.SAFE_ANGLE_A,self.SAFE_ANGLE_B) or\
                angle_between(self.SAFE_ANGLE_A,pos,pos+(self.current_angle-pos)%360): #between pos and current angle, making sure current_angle>pos
                 dir="f"
@@ -225,11 +224,11 @@ class ZebroLeg:
         if time!=None:
             delta_time=time
         else:
-            if speed==None: speed="normal"
+            if speed==None: speed=LEG_SPEED_NORMAL
 
-            if speed=="slow":
+            if speed==LEG_SPEED_SLOW:
                 delta_time=delta_angle/self.SPEED_SLOW
-            elif speed=="fast":
+            elif speed==LEG_SPEED_FAST:
                 delta_time=delta_angle/self.SPEED_FAST
             else:# speed=="normal":
                 delta_time=delta_angle/self.SPEED_NORMAL
