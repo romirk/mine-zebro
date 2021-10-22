@@ -1,25 +1,38 @@
 import threading
 import router
+import messageManager
+import time
 import comms
 
-#class MCP:
 
-# After boot rinzler must
-# setup the router and critical modules : COMMS
+#Boot precedure
+# 1)setup router and critical modules : (ex:COMMS)
+# 2)Create and start the router thread
 if __name__ == "__main__":
     print("rinzler online")
-    comms = comms.CommsManager()
+
     router = router.Router()
+    module = comms.CommsManager()
+    router.add_module(module)
 
     # create and start Router thread
-    routerThread = threading.Thread(target=router.boot_modules(comms))
+    routerThread = threading.Thread(target=router.start, args=())
     routerThread.start()
 
     #TODO start all other modules using this thread
     #locomotion = locopotion.locomotion_manager()
+    #router.add_module(locomotion)
+
+    print("Ohter thread continuous")
+    while(True):
+        time.sleep(2)
+        router.mcp_command = "bob"
+
+
+
+
 
     # wait until all threads are done
-    #routerThread.join()
-
+    routerThread.join()
     # both threads completely executed
-    print("rinzler was defeated!")
+    print("return 0")
