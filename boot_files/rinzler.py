@@ -23,7 +23,9 @@ if __name__ == "__main__":
     #locomotion = locopotion.locomotion_manager()
     #router.add_module(locomotion)
 
-    print("Ohter thread continuous")
+    print("Other thread continuous")
+    messenger = messageManager.MessageManager(router)
+
     while(True):
         time.sleep(2)
         router.mcp_command = "bob"
