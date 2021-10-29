@@ -34,6 +34,7 @@ if __name__ == "__main__":
     while True:
         if messenger.command_received:
             router.load_command(messenger.get_command(),messenger.get_destination())
+            messenger.command_received = False
         if router.is_output_loaded:
             messenger.send_to_user(router.output, router.output_time, router.error, router.process_completed)
         time.sleep(2)

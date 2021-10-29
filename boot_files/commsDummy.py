@@ -9,7 +9,7 @@ class CommsDummyManager(commsApi.AbstractComms):
         return
 
     def get_user_input(self):
-        return input("Input command")
+        return input(">")
 
     def send_response(self, response):
         print(response)
