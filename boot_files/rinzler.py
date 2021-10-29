@@ -13,55 +13,80 @@ import dummyModule
 # 1)setup router and critical modules (COMMS)
 # 2)Create and start the router, cooms threads
 # 3)Load all submodules to the Router
+class Mcp:
 
-def input_output_loop(router, messenger, comms_lock, router_lock):
-    #loop for forwarding messages between submodules and user
-    while True:
-        comms_lock.acquire()
-        if messenger.command_received:
-            router.load_command(messenger.get_command(), messenger.get_destination())
-            messenger.command_received = False
-        comms_lock.release()
+    #setup all required objects and threads for execution
+    def __init__(self):
+        #initialise all objects
+        self.router = router.Router()
+        self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())  # TODO change this to real Comms
+        self.threads = list()
 
-        router_lock.acquire()
-        if router.is_output_loaded:
-            messenger.send_to_user(router.output, router.output_time, router.error, router.process_completed)
-            router.is_output_loaded = False
-        router_lock.release()
+        # create all locks
+        comms_lock = threading.Lock()
+        router_lock = threading.Lock()
 
-        time.sleep(2)
+        #setup threads and place in a list
+        router_thread = threading.Thread(target=self.router.start, args=(router_lock,))
+        listen_to_user_thread = threading.Thread(target=self.messenger.listen_to_user, args=(comms_lock,))
+        in_out_thread = threading.Thread(target=self.input_output_loop, args=(self.router, self.messenger, comms_lock, router_lock))
+        router_thread.setName("RouterThread")
+        listen_to_user_thread.setName("UserInputThread")
+        in_out_thread.setName("In/OutThread")
+        self.threads.append(router_thread)
+        self.threads.append(listen_to_user_thread)
+        self.threads.append(in_out_thread)
+
+        # TODO start all other modules here
+        self.router.add_module(dummyModule.DummyManager())
+        return
+
+    # start all threads
+    def start(self):
+        for thread in self.threads:
+            thread.start()
+        return
+
+    # loop that connects router and comms
+    # locks are used to avoid deadlock
+    # 2 locks: one for comms and one for router resources
+    def input_output_loop(self,router, messenger, comms_lock, router_lock):
+        while True:
+            comms_lock.acquire()
+            if messenger.command_received:
+                destination = messenger.get_destination()
+                command = messenger.get_command()
+                if (destination == "mcp"):
+                    self.mcp_handle_command(command)
+                else:
+                    router.load_command(command, destination)
+                messenger.command_received = False
+            comms_lock.release()
+
+            router_lock.acquire()
+            if router.is_output_loaded:
+                messenger.send_to_user(router.output, router.output_time, router.error, router.process_completed)
+                router.is_output_loaded = False
+            router_lock.release()
+
+            time.sleep(2)
+
+    def mcp_handle_command(self,command):
+        if command == "terminate":
+            print("ehdkjflka")
+            #for i in self.threads:
+
+        return
 
 if __name__ == "__main__":
     print("rinzler start")
 
-    #setup
-    router = router.Router()
-    messenger = messageManager.MessageManager(commsDummy.CommsDummyManager()) #TODO change this to real Comms
-
-    # setup Router,Comms thread
-
-    comms_lock = threading.Lock()
-    router_lock = threading.Lock()
-    routerThread = threading.Thread(target=router.start, args=(router_lock,))
-    listen_to_user_thread = threading.Thread(target=messenger.listen_to_user, args=(comms_lock,))
-    in_out_thread = threading.Thread(target=input_output_loop, args=(router, messenger, comms_lock, router_lock))
-
-    #TODO start all other modules here
-    dummyModule = dummyModule.DummyManager()
-    router.add_module(dummyModule)
-
-    #start threads
-    routerThread.start()
-    listen_to_user_thread.start()
-    in_out_thread.start()
-
-    print("Main thread continuous")
-
+    mcp = Mcp()
+    mcp.start()
 
     # wait until all threads are done
-    routerThread.join()
-    listen_to_user_thread.join()
-    in_out_thread.join()
+    #routerThread.join()
+    #listen_to_user_thread.join()
+    #in_out_thread.join()
     # both threads completely executed
-    print("return 0")
 

@@ -77,10 +77,12 @@ class Router:
 
     #called by active module to return data to mcp
     def send_data_to_mcp(self, output, error):
+        self.lock.acquire()
         self.is_output_loaded = True
         self.output = output
         self.output_time = datetime.now().strftime("%H:%M:%S")
         self.error = error
+        self.lock.release()
 
     #called by mcp to load a command to be executed
     def load_command(self, command, id):
