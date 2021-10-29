@@ -3,28 +3,32 @@ import router
 import messageManager
 import time
 import comms
+import dummyModule
 
 
 #Boot precedure
-# 1)setup router and critical modules : (ex:COMMS)
-# 2)Create and start the router thread
+# 1)setup router and critical modules (COMMS)
+# 2)Create and start the router, cooms threads
+# 3)Load all submodules to the Router
 if __name__ == "__main__":
-    print("rinzler online")
+    print("rinzler start")
 
+    #setup
     router = router.Router()
-    module = comms.CommsManager()
-    router.add_module(module)
+    #cooms = comms.CommsManager()
 
-    # create and start Router thread
+    # create and start Router,Cooms thread
     routerThread = threading.Thread(target=router.start, args=())
     routerThread.start()
+    #coomsThread = threading.Thread(target=router.start, args=())
+    #coomsThread.start()
 
     #TODO start all other modules using this thread
-    #locomotion = locopotion.locomotion_manager()
-    #router.add_module(locomotion)
-
     print("Other thread continuous")
-    messenger = messageManager.MessageManager(router)
+    dummyModule = dummyModule.DummyManager()
+    router.add_module(dummyModule)
+
+    #messenger = messageManager.MessageManager(router)
 
     while(True):
         time.sleep(2)
