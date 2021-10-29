@@ -11,6 +11,7 @@ class DummyManager(module.Module):
         super().execute(command, router)
         data = command
         self.send_to_mcp(router, data, 0)
+        return
 
     def send_to_mcp(self, router, data, error):
         super().send_to_mcp(router, data, error)

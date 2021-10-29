@@ -21,14 +21,19 @@ class MessageManager:
     def listen_to_user(self, lock):
         while True:
             temp = self.__comms.get_user_input() #blocking method
+            lock.acquire()
             self.__command = temp
-            command_received = True
+            #Check if command is valid
+            if len(self.__command.split(" ", 1)) < 2:
+                raise Exception("messenger: command invalid add space")
+            self.command_received = True
+            lock.release()
 
-    def get_destination(self, data):
-        return data.split(" ", 1).__getitem__(0)
+    def get_destination(self):
+        return self.__command.split(" ", 1).__getitem__(0)
 
-    def get_command(self, data):
-        return data.split(" ", 1).__getitem__(1)
+    def get_command(self):
+        return self.__command.split(" ", 1).__getitem__(1)
 
     #MCP to Comms
     def send_to_user(self, output, time, error, process_completed):

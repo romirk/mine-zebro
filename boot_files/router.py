@@ -33,8 +33,9 @@ class Router:
         self.__list = Submodules()  # list of submodules
 
     # initialisation before entering listening loop
-    def start(self):
+    def start(self, router_lock):
         print("Router has started")
+        self.lock = router_lock
         self.__listen_to_comms()
 
     # Given a module by MCP add to submodules
@@ -120,4 +121,4 @@ class Submodules:
 
     # Getter for modules
     def get_by_id(self, id):
-        return self.__list[self.__mapidToIndex(id)]
+        return self.__list[self.map_id_to_index(id)]

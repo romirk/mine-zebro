@@ -14,14 +14,21 @@ import dummyModule
 # 2)Create and start the router, cooms threads
 # 3)Load all submodules to the Router
 
-def input_output_loop(router, messenger, lock):
+def input_output_loop(router, messenger, comms_lock, router_lock):
     #loop for forwarding messages between submodules and user
     while True:
+        comms_lock.acquire()
         if messenger.command_received:
-            router.load_command(messenger.get_command(),messenger.get_destination())
+            router.load_command(messenger.get_command(), messenger.get_destination())
             messenger.command_received = False
+        comms_lock.release()
+
+        router_lock.acquire()
         if router.is_output_loaded:
             messenger.send_to_user(router.output, router.output_time, router.error, router.process_completed)
+            router.is_output_loaded = False
+        router_lock.release()
+
         time.sleep(2)
 
 if __name__ == "__main__":
@@ -32,15 +39,16 @@ if __name__ == "__main__":
     messenger = messageManager.MessageManager(commsDummy.CommsDummyManager()) #TODO change this to real Comms
 
     # setup Router,Comms thread
-    routerThread = threading.Thread(target=router.start, args=())
+
+    comms_lock = threading.Lock()
+    router_lock = threading.Lock()
+    routerThread = threading.Thread(target=router.start, args=(router_lock,))
+    listen_to_user_thread = threading.Thread(target=messenger.listen_to_user, args=(comms_lock,))
+    in_out_thread = threading.Thread(target=input_output_loop, args=(router, messenger, comms_lock, router_lock))
 
     #TODO start all other modules here
     dummyModule = dummyModule.DummyManager()
     router.add_module(dummyModule)
-
-    lock = threading.Lock()
-    listen_to_user_thread = threading.Thread(target=messenger.listen_to_user, args=(lock,))
-    in_out_thread = threading.Thread(target=input_output_loop, args=(router, messenger, lock))
 
     #start threads
     routerThread.start()
