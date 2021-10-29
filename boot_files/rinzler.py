@@ -2,7 +2,8 @@ import threading
 import router
 import messageManager
 import time
-import comms
+import commsApi
+import commsDummy
 import dummyModule
 
 
@@ -15,27 +16,27 @@ if __name__ == "__main__":
 
     #setup
     router = router.Router()
-    #cooms = comms.CommsManager()
+    #pass commsApi instance
+    messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())
 
-    # create and start Router,Cooms thread
+    # create and start Router,Comms thread
     routerThread = threading.Thread(target=router.start, args=())
     routerThread.start()
-    #coomsThread = threading.Thread(target=router.start, args=())
-    #coomsThread.start()
+    messenger.start()
 
     #TODO start all other modules using this thread
     print("Other thread continuous")
     dummyModule = dummyModule.DummyManager()
     router.add_module(dummyModule)
 
-    #messenger = messageManager.MessageManager(router)
 
-    while(True):
+    #loop for forwarding messages between submodules and user
+    while True:
+        if messenger.command_received:
+            router.load_command(messenger.get_command(),messenger.get_destination())
+        if router.is_output_loaded:
+            messenger.send_to_user(router.output, router.output_time, router.error, router.process_completed)
         time.sleep(2)
-        router.mcp_command = "bob"
-
-
-
 
 
     # wait until all threads are done
