@@ -56,7 +56,7 @@ class Router:
                 if not isinstance(module, module.__class__):
                     raise Exception("Failed to fetch module to execute command")
                 self.__prepare()
-                module.execute(self.__mcp_command);#blocking method
+                module.execute(self.__mcp_command, self);#blocking method
                 self.__clean_up()
 
     #called before each command is executed

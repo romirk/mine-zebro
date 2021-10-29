@@ -6,7 +6,7 @@ import module
 class AbstractComms(ABC):
 
     @abstractmethod
-    def start(self):
+    def setup(self):
         pass
 
     @abstractmethod

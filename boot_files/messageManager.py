@@ -3,6 +3,8 @@ import threading
 
 class MessageManager:
 
+    #TODO access to this variables should be synchronous since used by 2 threads
+    #https://www.youtube.com/watch?v=rQTJuCCCLVo
     command_received = False
     __command = ""
 
@@ -10,21 +12,16 @@ class MessageManager:
     def __init__(self, comms):
         if not isinstance(comms, commsApi.AbstractComms.__class__):
             self.__comms = comms
+            self.__comms.setup()
         else:
             raise Exception("MessageManager: constructor object not of type commsApi")
 
-    #MCP to Cooms methods
-    #starts communication module
-    def start(self):
-        listen_to_user_thread = threading.Thread(target=self.listen_to_user, args=())
-        listen_to_user_thread.start()
-        self.__comms.start()
-        return
-
-    #Comms to MCP methods
-    def listen_to_user(self):
+#Comms to MCP methods
+    #loop for waiting for user input
+    def listen_to_user(self, lock):
         while True:
-            self.__command = self.__comms.get_user_input()
+            temp = self.__comms.get_user_input() #blocking method
+            self.__command = temp
             command_received = True
 
     def get_destination(self, data):

@@ -5,11 +5,11 @@ import commsApi
 #Module responsible for communication with user
 class CommsDummyManager(commsApi.AbstractComms):
 
-    def start(self):
+    def setup(self):
         return
 
     def get_user_input(self):
-        return input(">")
+        return input("rinzler>")
 
     def send_response(self, response):
         print(response)
