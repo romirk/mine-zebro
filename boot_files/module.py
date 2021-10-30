@@ -11,12 +11,17 @@ class Module(ABC):
     #main function of module (note use super().execute before doing anything else)
     @abstractmethod
     def execute(self, command, router):
-        if not isinstance(router,router.__class__):
-            raise Exception("Module:" + self.get_id()+ " input parameter not a router")
+        if not isinstance(router, router.__class__):
+            raise Exception("Module:" + self.get_id() + " input parameter not a router")
         pass
 
     @abstractmethod
     #method delivers data to mcp use super().send_to_mcp to execute
     def send_to_mcp(self, router, data, error):
-        router.send_data_to_mcp(data,error)
+        router.send_data_to_mcp(data, error)
         pass
+
+    @abstractmethod
+    #method that check if module should stop execution
+    def check_if_hold(self, router):
+        return router.hold_module_execution

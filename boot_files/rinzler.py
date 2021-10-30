@@ -7,22 +7,23 @@ import commsDummy
 import dummyModule
 from datetime import datetime
 
-#TODO implement hold flag
-#TODO implement commands handled by MCP (terminate,shutdown)
-#TODO check out multiprocessing module
+
+# TODO implement hold flag
+# TODO implement commands handled by MCP (terminate,shutdown)
+# TODO check out multiprocessing module
 # TODO access to this variables should be synchronous since used by 2 threads
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
 
-#Boot precedure
+# Boot precedure
 # 1)setup router and critical modules (COMMS)
 # 2)Create and start the router, cooms threads
 # 3)Load all submodules to the Router
 class Mcp:
     __sleep_interval = 1
 
-    #setup all required objects and threads for execution
+    # setup all required objects and threads for execution
     def __init__(self):
-        #initialise all objects
+        # initialise all objects
         self.router = router.Router()
         self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())  # TODO change this to real Comms
         self.threads = list()
@@ -32,11 +33,11 @@ class Mcp:
         comms_lock = threading.Lock()
         router_lock = threading.Lock()
 
-        #setup threads and place in a list
+        # setup threads and place in a list
         router_thread = threading.Thread(target=self.router.start,
-                                         args=(router_lock, ))
+                                         args=(router_lock,))
         listen_to_user_thread = threading.Thread(target=self.messenger.listen_to_user,
-                                         args=(comms_lock, ))
+                                                 args=(comms_lock,))
         in_out_thread = threading.Thread(target=self.input_output_loop,
                                          args=(comms_lock, router_lock))
         router_thread.setName("RouterThread")
@@ -76,7 +77,7 @@ class Mcp:
             router_lock.acquire()
             if self.router.is_output_loaded:
                 self.messenger.router_send_to_user(self.router.output, self.router.output_time,
-                                            self.router.error, self.router.process_completed)
+                                                   self.router.error, self.router.process_completed)
                 self.router.is_output_loaded = False
             router_lock.release()
 
@@ -85,14 +86,18 @@ class Mcp:
 
     def mcp_handle_command(self, command):
         if command == "terminate":
+            self.messenger.is_shut_down = True
             self.isShutDown = True
         elif command == "shutdown":
-            self.messenger.mcp_send_to_user("shuttingDown", datetime.now().strftime("%H:%M:%S"))
+            self.messenger.mcp_send_to_user("shuttingDown")
             self.router.is_shut_down = True
             self.messenger.is_shut_down = True
             self.isShutDown = True
+        elif command == "hold":
+            self.router.hold_module_execution = True
 
         return
+
 
 if __name__ == "__main__":
     print("rinzler start")

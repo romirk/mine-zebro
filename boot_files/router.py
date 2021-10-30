@@ -21,6 +21,7 @@ class Router:
     __is_command_loaded = False
     __mcp_command = ""
     __server_id = ""
+    hold_module_execution = False
 
     #Public Variables & Flags
     output = "" #output data from modules read by MCP from here
@@ -68,6 +69,7 @@ class Router:
         self.output_time = ""
         self.error = ""
         self.is_output_loaded = False
+        self.hold_module_execution = False
 
     #called after each command is executed
     def __clean_up(self):

@@ -23,11 +23,14 @@ class MessageManager:
     def listen_to_user(self, lock):
         while not self.is_shut_down:
             temp = self.__comms.get_user_input()  # blocking method
+            while len(temp.split(" ", 1)) < 2:
+                # Check if command is valid
+                lock.acquire()
+                self.mcp_send_to_user("messenger: command invalid add space")
+                lock.release()
+                temp = self.__comms.get_user_input()  # blocking method
             lock.acquire()
             self.__command = temp
-            # Check if command is valid
-            if len(self.__command.split(" ", 1)) < 2:
-                raise Exception("messenger: command invalid add space")
             self.command_received = True
             lock.release()
             time.sleep(self.__sleep_interval)
@@ -43,5 +46,5 @@ class MessageManager:
         # Edit data to make it presentable
         self.__comms.send_response(output)
 
-    def mcp_send_to_user(self, output, time):
+    def mcp_send_to_user(self, output):
         self.__comms.send_response(output)
