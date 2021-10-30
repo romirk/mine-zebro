@@ -53,6 +53,7 @@ class Mcp:
     # start all threads
     def start(self):
         for thread in self.threads:
+            thread.daemon = True
             thread.start()
         return
 
@@ -82,14 +83,14 @@ class Mcp:
             time.sleep(self.__sleep_interval)
         return
 
-    def mcp_handle_command(self,command):
+    def mcp_handle_command(self, command):
         if command == "terminate":
-            print("ehdkjflka")
-        if command == "shutdown":
-            self.messenger.mcp_send_to_user("shuttingDown", datetime.now().strftime("%H:%M:%S"))
             self.isShutDown = True
+        elif command == "shutdown":
+            self.messenger.mcp_send_to_user("shuttingDown", datetime.now().strftime("%H:%M:%S"))
             self.router.is_shut_down = True
             self.messenger.is_shut_down = True
+            self.isShutDown = True
 
         return
 
@@ -99,9 +100,5 @@ if __name__ == "__main__":
     mcp = Mcp()
     mcp.start()
 
-    # wait until all threads are done
-    #routerThread.join()
-    #listen_to_user_thread.join()
-    #in_out_thread.join()
-    # both threads completely executed
-
+    while not mcp.isShutDown:
+        time.sleep(1)
