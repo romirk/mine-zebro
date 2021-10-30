@@ -28,6 +28,7 @@ class Router:
     error = "" #error message placed here
     process_completed = False
     is_output_loaded = False
+    is_shut_down = False
 
     def __init__(self):
         self.__list = Submodules()  # list of submodules
@@ -47,7 +48,7 @@ class Router:
 
     # loop until command given by mcp (if no command sleep to an appropriate amount of time)
     def __listen_to_comms(self):
-        while (True):
+        while not self.is_shut_down:
             # If no command to execute sleep
             if not self.__is_command_loaded:
                 time.sleep(self.__sleep_interval)
