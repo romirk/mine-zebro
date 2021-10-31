@@ -53,7 +53,7 @@ class CPG:
                 
 
         elif direction==STEP_RIGHT:
-            #groupA,groupB=groupB,groupA #reverse groups so that the robot can just turn
+            groupA,groupB=groupB,groupA #reverse groups so that the robot can just turn back without having to "reset" leg positions
             if DEBUG:
                 print("cpg: direction is right")
             # turn right fully
