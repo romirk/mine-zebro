@@ -426,10 +426,10 @@ class LocomotionApp:
 
         for direction,count in args:
             d=direction
-            if direction in ("left","right"):   d="turn"
-            elif direction in ("fd","bd"):  d="straight"
+            if direction in (STEP_LEFT,STEP_RIGHT):   d=STEP_TURN
+            elif direction in (STEP_FORWARDS,STEP_BACKWARDS):  d=STEP_STRAIGHT
 
-            if d!=self.laststep and d!="down" and d!="up": #move legs to neutral standup position when starting the lext move, unless it was standing up anyway, and don't whey lying down
+            if d!=self.laststep and d!=STEP_DOWN and d!=STEP_UP and d!=STEP_RELAX: #move legs to neutral standup position when starting the lext move, unless it was standing up anyway, and don't whey lying down or relaxing
                 if not self.standUp(): #move legs down
                     self.returnf(self._warning("Error occured while standing up, halting step execution"))
                     return

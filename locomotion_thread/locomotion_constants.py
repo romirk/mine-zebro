@@ -13,7 +13,8 @@ STEP_SIT="sit"
 STEP_BOW="bow"
 STEP_RELAX="relax"
 
-
+STEP_TURN="turn"
+STEP_STRAIGHT="straight"
 
 
 #individual leg commands
