@@ -83,8 +83,8 @@ class ZebroLeg:
         self.prev_angle=self.current_angle
         self.delta_time=1
         self.direction="f"
-        self.LEG_STUCK_DELAY=30 #fixed allowed delay
-        self.LEG_STUCK_FACTOR=1.5 #scalor for progress/speed (i.e. 2 means it will be marked stuck if the leg moves slower than half speed)
+        self.LEG_STUCK_DELAY=40 #fixed allowed delay
+        self.LEG_STUCK_FACTOR=1.7 #scalor for progress/speed (i.e. 2 means it will be marked stuck if the leg moves slower than half speed)
 
     #pick right i2c address
     def _address(self):

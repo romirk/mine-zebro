@@ -154,7 +154,7 @@ class LocomotionApp:
                     elif direction in ("b","bd","back","backward","backwards"):
                         dir=STEP_BACKWARDS
                     elif direction in ("l","left"):
-                        dir=STEP_BACKWARDS
+                        dir=STEP_LEFT
                     elif direction in ("r","right"):
                         dir=STEP_RIGHT
                     elif direction in ("u","up","standup","stand_up"):
