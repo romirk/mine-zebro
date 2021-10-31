@@ -545,8 +545,8 @@ class LocomotionApp:
             t+=1 #update time
             sleep(0.02)#total delay will be slightly worse but that's ok
 
-        #get new information on legs now that motions have ended
-        self.get([sum([setting["motors"] for setting in args],start=[]),dict(position=True,temperature=True,state=True,relaxed=True)])
+        #get new information on legs now that motions have ended, about all relevant motors
+        self.get([sum([list(setting["motors"]) for setting in args],[]),dict(position=True,temperature=True,state=True,relaxed=True)])
 
         if err: #leg got stuck
             return
