@@ -3,14 +3,6 @@ import module
 import time
 from datetime import datetime
 
-#For MCP
-# TODO use disconnect function from the MCP to terminate a process that is taking too long
-# TODO implement timer to check if connection takes too long to respond
-
-#For Router file here
-# TODO define error messages and exceptions (use to implemented sanitation of inputs of methods in submodules array)
-# TODO finish module ABC and loop method for connections
-
 # responsible for sending/ receiving messages between MCP and the software modules
 # only one module can communicate with the MCP throughout the bus at a time thus only one connection used
 # Establishes connection between module(server) and MCP
@@ -37,7 +29,7 @@ class Router:
 
     # initialisation before entering listening loop
     def start(self):
-        print("Router has started")
+        self.send_data_to_mcp("Router has started", 0)
         self.__listen_to_commands()
 
     # Given a module by MCP add to submodules

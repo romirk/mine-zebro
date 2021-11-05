@@ -1,4 +1,6 @@
 import threading
+from enum import Enum
+
 import router
 import messageManager
 import time
@@ -7,12 +9,18 @@ import commsDummy
 import dummyModule
 from datetime import datetime
 
-#python passes immutable objects by copying
 
-# TODO implement commands handled by MCP (terminate,shutdown)
-# TODO create enums for shutdown and terminate
-# TODO Create method that check if command exist in a module
+# python passes immutable objects by copying
+
+# TODO Replace exceptions with couts to user
+# TODO define error messages and exceptions (use to implemented sanitation of inputs of methods in submodules array)
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
+# TODO autonomous checking of battery status
+# TODO autonomous checking for overheating motors
+# For MCP
+# TODO use disconnect function from the MCP to terminate a process that is taking too long
+# TODO implement timer to check if connection takes too long to respond
+
 
 # Boot precedure
 # 1)setup router and critical modules (COMMS)
@@ -29,10 +37,10 @@ class Mcp:
 
         # initialise all objects
         self.router = router.Router(router_lock)
-        self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager(), message_manager_lock)  # TODO change this to real Comms
+        self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager(),
+                                                       message_manager_lock)  # TODO change this to real Comms
         self.threads = list()
-        self.isShutDown = False
-
+        self.internal_state = State.Running
 
         # setup threads and place in a list
         router_thread = threading.Thread(target=self.router.start)
@@ -61,8 +69,8 @@ class Mcp:
     # locks are used to avoid deadlock
     # 2 locks: one for comms and one for router resources
     def input_output_loop(self, router_lock):
-        while not self.isShutDown:
-            #moves input from message manager to router
+        while not self.internal_state == State.ShutDown:
+            # moves input from message manager to router
             if self.messenger.input_received:
                 destination = self.messenger.get_destination()
                 command = self.messenger.get_command()
@@ -84,17 +92,29 @@ class Mcp:
 
     def mcp_handle_command(self, command):
         if command == "terminate":
-            self.messenger.is_shut_down = True
-            self.isShutDown = True
+            self.internal_state = State.Terminate
         elif command == "shutdown":
             self.messenger.send_to_user_package("shuttingDown", datetime.now().strftime("%H:%M:%S"), 0, True)
             self.router.is_shut_down = True
+            self.router.hold_module_execution = True
             self.messenger.is_shut_down = True
-            self.isShutDown = True
+            self.internal_state = State.ShutDown
         elif command == "hold":
             self.router.hold_module_execution = True
 
         return
+
+    # wait for all threads
+    def wait(self):
+        for thread in self.threads:
+            thread.join()
+        return
+
+
+class State(Enum):
+    Running = 0
+    ShutDown = 1
+    Terminate = 2
 
 
 if __name__ == "__main__":
@@ -103,9 +123,10 @@ if __name__ == "__main__":
     mcp = Mcp()
     mcp.start()
 
-    while not mcp.isShutDown:
+    while not mcp.internal_state == State.Terminate and (not mcp.internal_state == State.ShutDown):
         time.sleep(1)
 
-#shared variables
-#messageManager
-#
+    if mcp.internal_state == State.ShutDown:
+        mcp.wait()
+
+
