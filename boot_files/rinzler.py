@@ -7,6 +7,7 @@ import commsDummy
 import dummyModule
 from datetime import datetime
 
+#python passes immutable objects by copying
 
 # TODO implement hold flag
 # TODO implement commands handled by MCP (terminate,shutdown)
@@ -23,23 +24,22 @@ class Mcp:
 
     # setup all required objects and threads for execution
     def __init__(self):
+        # create all locks
+        message_manager_lock = threading.Lock()
+        router_lock = threading.Lock()
+
         # initialise all objects
-        self.router = router.Router()
-        self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())  # TODO change this to real Comms
+        self.router = router.Router(router_lock)
+        self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager(), message_manager_lock)  # TODO change this to real Comms
         self.threads = list()
         self.isShutDown = False
 
-        # create all locks
-        comms_lock = threading.Lock()
-        router_lock = threading.Lock()
 
         # setup threads and place in a list
-        router_thread = threading.Thread(target=self.router.start,
-                                         args=(router_lock,))
-        listen_to_user_thread = threading.Thread(target=self.messenger.listen_to_user,
-                                                 args=(comms_lock,))
+        router_thread = threading.Thread(target=self.router.start)
+        listen_to_user_thread = threading.Thread(target=self.messenger.listen_to_user)
         in_out_thread = threading.Thread(target=self.input_output_loop,
-                                         args=(comms_lock, router_lock))
+                                         args=(router_lock,))
         router_thread.setName("RouterThread")
         listen_to_user_thread.setName("UserInputThread")
         in_out_thread.setName("In/OutThread")
@@ -61,25 +61,24 @@ class Mcp:
     # loop that connects router and comms
     # locks are used to avoid deadlock
     # 2 locks: one for comms and one for router resources
-    def input_output_loop(self, comms_lock, router_lock):
+    def input_output_loop(self, router_lock):
         while not self.isShutDown:
-            comms_lock.acquire()
-            if self.messenger.command_received:
+            #moves input from message manager to router
+            if self.messenger.input_received:
                 destination = self.messenger.get_destination()
                 command = self.messenger.get_command()
+                self.messenger.reset_input_received()
                 if destination == "mcp":
                     self.mcp_handle_command(command)
                 else:
                     self.router.load_command(command, destination)
-                self.messenger.command_received = False
-            comms_lock.release()
 
-            router_lock.acquire()
             if self.router.is_output_loaded:
-                self.messenger.router_send_to_user(self.router.output, self.router.output_time,
-                                                   self.router.error, self.router.process_completed)
+                router_lock.acquire()
+                self.messenger.send_to_user_package(self.router.output, self.router.output_time, self.router.error,
+                                                    self.router.process_completed)
                 self.router.is_output_loaded = False
-            router_lock.release()
+                router_lock.release()
 
             time.sleep(self.__sleep_interval)
         return
@@ -89,7 +88,7 @@ class Mcp:
             self.messenger.is_shut_down = True
             self.isShutDown = True
         elif command == "shutdown":
-            self.messenger.mcp_send_to_user("shuttingDown")
+            self.messenger.send_to_user_package("shuttingDown", datetime.now().strftime("%H:%M:%S"), 0, True)
             self.router.is_shut_down = True
             self.messenger.is_shut_down = True
             self.isShutDown = True
@@ -107,3 +106,7 @@ if __name__ == "__main__":
 
     while not mcp.isShutDown:
         time.sleep(1)
+
+#shared variables
+#messageManager
+#

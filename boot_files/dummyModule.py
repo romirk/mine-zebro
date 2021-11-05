@@ -6,14 +6,22 @@ import module
 class DummyManager(module.Module):
 
     def get_id(self):
-        return "Dummy"
+        return "dummy"
 
     def execute(self, command, router):
         super().execute(command, router)
-        while not self.check_if_hold(router):
-            data = command
-            self.send_to_mcp(router, data, 0)
-            time.sleep(5)
+        number = 0
+        if (command == "count"):
+            for i in range(5):
+                data = str(i)
+                self.send_to_mcp(router, data, 0)
+                i += 1
+        elif (command == "infinity"):
+            while not self.check_if_hold(router):
+                data = str(number)
+                self.send_to_mcp(router, data, 0)
+                number += 1
+                time.sleep(5)
         return
 
     def send_to_mcp(self, router, data, error):

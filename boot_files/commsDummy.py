@@ -12,4 +12,4 @@ class CommsDummyManager(commsApi.AbstractComms):
         return input("rinzler>")
 
     def send_response(self, response):
-        print("\noutput>" + response)
+        print("output>" + response)

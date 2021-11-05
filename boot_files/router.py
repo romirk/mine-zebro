@@ -31,14 +31,14 @@ class Router:
     is_output_loaded = False
     is_shut_down = False
 
-    def __init__(self):
+    def __init__(self, lock):
         self.__list = Submodules()  # list of submodules
+        self.__lock = lock
 
     # initialisation before entering listening loop
-    def start(self, router_lock):
+    def start(self):
         print("Router has started")
-        self.lock = router_lock
-        self.__listen_to_comms()
+        self.__listen_to_commands()
 
     # Given a module by MCP add to submodules
     def add_module(self, module):
@@ -48,7 +48,7 @@ class Router:
         raise Exception("Can't add non_module object to submodule list")
 
     # loop until command given by mcp (if no command sleep to an appropriate amount of time)
-    def __listen_to_comms(self):
+    def __listen_to_commands(self):
         while not self.is_shut_down:
             # If no command to execute sleep
             if not self.__is_command_loaded:
@@ -59,44 +59,53 @@ class Router:
                 if not isinstance(module, module.__class__):
                     raise Exception("Failed to fetch module to execute command")
                 self.__prepare()
-                module.execute(self.__mcp_command, self);#blocking method
+                module.execute(self.__mcp_command, self) #blocking method
                 self.__clean_up()
 
+    #All functions that change attributes need to use lock to avoid deadlock
     #called before each command is executed
     def __prepare(self):
+        self.__lock.acquire()
         self.process_completed = False
         self.output = ""
         self.output_time = ""
         self.error = ""
         self.is_output_loaded = False
         self.hold_module_execution = False
+        self.__lock.release()
 
     #called after each command is executed
     def __clean_up(self):
+        self.__lock.acquire()
         self.__is_command_loaded = False
         self.__mcp_command = ""
         self.__server_id = ""
         self.process_completed = True
+        self.__lock.release()
 
     #called by active module to return data to mcp
     def send_data_to_mcp(self, output, error):
-        self.lock.acquire()
+        while self.is_output_loaded:
+            time.sleep(1)
+        self.__lock.acquire()
         self.is_output_loaded = True
         self.output = output
         self.output_time = datetime.now().strftime("%H:%M:%S")
         self.error = error
-        self.lock.release()
+        self.__lock.release()
 
     #called by mcp to load a command to be executed
     def load_command(self, command, id):
+        self.__lock.acquire()
         self.__mcp_command = command
         self.__server_id = id
         self.__is_command_loaded = True
+        self.__lock.release()
 
 
 
 class Submodules:
-    __id_list = ["com", "loco", "Dummy"]  # every module needs to implement a getter for their id
+    __id_list = ["com", "loco", "dummy"]  # every module needs to implement a getter for their id
     __predefined_max = len(__id_list)  # should be equal to the max number of modules
     size = 0
 
