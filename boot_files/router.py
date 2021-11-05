@@ -43,6 +43,7 @@ class Router:
     # Given a module by MCP add to submodules
     def add_module(self, module):
         if isinstance(module, module.__class__):
+            module.set_router(self)
             self.__list.add_by_id(module.get_id(), module)
             return
         raise Exception("Can't add non_module object to submodule list")
@@ -59,7 +60,7 @@ class Router:
                 if not isinstance(module, module.__class__):
                     raise Exception("Failed to fetch module to execute command")
                 self.__prepare()
-                module.execute(self.__mcp_command, self) #blocking method
+                module.execute(self.__mcp_command) #blocking method
                 self.__clean_up()
 
     #All functions that change attributes need to use lock to avoid deadlock
