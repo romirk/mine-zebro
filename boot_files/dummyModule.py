@@ -32,5 +32,5 @@ class DummyManager(module.Module):
         super().send_to_mcp(data, error)
 
     def check_if_hold(self):
-        super().check_if_hold()
+        return super().check_if_hold()
 
