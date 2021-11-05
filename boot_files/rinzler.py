@@ -9,10 +9,9 @@ from datetime import datetime
 
 #python passes immutable objects by copying
 
-# TODO implement hold flag
 # TODO implement commands handled by MCP (terminate,shutdown)
-# TODO check out multiprocessing module
-# TODO access to this variables should be synchronous since used by 2 threads
+# TODO create enums for shutdown and terminate
+# TODO Create method that check if command exist in a module
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
 
 # Boot precedure

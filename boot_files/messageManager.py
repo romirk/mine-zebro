@@ -66,7 +66,7 @@ class MessageManager:
     # MCP to Comms
     def send_to_user_package(self, output, time, error, process_completed):
         # Edit data to make it presentable
-        text = output + " at  " + str(time) + str(error) + str(process_completed)
+        text = output + " Time:" + str(time) + " Error:" + str(error) + "  Completed:" + str(process_completed)
         self.send_to_user_text(text)
 
     def send_to_user_text(self, text):

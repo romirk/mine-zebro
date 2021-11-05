@@ -16,11 +16,6 @@ class Module(ABC):
     def get_id(self):
         pass
 
-    #main function of module (note use super().execute before doing anything else)
-    @abstractmethod
-    def execute(self, command):
-        pass
-
     @abstractmethod
     #method delivers data to mcp use super().send_to_mcp to execute
     def send_to_mcp(self, data, error):
@@ -33,3 +28,16 @@ class Module(ABC):
         temp = self.__router.hold_module_execution
         return temp
         pass
+
+    @abstractmethod
+    def command_does_not_exist(self, command):
+        text = self.get_id() + ": " + "no such command"
+        self.send_to_mcp(text, -1)
+        pass
+
+
+    # main function of module (note use super().execute before doing anything else)
+    @abstractmethod
+    def execute(self, command):
+        pass
+
