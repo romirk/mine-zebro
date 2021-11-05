@@ -12,6 +12,7 @@ class MessageManager:
     input_received = False
 
     # Wrap this class around a comms module
+    #TODO Fix bug here when checking for comms
     def __init__(self, comms, lock):
         if not isinstance(comms, commsApi.AbstractComms.__class__):
             self.__comms = comms
@@ -30,12 +31,12 @@ class MessageManager:
 
     #Get valid input from the comms
     def __get_valid_input(self):
-        user_input = self.__comms.get_user_input()  # blocking method
+        user_input = self.__comms.cin()  # blocking method
         # check if input has at least two parts source/destination to be considered valid
         # if not repeat
         while len(user_input.split(" ", 1)) < 2:
             self.send_to_user_text("messenger: command invalid add space")
-            user_input = self.__comms.get_user_input()
+            user_input = self.__comms.cin()
 
         return user_input.lower()
 
@@ -71,5 +72,5 @@ class MessageManager:
 
     def send_to_user_text(self, text):
         self.__lock.acquire()
-        self.__comms.send_response(text)
+        self.__comms.cout(text)
         self.__lock.release()

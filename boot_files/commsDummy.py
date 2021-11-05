@@ -8,8 +8,8 @@ class CommsDummyManager(commsApi.AbstractComms):
     def setup(self):
         return
 
-    def get_user_input(self):
+    def cin(self):
         return input("rinzler>")
 
-    def send_response(self, response):
-        print("output>" + response)
+    def cout(self, string):
+        print("output>" + string)

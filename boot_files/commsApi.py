@@ -10,9 +10,9 @@ class AbstractComms(ABC):
         pass
 
     @abstractmethod
-    def get_user_input(self):
+    def cin(self):
         pass
 
     @abstractmethod
-    def send_response(self, response):
+    def cout(self, string):
         pass
