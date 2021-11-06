@@ -1,6 +1,4 @@
 import os
-import sys
-import threading
 from enum import Enum
 
 import router
@@ -10,20 +8,18 @@ import commsApi
 import commsDummy
 import mcpHelper
 import dummyModule
-from datetime import datetime
+import cameraManager
+import cameraDummy
 
 
 # python passes immutable objects by copying
 
-# TODO Replace exceptions with couts to user
 # TODO define error messages and exceptions (use to implemented sanitation of inputs of methods in submodules array)
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
-# TODO autonomous checking of battery status
-# TODO autonomous checking for overheating motors
+# TODO autonomous checking of battery status & overheating motors
 # TODO add camera
-# For MCP
-# TODO use disconnect function from the MCP to terminate a process that is taking too long
-# TODO implement timer to check if connection takes too long to respond
+# TODO be able to restart camera and router processes
+# TODO replace threading with processing
 
 
 # Boot precedure
@@ -41,10 +37,12 @@ class Mcp:
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
         self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())  # TODO change this to real Comms
+        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy())  # TODO change this to real Camera
 
         # setup threads and place in a list
         self.threads = list()
         self.mcp_helper.setup_router_thread()
+        self.mcp_helper.setup_camera_thread()
         self.mcp_helper.setup_non_restartable_threads()
 
         self.add_modules_to_router()
@@ -63,7 +61,7 @@ class Mcp:
         return
 
     # locks are used to avoid deadlock
-    # 2 locks: one for comms and one for router resources
+    # 3 locks: messageManager,router,cameraManager
     def input_output_loop(self):
         while self.internal_state == State.Running.value:
             # moves input from message manager to router
@@ -83,6 +81,15 @@ class Mcp:
                                                     self.router.process_completed)
                 self.router.is_output_loaded = False
                 self.router.lock.release()
+
+            # moves frame from cameraManager to user
+            if self.cameraManager.frame_ready:
+                frame = self.cameraManager.get_frame()
+                self.cameraManager.reset_frame_ready()
+                if len(frame) == 0:
+                    self.messenger.send_to_user_text("Frame could not be received")
+                else:
+                    self.messenger.send_to_user_text("Frame received")
 
             time.sleep(self.__sleep_interval)
         return

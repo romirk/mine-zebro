@@ -40,6 +40,7 @@ class McpHelper:
         self.mcp.router.is_shut_down = True
         self.mcp.router.hold_module_execution = True
         self.mcp.messenger.is_shut_down = True
+        self.mcp.cameraManager.is_shut_down = True
         return
 
     def __lights(self, command):
@@ -66,10 +67,16 @@ class McpHelper:
         router_thread.setName("RouterThread")
         self.mcp.threads.append(router_thread)
 
+    def setup_camera_thread(self):
+        camera_thread = threading.Thread(target=self.mcp.cameraManager.listen_to_camera)
+        camera_thread.setName("CameraThread")
+        self.mcp.threads.append(camera_thread)
+
     def setup_non_restartable_threads(self):
         listen_to_user_thread = threading.Thread(target=self.mcp.messenger.listen_to_user)
-        in_out_thread = threading.Thread(target=self.mcp.input_output_loop)
         listen_to_user_thread.setName("UserInputThread")
-        in_out_thread.setName("In/OutThread")
         self.mcp.threads.append(listen_to_user_thread)
+
+        in_out_thread = threading.Thread(target=self.mcp.input_output_loop)
+        in_out_thread.setName("In/OutThread")
         self.mcp.threads.append(in_out_thread)
