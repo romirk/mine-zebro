@@ -48,12 +48,14 @@ class Router:
                 time.sleep(self.__sleep_interval)
             else:
             # else execute
-                module = self.__list.get_by_id(self.__server_id)
-                if not isinstance(module, module.__class__):
-                    raise Exception("Failed to fetch module to execute command")
-                self.__prepare()
-                module.execute(self.__mcp_command) #blocking method
-                self.__clean_up()
+                if not self.__list.check_id(self.__server_id):
+                    self.send_data_to_mcp("Router:Failed to fetch module with id: " + str(self.__server_id), -1)
+                    self.__clean_up()
+                else:
+                    module = self.__list.get_by_id(self.__server_id)
+                    self.__prepare()
+                    module.execute(self.__mcp_command) #blocking method
+                    self.__clean_up()
 
     #All functions that change attributes need to use lock to avoid deadlock
     #called before each command is executed

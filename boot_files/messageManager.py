@@ -12,14 +12,10 @@ class MessageManager:
     input_received = False
 
     # Wrap this class around a comms module
-    #TODO Fix bug here when checking for comms
     def __init__(self, comms, lock):
-        if not isinstance(comms, commsApi.AbstractComms.__class__):
-            self.__comms = comms
-            self.__comms.setup()
-            self.__lock = lock
-        else:
-            raise Exception("MessageManager: constructor object not of type commsApi")
+        self.__comms = comms
+        self.__comms.setup()
+        self.__lock = lock
 
     # Comms to MCP methods
     # loop for waiting for user input
