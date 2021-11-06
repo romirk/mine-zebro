@@ -17,6 +17,7 @@ from datetime import datetime
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
 # TODO autonomous checking of battery status
 # TODO autonomous checking for overheating motors
+# TODO add camera
 # For MCP
 # TODO use disconnect function from the MCP to terminate a process that is taking too long
 # TODO implement timer to check if connection takes too long to respond
@@ -103,11 +104,11 @@ class Mcp:
         elif command == "hold":
             self.router.hold_module_execution = True
 
-        elif command.startswith("lights") and len(command.split(" ")) == 2:
+        elif command.startswith("lights"):
             #TODO add lights functionality
-            if command.split(" ", 1)[1] == "on":
+            if command == "lightsOn".lower():
                 self.messenger.send_to_user_text("lights" + str(True))
-            elif command.split(" ", 1)[1] == "off":
+            elif command == "lightsOff".lower():
                 self.messenger.send_to_user_text("lights" + str(False))
             else:
                 self.messenger.send_to_user_text("MCP command does not exist")

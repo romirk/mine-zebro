@@ -28,11 +28,9 @@ class MessageManager:
     #Get valid input from the comms
     def __get_valid_input(self):
         user_input = self.__comms.cin()  # blocking method
-        # check if input has at least two parts source/destination to be considered valid
-        # if not repeat
-        while len(user_input.split(" ", 1)) < 2:
-            self.send_to_user_text("messenger: command invalid add space")
-            user_input = self.__comms.cin()
+
+        if len(user_input.split(" ", 1)) < 2:
+            user_input = "mcp " + user_input
 
         return user_input.lower()
 
