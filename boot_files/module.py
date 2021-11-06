@@ -5,15 +5,28 @@ import router
 # Abstract class that all modules inherit from
 class Module(ABC):
 
+    #methods that first call super and then implmemented
+    @abstractmethod
+    def get_id(self):
+        pass
+
+    @abstractmethod
+    def help(self):
+        text = str(self.get_id()) + " module commands\n"
+        return text
+        pass
+
+    # main function of module (note use super().execute before doing anything else)
+    @abstractmethod
+    def execute(self, command):
+        pass
+
+    #note the following implementations only need to call the super() method
     @abstractmethod
     def set_router(self, router):
         if not isinstance(router, router.__class__):
             raise Exception("Module:" + self.get_id() + " input parameter not a router")
         self.__router = router
-        pass
-
-    @abstractmethod
-    def get_id(self):
         pass
 
     @abstractmethod
@@ -35,9 +48,4 @@ class Module(ABC):
         self.send_to_mcp(text, -1)
         pass
 
-
-    # main function of module (note use super().execute before doing anything else)
-    @abstractmethod
-    def execute(self, command):
-        pass
 
