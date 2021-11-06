@@ -8,7 +8,7 @@ import time
 
 class CameraManager:
     is_shut_down = False
-    __sleep_interval = 3
+    __sleep_interval = 5
     # variables shared between threads that need locks to write on are:
     __stored_frame = ""
     frame_ready = False

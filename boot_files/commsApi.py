@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import module
 
 
 #Module responsible for communication with user

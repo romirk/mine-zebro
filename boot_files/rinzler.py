@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from enum import Enum
 
 import router
@@ -89,7 +90,7 @@ class Mcp:
                 if len(frame) == 0:
                     self.messenger.send_to_user_text("Frame could not be received")
                 else:
-                    self.messenger.send_to_user_text("Frame received")
+                    self.messenger.send_to_user_text("Frame received time: " + datetime.now().strftime("%H:%M:%S")) #TODO replace with actual frame (str(frame))
 
             time.sleep(self.__sleep_interval)
         return

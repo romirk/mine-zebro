@@ -1,4 +1,5 @@
 import time
+import cameraApi
 
 import cv2
 
@@ -6,7 +7,7 @@ import cv2
 # Getting camera access using python
 # https://www.youtube.com/watch?v=ezAQvAN1xnQ
 
-class CameraDummy:
+class CameraDummy(cameraApi.AbstractCamera):
     __sleep_interval = 0.5
     frame = ""
     vc = cv2.VideoCapture(0)
