@@ -133,9 +133,11 @@ class ZebroLeg:
 
     #check if leg is stuck by looking at the current and expected position and timing
     def isStuck(self,time):
+        #method 1: check if the leg hasn't arrived in time
         if time-self.LEG_STUCK_DELAY>self.delta_time*self.LEG_STUCK_FACTOR: #leg is busy for a long time (obsolete, just for extra safety)
             return True
 
+        #method 2: check if the leg is on the right track
         if self.direction=="f":
             progress=(self.current_angle-self.prev_angle)%360
         else:
@@ -146,7 +148,10 @@ class ZebroLeg:
         #progress < time*speed
         #progress < time*(da/dt)
         #progress*dt < (time-30)*da
-        #if progress<time/self.delta_time*self.delta_angle*1.5: #leg hasn't progressed as much as it should have
+        #progress/da < time/dt -> bad
+        #speedf * progress/da < (time-offset)/dt
+        #speedf * progress * dt < (time-offset) * da
+        #if progress<time/self.delta_time*self.delta_angle: #leg hasn't progressed as much as it should have
         if progress*self.delta_time*self.LEG_STUCK_FACTOR < (time-self.LEG_STUCK_DELAY)*(self.delta_angle): #0 angle difference means delta_time must be 0 as well, and it won't fail
             return True
         return False
@@ -195,6 +200,8 @@ class ZebroLeg:
             pos=self.current_position #will this work???
         else:
             pos=position
+
+        pos=pos//3 * 3#ensure there are no weird situations due to the position not being an exact position
 
         #direction
         if direction==LEG_DIR_FORWARDS:
@@ -248,6 +255,7 @@ class ZebroLeg:
 
         #send commands
         dir2={"f":2,"b":3}[dir]
+
 
         self.sendCommand(pos,dir2,delta_time)
 
