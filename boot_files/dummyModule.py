@@ -25,12 +25,12 @@ class DummyManager(module.Module):
     def execute(self, command):
         super().execute(command)
         number = 0
-        if (command == "count"):
+        if command == "count":
             for i in range(5):
                 data = str(i)
                 self.send_to_mcp(data, 0)
                 i += 1
-        elif (command == "infinity"):
+        elif command == "infinity":
             while not self.check_if_hold():
                 data = str(number)
                 self.send_to_mcp(data, 0)

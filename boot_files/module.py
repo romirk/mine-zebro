@@ -6,7 +6,7 @@ import router
 class Module(ABC):
 
     @abstractmethod
-    def set_router(self,router):
+    def set_router(self, router):
         if not isinstance(router, router.__class__):
             raise Exception("Module:" + self.get_id() + " input parameter not a router")
         self.__router = router

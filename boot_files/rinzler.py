@@ -6,6 +6,7 @@ import messageManager
 import time
 import commsApi
 import commsDummy
+import mcpHelper
 import dummyModule
 from datetime import datetime
 
@@ -37,6 +38,7 @@ class Mcp:
         router_lock = threading.Lock()
 
         # initialise all objects
+        self.mcp_command_handler = mcpHelper.McpCommandHandler(self)
         self.router = router.Router(router_lock)
         self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager(),
                                                        message_manager_lock)  # TODO change this to real Comms
@@ -55,6 +57,10 @@ class Mcp:
         self.threads.append(listen_to_user_thread)
         self.threads.append(in_out_thread)
 
+        self.add_modules_to_router()
+        return
+
+    def add_modules_to_router(self):
         # TODO start all other modules here
         self.router.add_module(dummyModule.DummyManager())
         return
@@ -76,7 +82,7 @@ class Mcp:
                 command = self.messenger.get_command()
                 self.messenger.reset_input_received()
                 if destination == "mcp":
-                    self.mcp_handle_command(command)
+                    self.mcp_command_handler.execute(command)
                 else:
                     self.router.load_command(command, destination)
 
@@ -88,34 +94,6 @@ class Mcp:
                 router_lock.release()
 
             time.sleep(self.__sleep_interval)
-        return
-
-    def mcp_handle_command(self, command):
-        if command == "terminate":
-            self.internal_state = State.Terminate
-
-        elif command == "shutdown":
-            self.messenger.send_to_user_package("shuttingDown", datetime.now().strftime("%H:%M:%S"), 0, True)
-            self.router.is_shut_down = True
-            self.router.hold_module_execution = True
-            self.messenger.is_shut_down = True
-            self.internal_state = State.ShutDown
-
-        elif command == "hold":
-            self.router.hold_module_execution = True
-
-        elif command.startswith("lights"):
-            #TODO add lights functionality
-            if command == "lightsOn".lower():
-                self.messenger.send_to_user_text("lights" + str(True))
-            elif command == "lightsOff".lower():
-                self.messenger.send_to_user_text("lights" + str(False))
-            else:
-                self.messenger.send_to_user_text("MCP command does not exist")
-
-        else:
-            self.messenger.send_to_user_text("MCP command does not exist")
-
         return
 
     # wait for all threads
@@ -137,7 +115,7 @@ if __name__ == "__main__":
     mcp = Mcp()
     mcp.start()
 
-    while not mcp.internal_state == State.Terminate and (not mcp.internal_state == State.ShutDown):
+    while mcp.internal_state == State.Running:
         time.sleep(1)
 
     if mcp.internal_state == State.ShutDown:
