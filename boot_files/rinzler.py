@@ -1,3 +1,5 @@
+import os
+import sys
 import threading
 from enum import Enum
 
@@ -33,6 +35,7 @@ class Mcp:
 
     # setup all required objects and threads for execution
     def __init__(self):
+        self.internal_state = State.Running.value
         # create all locks
         message_manager_lock = threading.Lock()
         router_lock = threading.Lock()
@@ -43,7 +46,6 @@ class Mcp:
         self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager(),
                                                        message_manager_lock)  # TODO change this to real Comms
         self.threads = list()
-        self.internal_state = State.Running
 
         # setup threads and place in a list
         router_thread = threading.Thread(target=self.router.start)
@@ -75,7 +77,7 @@ class Mcp:
     # locks are used to avoid deadlock
     # 2 locks: one for comms and one for router resources
     def input_output_loop(self, router_lock):
-        while not self.internal_state == State.ShutDown:
+        while self.internal_state == State.Running.value:
             # moves input from message manager to router
             if self.messenger.input_received:
                 destination = self.messenger.get_destination()
@@ -107,6 +109,7 @@ class State(Enum):
     Running = 0
     ShutDown = 1
     Terminate = 2
+    Restart = 3
 
 
 if __name__ == "__main__":
@@ -115,10 +118,13 @@ if __name__ == "__main__":
     mcp = Mcp()
     mcp.start()
 
-    while mcp.internal_state == State.Running:
+    while mcp.internal_state == State.Running.value:
         time.sleep(1)
 
-    if mcp.internal_state == State.ShutDown:
+    if mcp.internal_state == State.ShutDown.value or mcp.internal_state == State.Restart.value:
         mcp.wait()
+
+    if mcp.internal_state == State.Restart.value:
+        os.execv(sys.executable, [sys.executable, __file__] + sys.argv)
 
 

@@ -9,10 +9,11 @@ class McpCommandHandler:
 
     def execute(self, command):
         if command == "terminate":
-            self.mcp.internal_state = rinzler.State.Terminate
+            self.mcp.internal_state = rinzler.State.Terminate.value
 
         elif command == "shutdown":
-            self.__shutdown()
+            self.__shutdown_procedure()
+            self.mcp.internal_state = rinzler.State.ShutDown.value
 
         elif command == "hold":
             self.mcp.router.hold_module_execution = True
@@ -23,17 +24,20 @@ class McpCommandHandler:
         elif command == "help":
             self.mcp.messenger.send_to_user_text(self.__help())
 
+        elif command == "restart":
+            self.__shutdown_procedure()
+            self.mcp.internal_state = rinzler.State.Restart.value
+
         else:
             self.mcp.messenger.send_to_user_text("MCP command does not exist")
 
         return
 
-    def __shutdown(self):
+    def __shutdown_procedure(self):
         self.mcp.messenger.send_to_user_package("shuttingDown", datetime.now().strftime("%H:%M:%S"), 0, True)
         self.mcp.router.is_shut_down = True
         self.mcp.router.hold_module_execution = True
         self.mcp.messenger.is_shut_down = True
-        self.mcp.internal_state = rinzler.State.ShutDown
         return
 
     def __lights(self, command):
