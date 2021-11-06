@@ -12,10 +12,10 @@ class MessageManager:
     input_received = False
 
     # Wrap this class around a comms module
-    def __init__(self, comms, lock):
+    def __init__(self, comms):
         self.__comms = comms
         self.__comms.setup()
-        self.__lock = lock
+        self.__lock = threading.Lock()
 
     # Comms to MCP methods
     # loop for waiting for user input

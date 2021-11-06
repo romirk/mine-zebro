@@ -23,9 +23,9 @@ class Router:
     is_output_loaded = False
     is_shut_down = False
 
-    def __init__(self, lock):
+    def __init__(self):
         self.__list = Submodules()  # list of submodules
-        self.__lock = lock
+        self.lock = threading.Lock()
 
     # initialisation before entering listening loop
     def start(self):
@@ -60,42 +60,42 @@ class Router:
     #All functions that change attributes need to use lock to avoid deadlock
     #called before each command is executed
     def __prepare(self):
-        self.__lock.acquire()
+        self.lock.acquire()
         self.process_completed = False
         self.output = ""
         self.output_time = ""
         self.error = ""
         self.is_output_loaded = False
         self.hold_module_execution = False
-        self.__lock.release()
+        self.lock.release()
 
     #called after each command is executed
     def __clean_up(self):
-        self.__lock.acquire()
+        self.lock.acquire()
         self.__is_command_loaded = False
         self.__mcp_command = ""
         self.__server_id = ""
         self.process_completed = True
-        self.__lock.release()
+        self.lock.release()
 
     #called by active module to return data to mcp
     def send_data_to_mcp(self, output, error):
         while self.is_output_loaded:
             time.sleep(1)
-        self.__lock.acquire()
+        self.lock.acquire()
         self.is_output_loaded = True
         self.output = output
         self.output_time = datetime.now().strftime("%H:%M:%S")
         self.error = error
-        self.__lock.release()
+        self.lock.release()
 
     #called by mcp to load a command to be executed
     def load_command(self, command, id):
-        self.__lock.acquire()
+        self.lock.acquire()
         self.__mcp_command = command
         self.__server_id = id
         self.__is_command_loaded = True
-        self.__lock.release()
+        self.lock.release()
 
 
 

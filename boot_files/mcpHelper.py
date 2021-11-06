@@ -1,13 +1,15 @@
+import threading
+
 import rinzler
 from datetime import datetime
 
 
-class McpCommandHandler:
+class McpHelper:
 
     def __init__(self, mcp):
         self.mcp = mcp
 
-    def execute(self, command):
+    def handle_command(self, command):
         if command == "terminate":
             self.mcp.internal_state = rinzler.State.Terminate.value
 
@@ -58,3 +60,16 @@ class McpCommandHandler:
         text += " lightsON or OFF:  turns lights on or off respectively:\n"
 
         return text
+
+    def setup_router_thread(self):
+        router_thread = threading.Thread(target=self.mcp.router.start)
+        router_thread.setName("RouterThread")
+        self.mcp.threads.append(router_thread)
+
+    def setup_non_restartable_threads(self):
+        listen_to_user_thread = threading.Thread(target=self.mcp.messenger.listen_to_user)
+        in_out_thread = threading.Thread(target=self.mcp.input_output_loop)
+        listen_to_user_thread.setName("UserInputThread")
+        in_out_thread.setName("In/OutThread")
+        self.mcp.threads.append(listen_to_user_thread)
+        self.mcp.threads.append(in_out_thread)
