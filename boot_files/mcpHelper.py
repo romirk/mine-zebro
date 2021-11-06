@@ -53,6 +53,7 @@ class McpCommandHandler:
         text = " MCP commands that need no prefix:\n"
         text += " terminate:        force stops execution of the program immediately:\n"
         text += " shutdown:         stops execution safely by stopping all threads:\n"
+        text += " restart:          stops execution safely and restarts the program:\n"
         text += " hold:             stops execution of active module safely:\n"
         text += " lightsON or OFF:  turns lights on or off respectively:\n"
 

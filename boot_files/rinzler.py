@@ -125,6 +125,9 @@ if __name__ == "__main__":
         mcp.wait()
 
     if mcp.internal_state == State.Restart.value:
-        os.execv(sys.executable, [sys.executable, __file__] + sys.argv)
+        #TODO check stackoverflow why it works only in debug https://stackoverflow.com/questions/69864001/python-file-that-recursively-executes-itself
+        #os.execv(sys.executable, [sys.executable, __file__] + sys.argv)
+        os.system("Python rinzler.py")
+
 
 
