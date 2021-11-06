@@ -3,8 +3,10 @@ import threading
 import rinzler
 from datetime import datetime
 
+#Note all methods that receive parameters from commands must check if they are valid and if not send respond back to the user
 
 class McpHelper:
+    _command_not_found_string = "MCP command does not exist"
 
     def __init__(self, mcp):
         self.mcp = mcp
@@ -12,27 +14,44 @@ class McpHelper:
     def handle_command(self, command):
         if command == "terminate":
             self.mcp.internal_state = rinzler.State.Terminate.value
+            return
 
         elif command == "shutdown":
             self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.ShutDown.value
+            return
 
         elif command == "hold":
             self.mcp.router.hold_module_execution = True
+            return
 
         elif command.startswith("lights"):
             self.__lights(command)
+            return
 
         elif command == "help":
             self.mcp.messenger.send_to_user_text(self.__help())
+            return
 
         elif command == "restart":
             self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.Restart.value
+            return
+
+        elif command.startswith("fp="):
+            self.__change_frame_Period(command)
 
         else:
-            self.mcp.messenger.send_to_user_text("MCP command does not exist")
+            self.mcp.messenger.send_to_user_text(self._command_not_found_string)
 
+        return
+
+    def __change_frame_period(self, command):
+        try:
+            time = command.split("fp=")[1]
+            self.mcp.cameraManager.time_between_frames = float(time)
+        except:
+            self.mcp.messenger.send_to_user_text(self._command_not_found_string)
         return
 
     def __shutdown_procedure(self):
@@ -50,7 +69,7 @@ class McpHelper:
         elif command == "lightsOff".lower():
             self.mcp.messenger.send_to_user_text("lights" + str(False))
         else:
-            self.mcp.messenger.send_to_user_text("MCP command does not exist")
+            self.mcp.messenger.send_to_user_text(self._command_not_found_string)
 
     def __help(self):
         text = " MCP commands that need no prefix:\n"
@@ -59,6 +78,7 @@ class McpHelper:
         text += " restart:          stops execution safely and restarts the program:\n"
         text += " hold:             stops execution of active module safely:\n"
         text += " lightsON or OFF:  turns lights on or off respectively:\n"
+        text += " fp=:               change the period between each frame (in seconds)\n"
 
         return text
 

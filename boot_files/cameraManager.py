@@ -8,7 +8,7 @@ import time
 
 class CameraManager:
     is_shut_down = False
-    __sleep_interval = 5
+    time_between_frames = 5 #in seconds
     # variables shared between threads that need locks to write on are:
     __stored_frame = ""
     frame_ready = False
@@ -22,7 +22,7 @@ class CameraManager:
         while not self.is_shut_down:
             frame = self.__get_valid_input()
             self.__set_frame(frame)
-            time.sleep(self.__sleep_interval)
+            time.sleep(self.time_between_frames)
         return
 
     # Get valid input from the camera (check for crashes or errors)
