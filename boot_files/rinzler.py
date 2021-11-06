@@ -65,7 +65,6 @@ class Mcp:
             thread.start()
         return
 
-    # loop that connects router and comms
     # locks are used to avoid deadlock
     # 2 locks: one for comms and one for router resources
     def input_output_loop(self, router_lock):
@@ -93,14 +92,28 @@ class Mcp:
     def mcp_handle_command(self, command):
         if command == "terminate":
             self.internal_state = State.Terminate
+
         elif command == "shutdown":
             self.messenger.send_to_user_package("shuttingDown", datetime.now().strftime("%H:%M:%S"), 0, True)
             self.router.is_shut_down = True
             self.router.hold_module_execution = True
             self.messenger.is_shut_down = True
             self.internal_state = State.ShutDown
+
         elif command == "hold":
             self.router.hold_module_execution = True
+
+        elif command.startswith("lights") and len(command.split(" ")) == 2:
+            #TODO add lights functionality
+            if command.split(" ", 1)[1] == "on":
+                self.messenger.send_to_user_text("lights" + str(True))
+            elif command.split(" ", 1)[1] == "off":
+                self.messenger.send_to_user_text("lights" + str(False))
+            else:
+                self.messenger.send_to_user_text("MCP command does not exist")
+
+        else:
+            self.messenger.send_to_user_text("MCP command does not exist")
 
         return
 
