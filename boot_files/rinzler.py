@@ -1,53 +1,44 @@
-import threading
+import os
+from datetime import datetime
+from enum import Enum
+
 import router
 import messageManager
 import time
-import commsApi
 import commsDummy
-import dummyModule
-from datetime import datetime
+import mcpHelper
+import cameraManager
+import cameraDummy
 
-#TODO implement hold flag
-#TODO implement commands handled by MCP (terminate,shutdown)
-#TODO check out multiprocessing module
-# TODO access to this variables should be synchronous since used by 2 threads
-# https://www.youtube.com/watch?v=rQTJuCCCLVo
 
-#Boot precedure
-# 1)setup router and critical modules (COMMS)
-# 2)Create and start the router, cooms threads
-# 3)Load all submodules to the Router
+# TODO define error messages and exceptions for submodules
+# TODO replace threading router thread with a process (geekfreak multiprocessing)
+
+
+# Boot procedure
+# 1)setup all essential objects (router,messenger,camera,mcp_helper)
+# 2)setup all threads and place then in a list
+# 3)start all threads
 class Mcp:
     __sleep_interval = 1
+    # __status_sleep_interval = 0.5  # how often to check motors for overheating and battery
+    __status_sleep_interval = 0  # for now use zero so not to check the battery or the motors
 
-    #setup all required objects and threads for execution
+    # setup all required objects and threads for execution
     def __init__(self):
-        #initialise all objects
+        self.internal_state = State.Running.value
+
+        # initialise all objects
+        self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
         self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())  # TODO change this to real Comms
+        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy())  # TODO change this to real Camera
+
+        # setup threads and place in a list
         self.threads = list()
-        self.isShutDown = False
-
-        # create all locks
-        comms_lock = threading.Lock()
-        router_lock = threading.Lock()
-
-        #setup threads and place in a list
-        router_thread = threading.Thread(target=self.router.start,
-                                         args=(router_lock, ))
-        listen_to_user_thread = threading.Thread(target=self.messenger.listen_to_user,
-                                         args=(comms_lock, ))
-        in_out_thread = threading.Thread(target=self.input_output_loop,
-                                         args=(comms_lock, router_lock))
-        router_thread.setName("RouterThread")
-        listen_to_user_thread.setName("UserInputThread")
-        in_out_thread.setName("In/OutThread")
-        self.threads.append(router_thread)
-        self.threads.append(listen_to_user_thread)
-        self.threads.append(in_out_thread)
-
-        # TODO start all other modules here
-        self.router.add_module(dummyModule.DummyManager())
+        self.mcp_helper.setup_router_thread()
+        self.mcp_helper.setup_camera_thread()
+        self.mcp_helper.setup_non_restartable_threads()
         return
 
     # start all threads
@@ -57,48 +48,86 @@ class Mcp:
             thread.start()
         return
 
-    # loop that connects router and comms
-    # locks are used to avoid deadlock
-    # 2 locks: one for comms and one for router resources
-    def input_output_loop(self, comms_lock, router_lock):
-        while not self.isShutDown:
-            comms_lock.acquire()
-            if self.messenger.command_received:
+    # locks are used to avoid deadlock when accessing shared variables
+    def input_output_loop(self):
+        while self.internal_state == State.Running.value:
+
+            # move input from message manager to router or handle if mcp command
+            if self.messenger.input_received:
                 destination = self.messenger.get_destination()
                 command = self.messenger.get_command()
+                self.messenger.reset_input_received()
                 if destination == "mcp":
-                    self.mcp_handle_command(command)
+                    self.mcp_helper.handle_command(command)
                 else:
                     self.router.load_command(command, destination)
-                self.messenger.command_received = False
-            comms_lock.release()
 
-            router_lock.acquire()
+            # move output from router to message manager
             if self.router.is_output_loaded:
-                self.messenger.router_send_to_user(self.router.output, self.router.output_time,
-                                            self.router.error, self.router.process_completed)
+                self.router.lock.acquire()
+                self.messenger.send_to_user_package(self.router.output, self.router.output_time, self.router.error,
+                                                    self.router.process_completed)
                 self.router.is_output_loaded = False
-            router_lock.release()
+                self.router.lock.release()
+
+            # moves frame from cameraManager to user
+            if self.cameraManager.frame_ready:
+                frame = self.cameraManager.get_frame()
+                self.cameraManager.reset_frame_ready()
+                if len(frame) == 0:
+                    self.messenger.send_to_user_text("Frame could not be received")
+                else:
+                    # TODO replace with actual frame (str(frame))
+                    self.messenger.send_to_user_text("Frame received time: "
+                                                     + datetime.now().strftime("%H:%M:%S"))
 
             time.sleep(self.__sleep_interval)
         return
 
-    def mcp_handle_command(self, command):
-        if command == "terminate":
-            self.isShutDown = True
-        elif command == "shutdown":
-            self.messenger.mcp_send_to_user("shuttingDown", datetime.now().strftime("%H:%M:%S"))
-            self.router.is_shut_down = True
-            self.messenger.is_shut_down = True
-            self.isShutDown = True
+    # wait for all threads to finish before shutdown
+    def wait(self):
+        for thread in self.threads:
+            thread.join()
+        return
+
+    # loop that check battery status and if motors overheat
+    # note if status sleep interval is 0 then disabled
+    def status_loop(self):
+        battery_level = 100
+        while self.internal_state == State.Running.value and self.__status_sleep_interval > 0:
+            # TODO check for battery status
+            battery_level -= 5
+            if 20 > battery_level > 0:
+                self.messenger.send_to_user_text("WARNING => Battery:"
+                                                 + str(battery_level) + "%")
+            # TODO add check for overheating
+            time.sleep(self.__status_sleep_interval)
 
         return
 
+
+#Class shows all internal states mcp can be active in
+class State(Enum):
+    Running = 0
+    ShutDown = 1
+    Terminate = 2
+    Restart = 3
+
+
 if __name__ == "__main__":
-    print("rinzler start")
+    print("\nRINZLER STARTED")
 
     mcp = Mcp()
     mcp.start()
 
-    while not mcp.isShutDown:
+    #keep main thread busy until state changes
+    while mcp.internal_state == State.Running.value:
         time.sleep(1)
+
+    #wait for all threads to finish to shutdown safely
+    if mcp.internal_state == State.ShutDown.value or mcp.internal_state == State.Restart.value:
+        mcp.wait()
+
+    #command given to the terminal to restart __main__
+    if mcp.internal_state == State.Restart.value:
+        os.system("Python rinzler.py")
