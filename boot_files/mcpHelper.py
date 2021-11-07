@@ -1,5 +1,6 @@
 import threading
 import time
+import router
 
 import rinzler
 from datetime import datetime
@@ -47,6 +48,10 @@ class McpHelper:
             self.__camera(command)
             return
 
+        elif command == "reset":
+            self.__router_reset()
+            return
+
         else:
             self.mcp.messenger.send_to_user_text(self._command_not_found_string)
 
@@ -86,6 +91,7 @@ class McpHelper:
         text += " lightsON or OFF:  turns lights on or off respectively:\n"
         text += " cameraON or OFF:  turns camera on or off respectively:\n"
         text += " fp=:              change the period between each frame (in seconds)\n"
+        text += " reset:           resets all modules and router flags\n"
 
         return text
 
@@ -94,6 +100,7 @@ class McpHelper:
         router_thread.daemon = True
         router_thread.setName("RouterThread")
         self.mcp.threads.append(router_thread)
+        return router_thread
 
     def setup_camera_thread(self):
         camera_thread = threading.Thread(target=self.mcp.cameraManager.listen_to_camera)
@@ -122,6 +129,25 @@ class McpHelper:
             return
         else:
             self.mcp.messenger.send_to_user_text(self._command_not_found_string)
+
+    def __router_reset(self):
+        #find thread
+        for i in range(len(self.mcp.threads)):
+            if self.mcp.threads[i].name == "RouterThread":
+                thread = self.mcp.threads[i]
+        #set to off and wait
+        self.mcp.router.hold_module_execution = True
+        self.mcp.router.is_shut_down = True
+        self.mcp.messenger.send_to_user_text("router reset started")
+        while thread.is_alive():
+            time.sleep(1)
+        #remove thread and clear router object and give feedback
+        self.mcp.threads.remove(thread)
+        self.mcp.router.clear_modules_list()
+
+        self.setup_router_thread().start()
+        self.mcp.messenger.send_to_user_text("router reset successful")
+        return
 
     def setup_non_restartable_threads(self):
         listen_to_user_thread = threading.Thread(target=self.mcp.messenger.listen_to_user)

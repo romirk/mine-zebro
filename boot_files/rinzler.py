@@ -18,9 +18,8 @@ import cameraDummy
 # TODO define error messages and exceptions (use to implemented sanitation of inputs of methods in submodules array)
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
 # TODO autonomous checking of battery status & overheating motors
-# TODO add camera controls (off/on)
-# TODO replace threading with processing
-# TODO be able to restart camera and router threads immediatly
+# TODO be able to replace router and all modules
+# TODO replace threading router/camera with processing
 
 
 # Boot precedure
@@ -45,13 +44,6 @@ class Mcp:
         self.mcp_helper.setup_router_thread()
         self.mcp_helper.setup_camera_thread()
         self.mcp_helper.setup_non_restartable_threads()
-
-        self.add_modules_to_router()
-        return
-
-    def add_modules_to_router(self):
-        # TODO start all other modules here
-        self.router.add_module(dummyModule.DummyManager())
         return
 
     # start all threads
