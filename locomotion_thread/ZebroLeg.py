@@ -4,6 +4,9 @@ from time import sleep
 from locomotion_constants import *
 
 
+DEBUG=True
+
+
 #test if angle is within some range
 def angle_between(x,a,b): #assert a<=b
     while x>b:  x-=360 #ensure x is minimal
@@ -12,8 +15,10 @@ def angle_between(x,a,b): #assert a<=b
 
 #mostly meant for checking of centered range
 def abs_angle_difference(a,b):
-    return abs((b-a+180)%360-180) #convert difference to [-180,180] interval
+    return abs(angle_difference(a,b)) #convert difference to [-180,180] interval
 
+def angle_difference(a,b): #a-b
+    return (a-b+180)%360-180
 
 class ZebroLeg:
     def __init__(self, leg_num, bus, master):
@@ -81,6 +86,7 @@ class ZebroLeg:
 
         #variables for leg stuck detection
         self.prev_angle=self.current_angle
+        self.progress=0
         self.delta_time=1
         self.direction="f"
         self.LEG_STUCK_DELAY=50#1s #fixed allowed delay
@@ -133,15 +139,30 @@ class ZebroLeg:
 
     #check if leg is stuck by looking at the current and expected position and timing
     def isStuck(self,time):
+
+        
+        
         #method 1: check if the leg hasn't arrived in time
         if time-self.LEG_STUCK_DELAY>self.delta_time*self.LEG_STUCK_FACTOR: #leg is busy for a long time (obsolete, just for extra safety)
+
+            if DEBUG:
+                print("Leg %d"%self.leg_num)
+                print("Too much time passed:",time)
+                print(self.log)
+            
             return True
 
         #method 2: check if the leg is on the right track
         if self.direction=="f":
-            progress=(self.current_angle-self.prev_angle)%360
+            abs_progress=(self.current_angle-self.prev_angle)%360
         else:
-            progress=(self.prev_angle-self.current_angle)%360
+            abs_progress=(self.prev_angle-self.current_angle)%360
+
+        self.progress+=angle_difference(abs_progress,self.progress) #set progress to the nearest value of abs_progress to avoid overshoot/undershoot giving weird angles
+
+
+        if DEBUG:
+            self.log.append(dict(time=time,progress=self.progress,dt=self.delta_angle,da=self.delta_angle,angle=self.current_angle,prev=self.prev_angle,next=self.target_angle,bound=((time-self.LEG_STUCK_DELAY)*self.delta_angle)/(self.delta_time*self.LEG_STUCK_FACTOR)))
 
 
         #if progress < intended progress
@@ -152,7 +173,11 @@ class ZebroLeg:
         #speedf * progress/da < (time-offset)/dt
         #speedf * progress * dt < (time-offset) * da
         #if progress<time/self.delta_time*self.delta_angle: #leg hasn't progressed as much as it should have
-        if progress*self.delta_time*self.LEG_STUCK_FACTOR < (time-self.LEG_STUCK_DELAY)*(self.delta_angle): #0 angle difference means delta_time must be 0 as well, and it won't fail
+        if self.progress*self.delta_time*self.LEG_STUCK_FACTOR < (time-self.LEG_STUCK_DELAY)*(self.delta_angle): #0 angle difference means delta_time must be 0 as well, and it won't fail
+            if DEBUG:
+                print("Leg %d"%self.leg_num)
+                print("Leg got stuck: lagging behind too much")
+                print(self.log)
             return True
         return False
         
@@ -244,7 +269,7 @@ class ZebroLeg:
         #make sure time is a proper time (speed is within bounds)
         time_min=delta_angle/self.SPEED_MAX
         time_max=delta_angle/self.SPEED_MIN
-        print(f"leg:{self.leg_num}\tDA:{delta_angle}\tDT:{delta_time}\tDTN:{time_min}\tDTX:{time_max}")
+        if DEBUG:   print(f"leg:{self.leg_num}\tDA:{delta_angle}\tDT:{delta_time}\tDTN:{time_min}\tDTX:{time_max}")
         
         if delta_time>time_max or delta_time<time_min:
             self.master.returnf(self.master._warning("Improper leg time for leg %d corrected to fit angle difference"%self.leg_num))#print("Improper timing - corrected")
@@ -262,6 +287,7 @@ class ZebroLeg:
         #store command data for checking for stuck legs etc.
         self.direction=dir
         self.prev_angle=self.current_angle
+        self.progress=0
         self.delta_time=delta_time
         self.delta_angle=delta_angle
         self.target_angle=pos
@@ -269,6 +295,10 @@ class ZebroLeg:
 
         #moving so not relaxed (anymore)
         self.relaxed=False
+
+        #for debugging when leg got stuck
+        if DEBUG:
+            self.log=[]
 
 
 
