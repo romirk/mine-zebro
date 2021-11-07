@@ -1,11 +1,10 @@
 import threading
-import module
 import dummyModule
 import time
 from datetime import datetime
 
 
-# responsible for sending/ receiving messages between MCP and the software modules
+# responsible for sending/ receiving messages between MCP and the submodules
 # only one module can communicate with the MCP throughout the bus at a time thus only one connection used
 # Establishes connection between module(server) and MCP
 class Router:
@@ -37,7 +36,7 @@ class Router:
         self.__add_all_modules()
         self.__listen_to_commands()
 
-    # Given a module by MCP add to submodules
+    # Given a module by MCP add to submodules list
     def __add_module(self, module):
         if isinstance(module, module.__class__):
             module.set_router(self)
@@ -68,7 +67,7 @@ class Router:
                     module.execute(self.__mcp_command)  # blocking method
                     self.__clean_up()
 
-    # All functions that change attributes need to use lock to avoid deadlock
+    # Note: All functions that change attributes need to use lock to avoid deadlock
     # called before each command is executed
     def __prepare(self):
         self.lock.acquire()
@@ -114,6 +113,7 @@ class Router:
         return
 
 
+#list of submodules contained in the router
 class Submodules:
     __id_list = ["com", "loco", "dummy"]  # every module needs to implement a getter for their id
     __predefined_max = len(__id_list)  # should be equal to the max number of modules

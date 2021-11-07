@@ -1,17 +1,16 @@
 import time
 
-import commsApi
 import threading
 
 
+#Wrapper for comms that transfers messages between comms and mcp
 class MessageManager:
     is_shut_down = False
     __sleep_interval = 1
-    #variables shared between threads that need locks to write on are:
+    #variables shared that need locks to write on are:
     __stored_input = ""
     input_received = False
 
-    # Wrap this class around a comms module
     def __init__(self, comms):
         self.__comms = comms
         self.__comms.setup()
@@ -25,7 +24,7 @@ class MessageManager:
             self.__set_command(command)
             time.sleep(self.__sleep_interval)
 
-    #Get valid input from the comms
+    #Get valid input from comms
     def __get_valid_input(self):
         user_input = self.__comms.cin()  # blocking method
 

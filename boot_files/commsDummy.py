@@ -1,8 +1,7 @@
-from abc import ABC
 import commsApi
 
 
-#Module responsible for communication with user
+#comms Implementation using the terminal as input/output
 class CommsDummyManager(commsApi.AbstractComms):
 
     def setup(self):

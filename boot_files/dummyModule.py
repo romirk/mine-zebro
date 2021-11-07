@@ -1,9 +1,12 @@
 import time
-from abc import ABC
 import module
 
 
+# Example of module class
 class DummyManager(module.Module):
+
+    def get_id(self):
+        return "dummy"
 
     def help(self):
         text = super().help()
@@ -11,9 +14,6 @@ class DummyManager(module.Module):
         text += " loop:  Count from 0 until hold command given\n"
         self.send_to_mcp(text, 0)
         pass
-
-    def get_id(self):
-        return "dummy"
 
     def execute(self, command):
         super().execute(command)
@@ -51,4 +51,3 @@ class DummyManager(module.Module):
     def command_does_not_exist(self, command):
         super().command_does_not_exist(command)
         pass
-

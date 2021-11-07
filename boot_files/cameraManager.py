@@ -2,10 +2,11 @@ import copy
 import threading
 
 
-# Similar logic to messageManager
 import time
 
 
+# Wrapper for the camera that forwards frames from camera to mcp
+# Similar logic to messageManager
 class CameraManager:
     is_shut_down = False
     time_between_frames = 5 #in seconds
@@ -17,6 +18,7 @@ class CameraManager:
         self.__camera = camera
         self.__lock = threading.Lock()
 
+    #main loop that retrives frames
     def listen_to_camera(self):
         self.__camera.setup()
         while not self.is_shut_down:
@@ -45,6 +47,7 @@ class CameraManager:
         self.frame_ready = False
         self.__lock.release()
 
+    # getter for frames
     def get_frame(self):
         self.__lock.acquire()
         frame = copy.deepcopy(self.__stored_frame)

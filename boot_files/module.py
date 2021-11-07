@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-import router
 
 
 # Abstract class that all modules inherit from
+# See dummyModule.py for how example
 class Module(ABC):
 
-    #methods that first call super and then implmemented
+    #The following 3 methods first call super and add functionality
     @abstractmethod
     def get_id(self):
         pass
@@ -21,7 +21,7 @@ class Module(ABC):
     def execute(self, command):
         pass
 
-    #note the following implementations only need to call the super() method
+    #note the following implementations only need to call or return the super() method
     @abstractmethod
     def set_router(self, router):
         if not isinstance(router, router.__class__):

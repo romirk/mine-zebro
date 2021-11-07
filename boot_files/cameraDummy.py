@@ -4,11 +4,11 @@ import cameraApi
 import cv2
 
 
+# abstractCamera implementation using computer webcam
 # Getting camera access using python
 # https://www.youtube.com/watch?v=ezAQvAN1xnQ
 
 class CameraDummy(cameraApi.AbstractCamera):
-    __sleep_interval = 0.5
 
     def setup(self):
         self.vc = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -24,14 +24,16 @@ class CameraDummy(cameraApi.AbstractCamera):
 
         return rval
 
+    #getter
     def get_frame(self):
         return self.frame
 
+    #turn camera off
     def exit(self):
         self.vc.release()
         return
 
-    #displays given frame
+    #NOT used //displays given frame
     def show_frame(self):
         while True:
             cv2.imshow("capture", self.frame) #show what is captured
