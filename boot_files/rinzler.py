@@ -6,7 +6,7 @@ import router
 import messageManager
 import time
 import commsApi
-import commsDummy
+import communicationModule
 import mcpHelper
 import dummyModule
 import cameraManager
@@ -37,7 +37,7 @@ class Mcp:
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
-        self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())  # TODO change this to real Comms
+        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
         self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy())  # TODO change this to real Camera
 
         # setup threads and place in a list
