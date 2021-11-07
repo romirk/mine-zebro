@@ -15,14 +15,15 @@ class CameraManager:
 
     def __init__(self, camera):
         self.__camera = camera
-        self.__camera.setup()
         self.__lock = threading.Lock()
 
     def listen_to_camera(self):
+        self.__camera.setup()
         while not self.is_shut_down:
             frame = self.__get_valid_input()
             self.__set_frame(frame)
             time.sleep(self.time_between_frames)
+        self.__camera.exit()
         return
 
     # Get valid input from the camera (check for crashes or errors)

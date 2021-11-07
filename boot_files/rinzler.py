@@ -18,7 +18,7 @@ import cameraDummy
 # TODO define error messages and exceptions (use to implemented sanitation of inputs of methods in submodules array)
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
 # TODO autonomous checking of battery status & overheating motors
-# TODO add camera controls (frame rate, off/on)
+# TODO add camera controls (off/on)
 # TODO replace threading with processing
 # TODO be able to restart camera and router threads immediatly
 
@@ -110,7 +110,7 @@ class State(Enum):
 
 
 if __name__ == "__main__":
-    print("rinzler start")
+    print("\nRINZLER STARTED")
 
     mcp = Mcp()
     mcp.start()

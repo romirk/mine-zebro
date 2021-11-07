@@ -9,10 +9,10 @@ import cv2
 
 class CameraDummy(cameraApi.AbstractCamera):
     __sleep_interval = 0.5
-    frame = ""
-    vc = cv2.VideoCapture(0)
 
     def setup(self):
+        self.vc = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.frame = ""
         return
 
     #gets a single frame from webcam
@@ -26,6 +26,10 @@ class CameraDummy(cameraApi.AbstractCamera):
 
     def get_frame(self):
         return self.frame
+
+    def exit(self):
+        self.vc.release()
+        return
 
     #displays given frame
     def show_frame(self):
@@ -41,7 +45,11 @@ if __name__ == '__main__':
     #Test method
     dummy = CameraDummy()
     #dummy.get_frames()
-    if dummy.get_frame():
+    if dummy.frame_capture():
         print(dummy.frame)
         dummy.show_frame()
+
+    dummy.exit()
+    while True:
+        time.sleep(1)
 

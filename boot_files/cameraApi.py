@@ -15,3 +15,7 @@ class AbstractCamera(ABC):
     @abstractmethod
     def get_frame(self):
         pass
+
+    @abstractmethod
+    def exit(self):
+        pass
