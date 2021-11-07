@@ -17,9 +17,8 @@ import cameraDummy
 
 # TODO define error messages and exceptions (use to implemented sanitation of inputs of methods in submodules array)
 # https://www.youtube.com/watch?v=rQTJuCCCLVo
-# TODO autonomous checking of battery status & overheating motors
-# TODO be able to replace router and all modules
-# TODO replace threading router/camera with processing
+# TODO add documentation
+# TODO replace threading router thread with a process (geekfreak multiprocessing)
 
 
 # Boot precedure
@@ -28,6 +27,8 @@ import cameraDummy
 # 3)Load all submodules to the Router
 class Mcp:
     __sleep_interval = 1
+    #__status_sleep_interval = 0.5  # how often to check motors for overheating and battery
+    __status_sleep_interval = 0 # for now use zero so not to check the battery or the motors
 
     # setup all required objects and threads for execution
     def __init__(self):
@@ -82,7 +83,9 @@ class Mcp:
                 if len(frame) == 0:
                     self.messenger.send_to_user_text("Frame could not be received")
                 else:
-                    self.messenger.send_to_user_text("Frame received time: " + datetime.now().strftime("%H:%M:%S")) #TODO replace with actual frame (str(frame))
+                    # TODO replace with actual frame (str(frame))
+                    self.messenger.send_to_user_text("Frame received time: "
+                                                     + datetime.now().strftime("%H:%M:%S"))
 
             time.sleep(self.__sleep_interval)
         return
@@ -91,6 +94,20 @@ class Mcp:
     def wait(self):
         for thread in self.threads:
             thread.join()
+        return
+
+    #loop that check battery status and if motors overheat
+    def status_loop(self):
+        battery_level = 100
+        while self.internal_state == State.Running.value and self.__status_sleep_interval > 0:
+            # TODO check for battery status
+            battery_level -= 5
+            if 20 > battery_level > 0:
+                self.messenger.send_to_user_text("WARNING => Battery:"
+                                                 + str(battery_level) + "%")
+            # TODO add check for overheating
+            time.sleep(self.__status_sleep_interval)
+
         return
 
 
@@ -114,9 +131,4 @@ if __name__ == "__main__":
         mcp.wait()
 
     if mcp.internal_state == State.Restart.value:
-        #TODO check stackoverflow why it works only in debug https://stackoverflow.com/questions/69864001/python-file-that-recursively-executes-itself
-        #os.execv(sys.executable, [sys.executable, __file__] + sys.argv)
         os.system("Python rinzler.py")
-
-
-

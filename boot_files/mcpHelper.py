@@ -91,7 +91,7 @@ class McpHelper:
         text += " lightsON or OFF:  turns lights on or off respectively:\n"
         text += " cameraON or OFF:  turns camera on or off respectively:\n"
         text += " fp=:              change the period between each frame (in seconds)\n"
-        text += " reset:           resets all modules and router flags\n"
+        text += " reset:            resets all modules and router flags\n"
 
         return text
 
@@ -116,15 +116,14 @@ class McpHelper:
 
         elif command == "cameraOff".lower():
             #find thread
-            for i in range(len(self.mcp.threads)):
-                if self.mcp.threads[i].name == "CameraThread":
-                    thread = self.mcp.threads[i]
-            #set to off and wait
-            self.mcp.cameraManager.is_shut_down = True
-            while thread.is_alive():
-                time.sleep(1)
-            #remove and give feedback
-            self.mcp.threads.remove(thread)
+            for thread in self.mcp.threads:
+                if thread.name == "CameraThread":
+                    #set to off and wait
+                    self.mcp.cameraManager.is_shut_down = True
+                    while thread.is_alive():
+                        time.sleep(1)
+                    #remove and give feedback
+                    self.mcp.threads.remove(thread)
             self.mcp.messenger.send_to_user_text("camera is off")
             return
         else:
@@ -132,21 +131,20 @@ class McpHelper:
 
     def __router_reset(self):
         #find thread
-        for i in range(len(self.mcp.threads)):
-            if self.mcp.threads[i].name == "RouterThread":
-                thread = self.mcp.threads[i]
-        #set to off and wait
-        self.mcp.router.hold_module_execution = True
-        self.mcp.router.is_shut_down = True
-        self.mcp.messenger.send_to_user_text("router reset started")
-        while thread.is_alive():
-            time.sleep(1)
-        #remove thread and clear router object and give feedback
-        self.mcp.threads.remove(thread)
-        self.mcp.router.clear_modules_list()
+        for thread in self.mcp.threads:
+            if thread.name == "RouterThread":
+                #set to off and wait
+                self.mcp.router.hold_module_execution = True
+                self.mcp.router.is_shut_down = True
+                self.mcp.messenger.send_to_user_text("router reset started")
+                while thread.is_alive():
+                    time.sleep(1)
+                #remove thread and clear router object and give feedback
+                self.mcp.threads.remove(thread)
+                self.mcp.router.clear_modules_list()
 
-        self.setup_router_thread().start()
-        self.mcp.messenger.send_to_user_text("router reset successful")
+                self.setup_router_thread().start()
+                self.mcp.messenger.send_to_user_text("router reset successful")
         return
 
     def setup_non_restartable_threads(self):
@@ -157,3 +155,9 @@ class McpHelper:
         in_out_thread = threading.Thread(target=self.mcp.input_output_loop)
         in_out_thread.setName("In/OutThread")
         self.mcp.threads.append(in_out_thread)
+
+        status_thread = threading.Thread(target=self.mcp.status_loop)
+        status_thread.setName("StatusThread")
+        self.mcp.threads.append(status_thread)
+
+        return
