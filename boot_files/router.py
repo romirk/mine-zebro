@@ -28,11 +28,10 @@ class Router:
 
     def __init__(self):
         self.lock = threading.Lock()
-        self.__process_lock = multiprocessing.Lock()
 
     # initialisation before entering listening loop
     def start(self):
-        self.send_text_to_user("Router has started")
+        self.__send_text_to_user("Router has started")
         self.is_shut_down = False
         self.__listen_to_commands()
 
@@ -45,32 +44,31 @@ class Router:
             else:
                 # else execute
                 output = Array('i', 100)
-                is_output_loaded = Value(ctypes.c_bool, False)
+                is_output_loaded = Value('i', 0)
                 hold_process = Value(ctypes.c_bool, False)
                 module_thread: Process = Process(target=execute,
                                                  args=(self.__server_id,
                                                        self.__mcp_command,
                                                        output,
                                                        is_output_loaded,
-                                                       hold_process,
-                                                       self.__process_lock,))
+                                                       hold_process,))
                 module_thread.name = "module_thread"
                 module_thread.daemon = True
 
                 self.__prepare()
 
-                module_thread.run()  # start module process
+                module_thread.start()  # start module process
                 while module_thread.is_alive():
-                    if is_output_loaded.value:
-                        self.send_array_to_user(output)
-                        is_output_loaded.value = False
+                    if is_output_loaded.value == 1:
+                        self.__send_array_to_user(output)
+                        is_output_loaded.value = 0
                     else:
                         time.sleep(self.__sleep_interval)
 
                 # check after process finished if anything loaded while sleeping
-                if is_output_loaded.value:
-                    self.send_array_to_user(output)
-                    is_output_loaded.value = False
+                if is_output_loaded.value == 1:
+                    self.__send_array_to_user(output)
+                    is_output_loaded.value = 0
 
                 self.__clean_up()
         return
@@ -92,8 +90,8 @@ class Router:
         self.__server_id = ""
         self.lock.release()
 
-    # called by active module to return data to mcp
-    def send_text_to_user(self, output):
+    # return a text output to the user
+    def __send_text_to_user(self, output):
         while self.is_output_loaded:
             time.sleep(1)
         self.lock.acquire()
@@ -101,12 +99,12 @@ class Router:
         self.output = output
         self.lock.release()
 
-    # called by active module to return data to mcp
-    def send_array_to_user(self, output: SynchronizedString):
+    # transform a array of characters into a string and send to user
+    def __send_array_to_user(self, output: SynchronizedString):
         output.acquire()
         text = array_to_string(output)
         output.release()
-        self.send_text_to_user(text)
+        self.__send_text_to_user(text)
 
     # called by mcp to load a command to be executed
     def load_command(self, command, id):
@@ -117,9 +115,10 @@ class Router:
         self.lock.release()
 
 
-def execute(destination, command, output_array, is_output_loaded, hold_process, process_lock):
+#process created by the router runs here
+def execute(destination, command, output_array, is_output_loaded, hold_process):
     print("Process started")
-    server_module = get_module(destination, output_array)
+    server_module = __get_module(destination, output_array, is_output_loaded)
     if server_module == "":
         string_to_array("No such module", output_array)
         is_output_loaded.value = True
@@ -130,23 +129,25 @@ def execute(destination, command, output_array, is_output_loaded, hold_process, 
 
 
 #transforms a string into an array
-def string_to_array(string, output_array):
-    for i in range(min(len(output_array), len(string))):
-        output_array[i] = ord(string[i])
+def string_to_array(string, array):
+    for i in range(min(len(array), len(string))):
+        array[i] = ord(string[i])
 
 
 #transforms an array into a string
-def array_to_string(output_array):
+def array_to_string(array):
     result = ""
-    for i in range(len(output_array)):
-        if 126 >= output_array[i] >= 32:
-            result += chr(output_array[i])
+    for i in range(len(array)):
+        #avoid null characters
+        if 126 >= array[i] >= 32:
+            result += chr(array[i])
     return result
 
 
-def get_module(destination, output_array):
+#retrive module #TODO add all modules here
+def __get_module(destination, output_array, is_output_loaded):
     if destination == "dummy":
-        return dummyModule.DummyManager(output_array)
+        return dummyModule.DummyManager(output_array, is_output_loaded)
 
     elif destination == "loco":
         return

@@ -5,8 +5,8 @@ import module
 # Example of module class
 class DummyManager(module.Module):
 
-    def __init__(self, output_array):
-        super().__init__(output_array)
+    def __init__(self, output_array, is_output_loaded):
+        super().__init__(output_array, is_output_loaded)
         pass
 
     def get_id(self):

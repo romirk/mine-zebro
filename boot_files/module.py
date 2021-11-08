@@ -1,4 +1,6 @@
+import time
 from abc import ABC, abstractmethod
+import router
 
 
 # Abstract class that all modules inherit from
@@ -6,8 +8,9 @@ from abc import ABC, abstractmethod
 class Module(ABC):
 
     @abstractmethod
-    def __init__(self, output_array):
+    def __init__(self, output_array, is_output_loaded):
         self.output_array = output_array
+        self.is_output_loaded = is_output_loaded
 
     #The following 3 methods first call super and add functionality
     @abstractmethod
@@ -28,7 +31,10 @@ class Module(ABC):
     @abstractmethod
     #method delivers data to mcp use super().send_to_mcp to execute
     def send_to_mcp(self, output):
-        self.output_array = list(output[:len(self.output_array)])
+        while self.is_output_loaded.value == 1:
+            time.sleep(0.5)
+        router.string_to_array(str(output), self.output_array)
+        self.is_output_loaded.value = 1
         pass
 
     @abstractmethod
