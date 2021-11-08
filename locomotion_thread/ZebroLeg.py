@@ -69,7 +69,7 @@ class ZebroLeg:
             self.DELTA_SIDE=0
 
         #position
-        self.current_angle = self.target_angle = self.readAngle()
+        self.current_angle = self.target_angle = 0#self.readAngle()
 
         #temperature
         self.MAX_TEMP=45
@@ -92,6 +92,9 @@ class ZebroLeg:
         self.LEG_STUCK_DELAY=30#3/5s #fixed allowed delay
         self.LEG_STUCK_FACTOR=1.5 #scalor for progress/speed (i.e. 2 means it will be marked stuck if the leg moves slower than half speed)
 
+    def init(self):
+        self.prev_angle=self.current_angle=self.target_angle=self.readAngle()
+
     #pick right i2c address
     def _address(self):
         leg_address = {
@@ -111,6 +114,16 @@ class ZebroLeg:
 
         self.current_angle-=self.DELTA_SIDE #correction for right side legs
         self.current_angle %= 360
+
+        #calculate progress so it can be used in isDone and isStuck
+        if self.direction=="f":
+            abs_progress=(self.current_angle-self.prev_angle)%360
+        else:
+            abs_progress=(self.prev_angle-self.current_angle)%360
+
+        self.progress+=angle_difference(abs_progress,self.progress) #set progress to the nearest value of abs_progress mod 360
+
+        
         return self.current_angle
 
     #measure motor temperature
@@ -132,7 +145,7 @@ class ZebroLeg:
 
     #check whether leg has finished its movement
     def isDone(self):
-        return self.relaxed or (not self.forced and not self.enabled) or (abs_angle_difference(self.current_angle,self.target_angle)<=self.DELTA_ANGLE)
+        return self.relaxed or (not self.forced and not self.enabled) or (abs_angle_difference(self.current_angle,self.target_angle)<=self.DELTA_ANGLE) or self.progress>self.delta_angle
         #if the leg is relaxed, it has not target so it is always in place
         #if the leg is disabled, neglect it, unless force was specified
         #else, check whether the angle is close to the target angle
@@ -153,16 +166,10 @@ class ZebroLeg:
             return True
 
         #method 2: check if the leg is on the right track
-        if self.direction=="f":
-            abs_progress=(self.current_angle-self.prev_angle)%360
-        else:
-            abs_progress=(self.prev_angle-self.current_angle)%360
-
-        self.progress+=angle_difference(abs_progress,self.progress) #set progress to the nearest value of abs_progress to avoid overshoot/undershoot giving weird angles
-
+        #progress is calculated when getting leg position
 
         if DEBUG:
-            self.log.append(dict(time=time,progress=self.progress,dt=self.delta_angle,da=self.delta_angle,angle=self.current_angle,prev=self.prev_angle,next=self.target_angle,bound=((time-self.LEG_STUCK_DELAY)*self.delta_angle)/(self.delta_time*self.LEG_STUCK_FACTOR)))
+            self.log.append(dict(time=time,progress=self.progress,dt=self.delta_time,da=self.delta_angle,angle=self.current_angle,prev=self.prev_angle,next=self.target_angle,bound=((time-self.LEG_STUCK_DELAY)*self.delta_angle)/(self.delta_time*self.LEG_STUCK_FACTOR)))
 
 
         #if progress < intended progress

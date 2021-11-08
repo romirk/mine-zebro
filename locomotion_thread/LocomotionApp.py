@@ -1,4 +1,27 @@
 
+
+"""
+USAGE
+
+initialisation:
+    loc=LocomotionApp(bus=I2Cbus, returnfunc=outputfunction, checkhaltfunc=check_halt_flag)
+    loc.init()#uses I2C bus
+
+run command:
+    loc.execute(commandstring)
+
+get help:
+    loc.help()
+
+get prefix:
+    loc.get_id()
+
+
+
+
+"""
+
+
 #Locomotion app to manage all locomotion i2c related commands
 
 
@@ -98,6 +121,11 @@ from time import sleep
 import traceback
 
 
+
+with open("commands.txt","r") as f:
+    HELPTEXT=f.read()
+
+
 GO_DIRECTIONS=[l.split("/") for l in """\
 fd/forward/forwards/f
 bd/back/backward/backwards
@@ -110,7 +138,7 @@ bow/z
 relax/r""".split("\n")]
 
 class LocomotionApp:
-    def __init__(self,bus,returnfunc,checkhaltfunc):
+    def __init__(self,bus=bus,returnfunc=print,checkhaltfunc=int):
         self.bus=bus
         self.returnf=returnfunc #function for sending back data and errors
         self.checkhalt=checkhaltfunc #function to check halt flag. returns True if the robot should stop
@@ -125,9 +153,24 @@ class LocomotionApp:
         self.laststep="custom"
 
 
+    def init(self):
+
+        for leg in self.legs:
+            leg.init()
+        
         ####run on startup??
         self.standUp()
         sleep(1.1)  # must be larger than 1, as each leg gets a a 1 sec hardcoded time in standUp function
+
+
+    #for router: give prefix
+    def get_id(self):
+        return "loc"
+
+    #return helptext
+    def help(self):
+        return HELPTEXT
+
 
 
     #function for executing commands
@@ -410,12 +453,18 @@ class LocomotionApp:
             return self._error("Invalid command: %s"%err)
         return self._error("Invalid command")
     
-    def _error(self,err="",data={}):
-        return ((1,err),data)
-    def _warning(self,err="",data={}):
-        return ((2,err),data)
-    def _data(self,data):
-        return (0,data)
+    def _error(self,err,data={}):
+        if data:
+            return dict(code=2,msg=err,data=data)
+        else:
+            return dict(code=2,msg=err)
+    def _warning(self,err,data={}):
+        if data:
+            return dict(code=1,msg=err,data=data)
+        else:
+            return dict(code=1,msg=err)
+    def _data(self,data,msg="Sent data"):
+        return dict(code=0,msg=msg,data)
 
     #used for initialisation
     def standUp(self):
@@ -629,6 +678,7 @@ if __name__=="__main__":
     
     
     loc=LocomotionApp(bus,pprint,int)
+    loc.init()
     print("Locomotion app testing environment - enter locomotion commands or 'exit'")
     while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
         i=input("> ").strip()
