@@ -464,7 +464,7 @@ class LocomotionApp:
         else:
             return dict(code=1,msg=err)
     def _data(self,data,msg="Sent data"):
-        return dict(code=0,msg=msg,data)
+        return dict(code=0,msg=msg,data=data)
 
     #used for initialisation
     def standUp(self):
