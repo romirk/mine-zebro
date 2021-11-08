@@ -591,8 +591,8 @@ class LocomotionApp:
                     
                     
                 
-            t+=2 #update time
-            sleep(2*0.02)#total delay will be slightly worse but that's ok
+            t+=3 #update time
+            sleep(3*0.02)#total delay will be slightly worse but that's ok
 
         #get new information on legs now that motions have ended, about all relevant motors
         self.get([sum([list(setting["motors"]) for setting in args],[]),dict(position=True,temperature=True,state=True,relaxed=True)])
