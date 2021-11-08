@@ -65,8 +65,7 @@ class Mcp:
             # move output from router to message manager
             if self.router.is_output_loaded:
                 self.router.lock.acquire()
-                self.messenger.send_to_user_package(self.router.output, self.router.output_time, self.router.error,
-                                                    self.router.process_completed)
+                self.messenger.send_to_user_text(self.router.output)
                 self.router.is_output_loaded = False
                 self.router.lock.release()
 

@@ -8,7 +8,7 @@ import time
 # Wrapper for the camera that forwards frames from camera to mcp
 # Similar logic to messageManager
 class CameraManager:
-    is_shut_down = False
+    is_shut_down = True
     time_between_frames = 5 #in seconds
     # variables shared between threads that need locks to write on are:
     __stored_frame = ""

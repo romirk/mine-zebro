@@ -1,5 +1,11 @@
+import ctypes
+import multiprocessing
+from multiprocessing import Process, Manager, Value, Array
 import threading
+from multiprocessing.sharedctypes import SynchronizedString
+
 import dummyModule
+import module
 import time
 from datetime import datetime
 
@@ -16,39 +22,19 @@ class Router:
 
     # Public Variables & Flags
     output = ""  # output data from modules read by MCP from here
-    output_time = ""  # time output variable has changed
-    error = ""  # error message placed here
-    process_completed = False
     is_output_loaded = False
     is_shut_down = False
     hold_module_execution = False
 
     def __init__(self):
-        self.__list = Submodules()  # list of submodules
         self.lock = threading.Lock()
+        self.__process_lock = multiprocessing.Lock()
 
     # initialisation before entering listening loop
     def start(self):
-        self.send_data_to_mcp("Router has started", 0)
-        self.__clean_up()
-        self.__prepare()
+        self.send_text_to_user("Router has started")
         self.is_shut_down = False
-        self.__add_all_modules()
         self.__listen_to_commands()
-
-    # Given a module by MCP add to submodules list
-    def __add_module(self, module):
-        if isinstance(module, module.__class__):
-            module.set_router(self)
-            self.__list.add_by_id(module.get_id(), module)
-            return
-        raise Exception("Can't add non_module object to submodule list")
-
-    # Use this method to add all modules to the current router instance
-    def __add_all_modules(self):
-        # TODO start all other modules here
-        self.__add_module(dummyModule.DummyManager())
-        return
 
     # loop until command given by mcp (if no command sleep to an appropriate amount of time)
     def __listen_to_commands(self):
@@ -58,23 +44,42 @@ class Router:
                 time.sleep(self.__sleep_interval)
             else:
                 # else execute
-                if not self.__list.check_id(self.__server_id):
-                    self.send_data_to_mcp("Router:Failed to fetch module with id: " + str(self.__server_id), -1)
-                    self.__clean_up()
-                else:
-                    module = self.__list.get_by_id(self.__server_id)
-                    self.__prepare()
-                    module.execute(self.__mcp_command)  # blocking method
-                    self.__clean_up()
+                output = Array('i', 100)
+                is_output_loaded = Value(ctypes.c_bool, False)
+                hold_process = Value(ctypes.c_bool, False)
+                module_thread: Process = Process(target=execute,
+                                                 args=(self.__server_id,
+                                                       self.__mcp_command,
+                                                       output,
+                                                       is_output_loaded,
+                                                       hold_process,
+                                                       self.__process_lock,))
+                module_thread.name = "module_thread"
+                module_thread.daemon = True
+
+                self.__prepare()
+
+                module_thread.run()  # start module process
+                while module_thread.is_alive():
+                    if is_output_loaded.value:
+                        self.send_array_to_user(output)
+                        is_output_loaded.value = False
+                    else:
+                        time.sleep(self.__sleep_interval)
+
+                # check after process finished if anything loaded while sleeping
+                if is_output_loaded.value:
+                    self.send_array_to_user(output)
+                    is_output_loaded.value = False
+
+                self.__clean_up()
+        return
 
     # Note: All functions that change attributes need to use lock to avoid deadlock
     # called before each command is executed
     def __prepare(self):
         self.lock.acquire()
-        self.process_completed = False
         self.output = ""
-        self.output_time = ""
-        self.error = ""
         self.is_output_loaded = False
         self.hold_module_execution = False
         self.lock.release()
@@ -85,19 +90,23 @@ class Router:
         self.__is_command_loaded = False
         self.__mcp_command = ""
         self.__server_id = ""
-        self.process_completed = True
         self.lock.release()
 
     # called by active module to return data to mcp
-    def send_data_to_mcp(self, output, error):
+    def send_text_to_user(self, output):
         while self.is_output_loaded:
             time.sleep(1)
         self.lock.acquire()
         self.is_output_loaded = True
         self.output = output
-        self.output_time = datetime.now().strftime("%H:%M:%S")
-        self.error = error
         self.lock.release()
+
+    # called by active module to return data to mcp
+    def send_array_to_user(self, output: SynchronizedString):
+        output.acquire()
+        text = array_to_string(output)
+        output.release()
+        self.send_text_to_user(text)
 
     # called by mcp to load a command to be executed
     def load_command(self, command, id):
@@ -107,47 +116,42 @@ class Router:
         self.__is_command_loaded = True
         self.lock.release()
 
-    # Use this method to remove all modules from the list
-    def clear_modules_list(self):
-        self.__list.clear()
+
+def execute(destination, command, output_array, is_output_loaded, hold_process, process_lock):
+    print("Process started")
+    server_module = get_module(destination, output_array)
+    if server_module == "":
+        string_to_array("No such module", output_array)
+        is_output_loaded.value = True
+        return
+    else:
+        server_module.execute(command)
         return
 
 
-#list of submodules contained in the router
-class Submodules:
-    __id_list = ["com", "loco", "dummy"]  # every module needs to implement a getter for their id
-    __predefined_max = len(__id_list)  # should be equal to the max number of modules
-    __size = 0
+#transforms a string into an array
+def string_to_array(string, output_array):
+    for i in range(min(len(output_array), len(string))):
+        output_array[i] = ord(string[i])
 
-    # List of submodules that is stored by the router
-    def __init__(self):
-        self.__list = [-1] * self.__predefined_max
 
-    def check_id(self, id):
-        return self.__id_list.__contains__(id)
+#transforms an array into a string
+def array_to_string(output_array):
+    result = ""
+    for i in range(len(output_array)):
+        if 126 >= output_array[i] >= 32:
+            result += chr(output_array[i])
+    return result
 
-    def is_in_list(self, module):
-        return self.__list.__contains__(module)
 
-    # Used for adding modules
-    def __map_id_to_index(self, id):
-        if self.check_id(id):
-            return self.__id_list.index(id)
-        raise Exception("Submodule list: id <" + id + "> does not exist")
+def get_module(destination, output_array):
+    if destination == "dummy":
+        return dummyModule.DummyManager(output_array)
 
-    def add_by_id(self, id, module):
-        index = self.__map_id_to_index(id)
-        if not self.is_in_list(module):
-            self.__size += 1
-            return self.__list.insert(index, module)
-        else:
-            raise Exception("Submodule list: Module is already loaded of given id")
+    elif destination == "loco":
+        return
 
-    def clear(self):
-        self.__size = 0
-        self.__list.clear()
-        self.__list = [-1] * self.__predefined_max
-
-    # Getter for modules
-    def get_by_id(self, id):
-        return self.__list[self.__map_id_to_index(id)]
+    elif destination == "com":
+        return
+    else:
+        return ""
