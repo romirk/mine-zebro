@@ -684,5 +684,10 @@ if __name__=="__main__":
         i=input("> ").strip()
         if i=="exit":
             break
-        if i:
+        elif i.startswith("read"):
+            l=int(i.split()[1])
+            for x in range(100):
+                print(loc.legs[l-1].readAngle())
+                sleep(.5)
+        elif i:
             loc.execute(i)
