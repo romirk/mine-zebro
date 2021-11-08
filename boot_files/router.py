@@ -18,7 +18,7 @@ class Router:
     __listen_for_commands_interval = 3  # used by thread to sleep after seeing no command was given (in seconds)
     __listen_for_module_output_interval = 1
     __wait_for_module_to_join = 5
-    __is_command_loaded = False
+    is_command_loaded = False
     __mcp_command = ""
     __server_id = ""
 
@@ -41,7 +41,7 @@ class Router:
     def __listen_to_commands(self):
         while not self.is_shut_down:
             # If no command to execute sleep
-            if not self.__is_command_loaded:
+            if not self.is_command_loaded:
                 time.sleep(self.__listen_for_commands_interval)
             else:
                 # else execute
@@ -92,7 +92,7 @@ class Router:
     # called after each command is executed
     def __clean_up(self):
         self.lock.acquire()
-        self.__is_command_loaded = False
+        self.is_command_loaded = False
         self.__mcp_command = ""
         self.__server_id = ""
         self.lock.release()
@@ -118,7 +118,7 @@ class Router:
         self.lock.acquire()
         self.__mcp_command = command
         self.__server_id = id
-        self.__is_command_loaded = True
+        self.is_command_loaded = True
         self.lock.release()
 
 

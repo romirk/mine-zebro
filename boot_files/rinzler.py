@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 from datetime import datetime
 from enum import Enum
@@ -13,7 +14,7 @@ import cameraDummy
 
 # TODO define error messages and exceptions for submodules
 # TODO replace threading router thread with a process (geekfreak multiprocessing)
-
+# https://stackoverflow.com/questions/69884166/multiprocessing-in-python-blocked-by-terminal-input
 
 # Boot procedure
 # 1)setup all essential objects (router,messenger,camera,mcp_helper)
@@ -60,7 +61,10 @@ class Mcp:
                 if destination == "mcp":
                     self.mcp_helper.handle_command(command)
                 else:
-                    self.router.load_command(command, destination)
+                    if not self.router.is_command_loaded:
+                        self.router.load_command(command, destination)
+                    else:
+                        self.messenger.send_to_user_text("Only 1 submodule command can be executed at a time")
 
             # move output from router to message manager
             if self.router.is_output_loaded:
@@ -114,6 +118,7 @@ class State(Enum):
 
 
 if __name__ == "__main__":
+    multiprocessing.set_start_method("spawn") #replace with forkserver (only available for linux)
     print("\nRINZLER STARTED")
 
     mcp = Mcp()
