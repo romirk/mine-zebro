@@ -21,7 +21,7 @@ def angle_difference(a,b): #a-b
     return (a-b+180)%360-180
 
 class ZebroLeg:
-    def __init__(self, leg_num, None, master):
+    def __init__(self, leg_num, bus, master):
         self.leg_num = leg_num+1 #own num is 1-based, init thing is 0-based
         self.address = self._address()
         self.bus=bus

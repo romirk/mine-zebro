@@ -138,7 +138,7 @@ bow/z
 relax/r""".split("\n")]
 
 class LocomotionApp:
-    def __init__(self,bus=bus,returnfunc=print,checkhaltfunc=int):
+    def __init__(self,bus=None,returnfunc=print,checkhaltfunc=int):
         self.bus=bus
         self.returnf=returnfunc #function for sending back data and errors
         self.checkhalt=checkhaltfunc #function to check halt flag. returns True if the robot should stop
