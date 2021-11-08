@@ -8,9 +8,10 @@ import router
 class Module(ABC):
 
     @abstractmethod
-    def __init__(self, output_array, is_output_loaded):
+    def __init__(self, output_array, is_output_loaded, halt_process):
         self.output_array = output_array
         self.is_output_loaded = is_output_loaded
+        self.halt_process = halt_process
 
     #The following 3 methods first call super and add functionality
     @abstractmethod
@@ -39,9 +40,8 @@ class Module(ABC):
 
     @abstractmethod
     #method that check if module should stop execution
-    def check_if_hold(self):
-        #temp = self.__router.hold_module_execution
-        return False
+    def halt(self):
+        return self.halt_process.value == 1
         pass
 
     @abstractmethod

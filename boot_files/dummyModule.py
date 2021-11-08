@@ -5,8 +5,8 @@ import module
 # Example of module class
 class DummyManager(module.Module):
 
-    def __init__(self, output_array, is_output_loaded):
-        super().__init__(output_array, is_output_loaded)
+    def __init__(self, output_array, is_output_loaded, hold_process):
+        super().__init__(output_array, is_output_loaded, hold_process)
         pass
 
     def get_id(self):
@@ -29,7 +29,7 @@ class DummyManager(module.Module):
                 i += 1
 
         elif command == "loop":
-            while not self.check_if_hold():
+            while not self.halt():
                 data = str(number)
                 self.send_to_mcp(data)
                 number += 1
@@ -45,8 +45,8 @@ class DummyManager(module.Module):
     def send_to_mcp(self, output):
         super().send_to_mcp(output)
 
-    def check_if_hold(self):
-        return super().check_if_hold()
+    def halt(self):
+        return super().halt()
 
     def command_does_not_exist(self, command):
         super().command_does_not_exist(command)

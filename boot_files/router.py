@@ -15,7 +15,9 @@ from datetime import datetime
 # Establishes connection between module(server) and MCP
 class Router:
     # Private Variables only accessed by Router
-    __sleep_interval = 3  # used by thread to sleep after seeing no command was given (in seconds)
+    __listen_for_commands_interval = 3  # used by thread to sleep after seeing no command was given (in seconds)
+    __listen_for_module_output_interval = 1
+    __wait_for_module_to_join = 5
     __is_command_loaded = False
     __mcp_command = ""
     __server_id = ""
@@ -24,7 +26,7 @@ class Router:
     output = ""  # output data from modules read by MCP from here
     is_output_loaded = False
     is_shut_down = False
-    hold_module_execution = False
+    halt_module_execution = False
 
     def __init__(self):
         self.lock = threading.Lock()
@@ -40,18 +42,18 @@ class Router:
         while not self.is_shut_down:
             # If no command to execute sleep
             if not self.__is_command_loaded:
-                time.sleep(self.__sleep_interval)
+                time.sleep(self.__listen_for_commands_interval)
             else:
                 # else execute
                 output = Array('i', 100)
                 is_output_loaded = Value('i', 0)
-                hold_process = Value(ctypes.c_bool, False)
+                halt_process = Value('i', 0)
                 module_thread: Process = Process(target=execute,
                                                  args=(self.__server_id,
                                                        self.__mcp_command,
                                                        output,
                                                        is_output_loaded,
-                                                       hold_process,))
+                                                       halt_process,))
                 module_thread.name = "module_thread"
                 module_thread.daemon = True
 
@@ -62,8 +64,13 @@ class Router:
                     if is_output_loaded.value == 1:
                         self.__send_array_to_user(output)
                         is_output_loaded.value = 0
+
+                    elif self.halt_module_execution:
+                        halt_process.value = 1
+                        module_thread.join(self.__wait_for_module_to_join)
+
                     else:
-                        time.sleep(self.__sleep_interval)
+                        time.sleep(self.__listen_for_module_output_interval)
 
                 # check after process finished if anything loaded while sleeping
                 if is_output_loaded.value == 1:
@@ -79,7 +86,7 @@ class Router:
         self.lock.acquire()
         self.output = ""
         self.is_output_loaded = False
-        self.hold_module_execution = False
+        self.halt_module_execution = False
         self.lock.release()
 
     # called after each command is executed
@@ -91,12 +98,12 @@ class Router:
         self.lock.release()
 
     # return a text output to the user
-    def __send_text_to_user(self, output):
+    def __send_text_to_user(self, text):
         while self.is_output_loaded:
             time.sleep(1)
         self.lock.acquire()
         self.is_output_loaded = True
-        self.output = output
+        self.output = text
         self.lock.release()
 
     # transform a array of characters into a string and send to user
@@ -116,9 +123,9 @@ class Router:
 
 
 #process created by the router runs here
-def execute(destination, command, output_array, is_output_loaded, hold_process):
+def execute(destination, command, output_array, is_output_loaded, halt_process):
     print("Process started")
-    server_module = __get_module(destination, output_array, is_output_loaded)
+    server_module = __get_module(destination, output_array, is_output_loaded, halt_process)
     if server_module == "":
         string_to_array("No such module", output_array)
         is_output_loaded.value = True
@@ -145,9 +152,9 @@ def array_to_string(array):
 
 
 #retrive module #TODO add all modules here
-def __get_module(destination, output_array, is_output_loaded):
+def __get_module(destination, output_array, is_output_loaded, halt_process):
     if destination == "dummy":
-        return dummyModule.DummyManager(output_array, is_output_loaded)
+        return dummyModule.DummyManager(output_array, is_output_loaded, halt_process)
 
     elif destination == "loco":
         return
