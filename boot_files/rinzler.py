@@ -128,6 +128,9 @@ if __name__ == "__main__":
         os.system("Python rinzler.py")
 
 
+#TODO
+#Done camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
+
 #move status thread in message manager and use "command" to check the battery/motors
 #
 #Processing router: Keep it on hold
@@ -136,7 +139,6 @@ if __name__ == "__main__":
     #identify outputs belong to which command input
 #router to user: dictionary (is_process_completed, timestamp, (optional)module_output, command_id)
 #mcp to user: same but add mcp to command_id
-#camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
 #
 #
 #

@@ -63,7 +63,8 @@ class MessageManager:
         text = output + " Time:" + str(time) + " Error:" + str(error) + "  Completed:" + str(process_completed)
         self.send_to_user_text(text)
 
-    def send_to_user_package2(self, package):
+#CameraManager packages use as command_id = frame #id
+    def send_to_user_package2(self, package: dict):
         # Edit data to make it presentable
         self.send_to_user_text(package)
 
@@ -73,5 +74,6 @@ class MessageManager:
         self.__lock.release()
 
 
+#Function called by all threads that need to deliver information to the user
 def create_package(command_id: str, output, timestamp, is_process_complete=None):
     return {'command_id': command_id, 'output': output, 'timestamp': timestamp, 'is_process_complete': is_process_complete}
