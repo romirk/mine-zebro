@@ -21,7 +21,7 @@ class Router:
     process_completed = False
     is_output_loaded = False
     is_shut_down = False
-    hold_module_execution = False
+    halt_module_execution = False
 
     def __init__(self):
         self.__list = Submodules()  # list of submodules
@@ -76,7 +76,7 @@ class Router:
         self.output_time = ""
         self.error = ""
         self.is_output_loaded = False
-        self.hold_module_execution = False
+        self.halt_module_execution = False
         self.lock.release()
 
     # called after each command is executed

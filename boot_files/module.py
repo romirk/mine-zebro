@@ -37,8 +37,8 @@ class Module(ABC):
 
     @abstractmethod
     #method that check if module should stop execution
-    def check_if_hold(self):
-        temp = self.__router.hold_module_execution
+    def check_if_halt(self):
+        temp = self.__router.halt_module_execution
         return temp
         pass
 

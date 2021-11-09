@@ -54,13 +54,13 @@ class Mcp:
 
             # move input from message manager to router or handle if mcp command
             if self.messenger.input_received:
-                destination = self.messenger.get_destination()
+                prefix = self.messenger.get_destination()
                 command = self.messenger.get_command()
                 self.messenger.reset_input_received()
-                if destination == "mcp":
-                    self.mcp_helper.handle_command(command)
+                if prefix.startswith("mcp"):
+                    self.mcp_helper.handle_command(prefix, command)
                 else:
-                    self.router.load_command(command, destination)
+                    self.router.load_command(command, prefix)
 
             # move output from router to message manager
             if self.router.is_output_loaded:
@@ -130,18 +130,17 @@ if __name__ == "__main__":
 
 #TODO
 #Done camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
+#Done define function that creates user package which is shared by mcp and router
 
+#mcp to user: (command_id = mcp, data, timestamp, is_process_complete)
 #move status thread in message manager and use "command" to check the battery/motors
-#
 #Processing router: Keep it on hold
 
 #module output: dictionary (code(error(1), warning(2), data(0)) + msg(string) + data (optional json compatible dictionary))
     #identify outputs belong to which command input
 #router to user: dictionary (is_process_completed, timestamp, (optional)module_output, command_id)
-#mcp to user: same but add mcp to command_id
 #
 #
 #
 #
-#define function that creates user package which is shared by mcp and router
 #change shared strings into shared dictionaries

@@ -25,7 +25,7 @@ class DummyManager(module.Module):
                 i += 1
 
         elif command == "loop":
-            while not self.check_if_hold():
+            while not self.check_if_halt():
                 data = str(number)
                 self.send_to_mcp(data, 0)
                 number += 1
@@ -45,8 +45,8 @@ class DummyManager(module.Module):
     def send_to_mcp(self, data, error):
         super().send_to_mcp(data, error)
 
-    def check_if_hold(self):
-        return super().check_if_hold()
+    def check_if_halt(self):
+        return super().check_if_halt()
 
     def command_does_not_exist(self, command):
         super().command_does_not_exist(command)

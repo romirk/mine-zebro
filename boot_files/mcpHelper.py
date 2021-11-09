@@ -6,6 +6,8 @@ from datetime import datetime
 
 #Class holds mcp functionality relating to handling commands, setting up threads
 #Note all methods that receive parameters from commands check if they are valid and if not send respond back to the user
+from boot_files import messageManager
+
 
 class McpHelper:
     _command_not_found_string = "MCP command does not exist"
@@ -13,64 +15,54 @@ class McpHelper:
     def __init__(self, mcp):
         self.mcp = mcp
 
-    def handle_command(self, command):
+    def handle_command(self, prefix, command):
+        data = ""
+        is_process_complete = True
         if command == "terminate":
             self.mcp.internal_state = rinzler.State.Terminate.value
-            return
 
         elif command == "shutdown":
             self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.ShutDown.value
-            return
 
-        elif command == "hold":
-            self.mcp.router.hold_module_execution = True
-            return
+        elif command == "halt":
+            self.mcp.router.halt_module_execution = True
 
         elif command.startswith("lights"):
-            self.__lights(command)
-            return
+            data = self.__lights(command)
 
         elif command == "help":
-            self.mcp.messenger.send_to_user_text(self.__help())
-            return
+            data = self.__help()
 
         elif command == "restart":
             self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.Restart.value
-            return
 
         elif command.startswith("fp="):
-            self.__change_frame_period(command)
-            return
+            data = self.__change_frame_period(command)
 
         elif command.startswith("camera"):
-            self.__camera(command)
-            return
+            data = self.__camera(command)
 
         elif command == "reset":
-            self.__router_reset()
-            return
+            self.mcp.messenger.send_to_user_package2(messageManager.create_package(prefix, "Router reset started",
+                                                                                   datetime.now().strftime("%H:%M:%S")))
+            is_process_complete = self.__router_reset()
 
         else:
-            self.mcp.messenger.send_to_user_text(self._command_not_found_string)
+            data = self._command_not_found_string
 
-        return
+        if data == self._command_not_found_string:
+            is_process_complete = False
+        package = messageManager.create_package(prefix, data, datetime.now().strftime("%H:%M:%S"), is_process_complete)
+        self.mcp.messenger.send_to_user_package2(package)
 
-    #change how often a frame is taken from the camera and send to comms
-    def __change_frame_period(self, command):
-        try:
-            time = command.split("fp=")[1]
-            self.mcp.cameraManager.time_between_frames = float(time)
-        except:
-            self.mcp.messenger.send_to_user_text(self._command_not_found_string)
         return
 
     #stops all loops so all threads can join the main thread
     def __shutdown_procedure(self):
-        self.mcp.messenger.send_to_user_package("shuttingDown", datetime.now().strftime("%H:%M:%S"), 0, True)
         self.mcp.router.is_shut_down = True
-        self.mcp.router.hold_module_execution = True
+        self.mcp.router.halt_module_execution = True
         self.mcp.messenger.is_shut_down = True
         self.mcp.cameraManager.is_shut_down = True
         return
@@ -79,11 +71,11 @@ class McpHelper:
     def __lights(self, command):
         # TODO add lights functionality
         if command == "lightsOn".lower():
-            self.mcp.messenger.send_to_user_text("lights" + str(True))
+            return "lights" + str(True)
         elif command == "lightsOff".lower():
-            self.mcp.messenger.send_to_user_text("lights" + str(False))
+            return "lights" + str(False)
         else:
-            self.mcp.messenger.send_to_user_text(self._command_not_found_string)
+            return self._command_not_found_string
 
     #returns information on available commands
     def __help(self):
@@ -99,25 +91,22 @@ class McpHelper:
 
         return text
 
-    def setup_router_thread(self):
-        router_thread = threading.Thread(target=self.mcp.router.start)
-        router_thread.daemon = True
-        router_thread.setName("RouterThread")
-        self.mcp.threads.append(router_thread)
-        return router_thread
+    #change how often a frame is taken from the camera and send to comms
+    def __change_frame_period(self, command):
+        try:
+            time = command.split("fp=")[1]
+            self.mcp.cameraManager.time_between_frames = float(time)
+            return ""
+        except:
+            return self._command_not_found_string
 
-    def setup_camera_thread(self):
-        camera_thread = threading.Thread(target=self.mcp.cameraManager.listen_to_camera)
-        camera_thread.daemon = True
-        camera_thread.setName("CameraThread")
-        self.mcp.threads.append(camera_thread)
-        return camera_thread
 
     #turns camera on/off
     def __camera(self, command):
         if command == "cameraOn".lower():
             self.mcp.cameraManager.is_shut_down = False
             self.setup_camera_thread().start()
+            return "Camera is on"
 
         elif command == "cameraOff".lower():
             #find thread
@@ -129,10 +118,9 @@ class McpHelper:
                         time.sleep(1)
                     #remove and give feedback
                     self.mcp.threads.remove(thread)
-            self.mcp.messenger.send_to_user_text("camera is off")
-            return
+            return "Camera is off"
         else:
-            self.mcp.messenger.send_to_user_text(self._command_not_found_string)
+            return self._command_not_found_string
 
     #in case router of router error hold all module processes and reset all attributes (including modules)
     def __router_reset(self):
@@ -140,9 +128,8 @@ class McpHelper:
         for thread in self.mcp.threads:
             if thread.name == "RouterThread":
                 #set to off and wait
-                self.mcp.router.hold_module_execution = True
+                self.mcp.router.halt_module_execution = True
                 self.mcp.router.is_shut_down = True
-                self.mcp.messenger.send_to_user_text("router reset started")
                 while thread.is_alive():
                     time.sleep(1)
                 #remove thread and clear router object and give feedback
@@ -150,10 +137,10 @@ class McpHelper:
                 self.mcp.router.clear_modules_list()
 
                 self.setup_router_thread().start()
-                self.mcp.messenger.send_to_user_text("router reset successful")
                 break
-        return
+        return True
 
+    #Setup threads methods
     def setup_non_restartable_threads(self):
         listen_to_user_thread = threading.Thread(target=self.mcp.messenger.listen_to_user)
         listen_to_user_thread.setName("UserInputThread")
@@ -168,3 +155,18 @@ class McpHelper:
         self.mcp.threads.append(status_thread)
 
         return
+
+    def setup_router_thread(self):
+        router_thread = threading.Thread(target=self.mcp.router.start)
+        router_thread.daemon = True
+        router_thread.setName("RouterThread")
+        self.mcp.threads.append(router_thread)
+        return router_thread
+
+    def setup_camera_thread(self):
+        camera_thread = threading.Thread(target=self.mcp.cameraManager.listen_to_camera)
+        camera_thread.daemon = True
+        camera_thread.setName("CameraThread")
+        self.mcp.threads.append(camera_thread)
+        return camera_thread
+

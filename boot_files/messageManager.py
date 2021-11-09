@@ -40,13 +40,13 @@ class MessageManager:
         self.input_received = True
         self.__lock.release()
 
-    def get_destination(self):
+    def get_destination(self) -> str:
         self.__lock.acquire()
         destination = self.__stored_input.split(" ", 1).__getitem__(0)
         self.__lock.release()
         return destination
 
-    def get_command(self):
+    def get_command(self) -> str:
         self.__lock.acquire()
         command = self.__stored_input.split(" ", 1).__getitem__(1)
         self.__lock.release()
