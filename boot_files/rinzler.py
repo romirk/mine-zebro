@@ -21,7 +21,7 @@ import cameraDummy
 # 3)start all threads
 class Mcp:
     __sleep_interval = 1
-    # __status_sleep_interval = 0.5  # how often to check motors for overheating and battery
+    #__status_sleep_interval = 0.5  # how often to check motors for overheating and battery
     __status_sleep_interval = 0  # for now use zero so not to check the battery or the motors
 
     # setup all required objects and threads for execution
@@ -38,7 +38,7 @@ class Mcp:
         self.threads = list()
         self.mcp_helper.setup_router_thread()
         self.mcp_helper.setup_camera_thread()
-        self.mcp_helper.setup_non_restartable_threads()
+        self.mcp_helper.setup_non_restartable_threads(self.__status_sleep_interval)
         return
 
     # start all threads
@@ -85,20 +85,6 @@ class Mcp:
             thread.join()
         return
 
-    # loop that check battery status and if motors overheat
-    # note if status sleep interval is 0 then disabled
-    def status_loop(self):
-        battery_level = 100
-        while self.internal_state == State.Running.value and self.__status_sleep_interval > 0:
-            # TODO check for battery status
-            battery_level -= 5
-            if 20 > battery_level > 0:
-                self.messenger.send_to_user_text("WARNING => Battery:"
-                                                 + str(battery_level) + "%")
-            # TODO add check for overheating
-            time.sleep(self.__status_sleep_interval)
-
-        return
 
 
 #Class shows all internal states mcp can be active in
@@ -131,9 +117,9 @@ if __name__ == "__main__":
 #TODO
 #Done camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
 #Done define function that creates user package which is shared by mcp and router
+#Done mcp to user: (command_id = mcp, data, timestamp, is_process_complete)
+#Done move status thread in message manager and use "command" to check the battery/motors
 
-#mcp to user: (command_id = mcp, data, timestamp, is_process_complete)
-#move status thread in message manager and use "command" to check the battery/motors
 #Processing router: Keep it on hold
 
 #module output: dictionary (code(error(1), warning(2), data(0)) + msg(string) + data (optional json compatible dictionary))

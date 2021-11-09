@@ -73,6 +73,20 @@ class MessageManager:
         self.__comms.cout(text)
         self.__lock.release()
 
+    # loop that periodically sets command to check battery status and if motors are overheating
+    # note if status sleep interval is 0 then disabled
+    def status_loop(self, sleep_interval):
+        battery_level = 100
+        while not self.is_shut_down and sleep_interval > 0:
+            # TODO check for battery status & implement as module or mcp command depending if it's using I2C bus
+            battery_level -= 5
+            if 20 > battery_level:
+                self.__set_command("dummy count")
+            # TODO add check for overheating
+            time.sleep(sleep_interval)
+
+        return
+
 
 #Function called by all threads that need to deliver information to the user
 def create_package(command_id: str, output, timestamp, is_process_complete=None):

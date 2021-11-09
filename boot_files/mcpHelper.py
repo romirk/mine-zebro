@@ -141,7 +141,7 @@ class McpHelper:
         return True
 
     #Setup threads methods
-    def setup_non_restartable_threads(self):
+    def setup_non_restartable_threads(self, status_sleep_interval):
         listen_to_user_thread = threading.Thread(target=self.mcp.messenger.listen_to_user)
         listen_to_user_thread.setName("UserInputThread")
         self.mcp.threads.append(listen_to_user_thread)
@@ -150,7 +150,8 @@ class McpHelper:
         in_out_thread.setName("In/OutThread")
         self.mcp.threads.append(in_out_thread)
 
-        status_thread = threading.Thread(target=self.mcp.status_loop)
+        status_thread = threading.Thread(target=self.mcp.messenger.status_loop,
+                                         args=(status_sleep_interval,))
         status_thread.setName("StatusThread")
         self.mcp.threads.append(status_thread)
 
