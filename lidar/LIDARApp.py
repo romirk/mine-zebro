@@ -67,6 +67,7 @@ class LIDARApp:
                 args=[]
 
             elif command[0]=="assertsafe":
+                func=self.assertsafe
                 args=[DEFAULT_DIST_MID,DEFAULT_DIST_HALF,DEFAULT_DIST_SIDE]
                 for term in command[1:]:
                     try:
@@ -154,6 +155,7 @@ if __name__=="__main__":
     
     
     lidar=LIDARApp(bus,pprint,int)
+    lidar.init()
     print("LIDAR app testing environment - enter commands or 'exit'")
     while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
         i=input("> ").strip()
