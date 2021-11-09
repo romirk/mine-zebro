@@ -138,7 +138,7 @@ class LIDARApp:
 
     def read(self,args):
         self.distances=[s.read() for s in self.sensors]
-        self.returnf(self._data(dict(zip(["l","hl","m","hr","r"],self.distances))))
+        self.returnf(self._data(dict(zip([1,2,3,4,5],self.distances))))
     
     def assertsafe(self,args):
         self.read()
