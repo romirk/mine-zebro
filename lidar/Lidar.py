@@ -58,7 +58,7 @@ class Lidar(VL53L1X):
     def enable(self):
         self.gpio.setup(self.xshut_pin, self.gpio.IN, pull_up_down=self.gpio.PUD_OFF) #gpio to highZ to turn the chip on
 
-        sleep(.010) #boot time should be <1.2ms
+        sleep(.010) #boot time should be <=1.2ms
         
         #open channel,turn on reading
         self.open()
@@ -66,6 +66,9 @@ class Lidar(VL53L1X):
         #set address again;
         self.address=self._address()
         self.change_address(self.address)
+        self.close()
+
+        self.open()
 
         #start ranging
         self.start_ranging(1)#use short range for rover

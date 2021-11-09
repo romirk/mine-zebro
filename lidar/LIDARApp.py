@@ -45,6 +45,7 @@ class LIDARApp:
         GPIO.setmode(GPIO.BCM)
         for s in self.sensors:
             s.disable()
+
         for s in self.sensors:
             sleep(.2)
             try:
@@ -52,6 +53,7 @@ class LIDARApp:
             except:
                 s.disable()
                 print("Loading LIDAR chip %d failed" % (self.sensors.index(s)+1))
+                
     def get_id(self):
         return "ldr"
     def help(self):
