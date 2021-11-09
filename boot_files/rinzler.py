@@ -13,7 +13,7 @@ import cameraDummy
 
 # TODO define error messages and exceptions for submodules
 # TODO replace threading router thread with a process (geekfreak multiprocessing)
-
+# TODO open different terminal for output and input
 # TODO
 # Done camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
 # Done define function that creates user package which is shared by mcp and router

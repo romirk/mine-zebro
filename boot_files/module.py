@@ -37,8 +37,8 @@ class Module(ABC):
 
     @abstractmethod
     # method delivers data to mcp use super().send_to_mcp to execute
-    def send_to_router(self, code: int, message=None, data=None, has_process_completed=False):
-        self.__router.send_package_to_mcp(create_router_package(code, message, data), has_process_completed)
+    def send_to_router(self, code: int, msg=None, data=None):
+        self.__router.send_package_to_mcp(create_router_package(code, msg, data), False)
         pass
 
     @abstractmethod
@@ -62,5 +62,5 @@ class OutputCode(Enum):
 
 
 # Function called by all modules to deliver information to the router
-def create_router_package(code: int, message=None, data=None):
-    return {'code': code, 'message': message, 'data': data}
+def create_router_package(code: int, msg=None, data=None):
+    return {'code': code, 'message': msg, 'data': data}

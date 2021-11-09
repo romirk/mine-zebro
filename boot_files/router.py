@@ -48,7 +48,7 @@ class Router:
         # TODO start all other modules here
         self.__add_module(dummyModule.DummyManager(self))
 
-        self.__list.setup() #calls setup method in each module
+        self.__list.setup()  # calls setup method in each module
         return
 
     # loop until command given by mcp (if no command sleep to an appropriate amount of time)
@@ -59,7 +59,8 @@ class Router:
                 time.sleep(self.__sleep_interval)
             else:
                 # else execute
-                server_id = "".join([i for i in self.__prefix if not i.isdigit()]) #remove identifier which is a number
+                server_id = "".join(
+                    [i for i in self.__prefix if not i.isdigit()])  # remove identifier which is a number
                 if not self.__list.check_id(server_id):
                     self.send_package_to_mcp("Router:Failed to fetch module with id: " + str(server_id), False)
                     self.__clean_up()
@@ -67,6 +68,7 @@ class Router:
                     module = self.__list.get_by_id(server_id)
                     self.__prepare()
                     module.execute(self.__command)  # blocking method
+                    self.send_package_to_mcp("", True)
                     self.__clean_up()
 
     # Note: All functions that change attributes need to use lock to avoid deadlock
