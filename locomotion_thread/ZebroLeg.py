@@ -36,7 +36,7 @@ class ZebroLeg:
         self.TIME_ADDRESS = 0x22
 
         #named angles
-        self.LIEDOWN_ANGLE = 330
+        self.LIEDOWN_ANGLE = 339
         self.STANDUP_ANGLE = 150
         self.TOUCHDOWN_ANGLE = 125
         self.LIFTOFF_ANGLE = 160
@@ -54,7 +54,7 @@ class ZebroLeg:
 
 
         #correction angles - multiples of 3 are preferred because they correspond to whole position changes, making them consistent
-        self.DELTA_ANGLE = 6 #leeway
+        self.DELTA_ANGLE = 12 #leeway
         self.DELTA_RIGHT = 6 #correction for right leg
 
         #timing        
