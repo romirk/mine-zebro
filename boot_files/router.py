@@ -2,6 +2,7 @@ import threading
 from typing import List
 
 import dummyModule
+import messageManager
 import module
 import time
 from datetime import datetime
@@ -13,16 +14,13 @@ from datetime import datetime
 class Router:
     # Private Variables only accessed by Router
     __sleep_interval = 3  # used by thread to sleep after seeing no command was given (in seconds)
-    __is_command_loaded = False
-    __mcp_command = ""
-    __server_id = ""
+    __command = ""
+    __prefix = ""
 
     # Public Variables & Flags
-    output = ""  # output data from modules read by MCP from here
-    output_time = ""  # time output variable has changed
-    error = ""  # error message placed here
-    process_completed = False
-    is_output_loaded = False
+    package = ""  # package data from modules read by MCP from here
+    is_command_loaded = False
+    is_package_loaded = False
     is_shut_down = False
     halt_module_execution = False
 
@@ -32,7 +30,6 @@ class Router:
 
     # initialisation before entering listening loop
     def start(self):
-        self.send_data_to_mcp("Router has started", 0)
         self.__clean_up()
         self.__prepare()
         self.is_shut_down = False
@@ -58,57 +55,53 @@ class Router:
     def __listen_to_commands(self):
         while not self.is_shut_down:
             # If no command to execute sleep
-            if not self.__is_command_loaded:
+            if not self.is_command_loaded:
                 time.sleep(self.__sleep_interval)
             else:
                 # else execute
-                if not self.__list.check_id(self.__server_id):
-                    self.send_data_to_mcp("Router:Failed to fetch module with id: " + str(self.__server_id), -1)
+                server_id = "".join([i for i in self.__prefix if not i.isdigit()]) #remove identifier which is a number
+                if not self.__list.check_id(server_id):
+                    self.send_package_to_mcp("Router:Failed to fetch module with id: " + str(server_id), False)
                     self.__clean_up()
                 else:
-                    module = self.__list.get_by_id(self.__server_id)
+                    module = self.__list.get_by_id(server_id)
                     self.__prepare()
-                    module.execute(self.__mcp_command)  # blocking method
+                    module.execute(self.__command)  # blocking method
                     self.__clean_up()
 
     # Note: All functions that change attributes need to use lock to avoid deadlock
     # called before each command is executed
     def __prepare(self):
         self.lock.acquire()
-        self.process_completed = False
-        self.output = ""
-        self.output_time = ""
-        self.error = ""
-        self.is_output_loaded = False
+        self.package = ""
         self.halt_module_execution = False
         self.lock.release()
 
     # called after each command is executed
     def __clean_up(self):
         self.lock.acquire()
-        self.__is_command_loaded = False
-        self.__mcp_command = ""
-        self.__server_id = ""
-        self.process_completed = True
+        self.is_command_loaded = False
+        self.__command = ""
+        self.__prefix = ""
         self.lock.release()
 
     # called by active module to return data to mcp
-    def send_data_to_mcp(self, output, error):
-        while self.is_output_loaded:
+    def send_package_to_mcp(self, module_output, has_process_completed):
+        while self.is_package_loaded:
             time.sleep(1)
         self.lock.acquire()
-        self.is_output_loaded = True
-        self.output = output
-        self.output_time = datetime.now().strftime("%H:%M:%S")
-        self.error = error
+
+        self.package = messageManager.create_user_package(self.__prefix, module_output,
+                                                          datetime.now().strftime("%H:%M:%S"), has_process_completed)
+        self.is_package_loaded = True
         self.lock.release()
 
     # called by mcp to load a command to be executed
-    def load_command(self, command, id):
+    def load_command(self, prefix, command):
         self.lock.acquire()
-        self.__mcp_command = command
-        self.__server_id = id
-        self.__is_command_loaded = True
+        self.__command = command
+        self.__prefix = prefix
+        self.is_command_loaded = True
         self.lock.release()
 
     # Use this method to remove all modules from the list

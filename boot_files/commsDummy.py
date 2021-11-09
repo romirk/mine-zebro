@@ -1,7 +1,7 @@
 import commsApi
 
 
-#comms Implementation using the terminal as input/output
+#comms Implementation using the terminal as input/package
 class CommsDummyManager(commsApi.AbstractComms):
 
     def setup(self):

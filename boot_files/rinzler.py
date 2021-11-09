@@ -14,6 +14,16 @@ import cameraDummy
 # TODO define error messages and exceptions for submodules
 # TODO replace threading router thread with a process (geekfreak multiprocessing)
 
+# TODO
+# Done camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
+# Done define function that creates user package which is shared by mcp and router
+# Done mcp to user: (command_id = mcp, data, timestamp, is_process_complete)
+# Done move status thread in message manager and use "command" to check the battery/motors
+# Done module package: dictionary (code(error(1), warning(2), data(0)) + msg(string) + data (optional json compatible dictionary))
+# router to user: dictionary (is_process_completed, timestamp, (optional)module_output, command_id)
+# (Done add number concatenated with prefix) identify outputs belong to which command input
+
+# Processing router: Keep it on hold
 
 # Boot procedure
 # 1)setup all essential objects (router,messenger,camera,mcp_helper)
@@ -21,7 +31,7 @@ import cameraDummy
 # 3)start all threads
 class Mcp:
     __sleep_interval = 1
-    #__status_sleep_interval = 0.5  # how often to check motors for overheating and battery
+    # __status_sleep_interval = 0.5  # how often to check motors for overheating and battery
     __status_sleep_interval = 0  # for now use zero so not to check the battery or the motors
 
     # setup all required objects and threads for execution
@@ -60,21 +70,26 @@ class Mcp:
                 if prefix.startswith("mcp"):
                     self.mcp_helper.handle_command(prefix, command)
                 else:
-                    self.router.load_command(command, prefix)
+                    if self.router.is_command_loaded:
+                        self.messenger.send_to_user_package(
+                            messageManager.create_user_package(prefix, "Command already loaded",
+                                                               datetime.now().strftime(
+                                                                   "%H:%M:%S"), False))
+                    else:
+                        self.router.load_command(prefix, command)
 
-            # move output from router to message manager
-            if self.router.is_output_loaded:
+            # move package from router to message manager
+            if self.router.is_package_loaded:
                 self.router.lock.acquire()
-                self.messenger.send_to_user_package(self.router.output, self.router.output_time, self.router.error,
-                                                    self.router.process_completed)
-                self.router.is_output_loaded = False
+                self.messenger.send_to_user_package(self.router.package)
+                self.router.is_package_loaded = False
                 self.router.lock.release()
 
             # moves frame from cameraManager to user
             if self.cameraManager.frame_ready:
                 package = self.cameraManager.get_package()
                 self.cameraManager.reset_frame_ready()
-                self.messenger.send_to_user_package2(package)
+                self.messenger.send_to_user_package(package)
 
             time.sleep(self.__sleep_interval)
         return
@@ -86,8 +101,7 @@ class Mcp:
         return
 
 
-
-#Class shows all internal states mcp can be active in
+# Class shows all internal states mcp can be active in
 class State(Enum):
     Running = 0
     ShutDown = 1
@@ -101,32 +115,16 @@ if __name__ == "__main__":
     mcp = Mcp()
     mcp.start()
 
-    #keep main thread busy until state changes
+    # keep main thread busy until state changes
     while mcp.internal_state == State.Running.value:
         time.sleep(1)
 
-    #wait for all threads to finish to shutdown safely
+    # wait for all threads to finish to shutdown safely
     if mcp.internal_state == State.ShutDown.value or mcp.internal_state == State.Restart.value:
         mcp.wait()
 
-    #command given to the terminal to restart __main__
+    # command given to the terminal to restart __main__
     if mcp.internal_state == State.Restart.value:
         os.system("Python rinzler.py")
 
 
-#TODO
-#Done camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
-#Done define function that creates user package which is shared by mcp and router
-#Done mcp to user: (command_id = mcp, data, timestamp, is_process_complete)
-#Done move status thread in message manager and use "command" to check the battery/motors
-
-#Processing router: Keep it on hold
-
-#module output: dictionary (code(error(1), warning(2), data(0)) + msg(string) + data (optional json compatible dictionary))
-    #identify outputs belong to which command input
-#router to user: dictionary (is_process_completed, timestamp, (optional)module_output, command_id)
-#
-#
-#
-#
-#change shared strings into shared dictionaries

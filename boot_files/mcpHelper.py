@@ -45,8 +45,9 @@ class McpHelper:
             data = self.__camera(command)
 
         elif command == "reset":
-            self.mcp.messenger.send_to_user_package2(messageManager.create_package(prefix, "Router reset started",
-                                                                                   datetime.now().strftime("%H:%M:%S")))
+            self.mcp.messenger.send_to_user_package(
+                messageManager.create_user_package(prefix, "Router reset started", datetime.now().strftime("%H:%M:%S"),
+                                                   False))
             is_process_complete = self.__router_reset()
 
         else:
@@ -54,8 +55,9 @@ class McpHelper:
 
         if data == self._command_not_found_string:
             is_process_complete = False
-        package = messageManager.create_package(prefix, data, datetime.now().strftime("%H:%M:%S"), is_process_complete)
-        self.mcp.messenger.send_to_user_package2(package)
+        package = messageManager.create_user_package(prefix, data, datetime.now().strftime("%H:%M:%S"),
+                                                     is_process_complete)
+        self.mcp.messenger.send_to_user_package(package)
 
         return
 

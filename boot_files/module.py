@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 
-
 # Abstract class that all modules inherit from
 # See dummyModule.py for how example
+from enum import Enum
+
+
 class Module(ABC):
 
     @abstractmethod
@@ -16,7 +18,8 @@ class Module(ABC):
     def setup(self):
         pass
 
-    #The following 3 methods first call super and add functionality
+    # The following 3 methods first call super and add functionality
+    # id must not include any digits
     @abstractmethod
     def get_id(self):
         pass
@@ -33,13 +36,13 @@ class Module(ABC):
         pass
 
     @abstractmethod
-    #method delivers data to mcp use super().send_to_mcp to execute
-    def send_to_mcp(self, data, error):
-        self.__router.send_data_to_mcp(data, error)
+    # method delivers data to mcp use super().send_to_mcp to execute
+    def send_to_router(self, code: int, message=None, data=None, has_process_completed=False):
+        self.__router.send_package_to_mcp(create_router_package(code, message, data), has_process_completed)
         pass
 
     @abstractmethod
-    #method that check if module should stop execution
+    # method that check if module should stop execution
     def check_if_halt(self):
         temp = self.__router.halt_module_execution
         return temp
@@ -48,7 +51,16 @@ class Module(ABC):
     @abstractmethod
     def command_does_not_exist(self, command):
         text = self.get_id() + ": " + "no such command"
-        self.send_to_mcp(text, -1)
+        self.send_to_router(OutputCode.error.value, text)
         pass
 
 
+class OutputCode(Enum):
+    data = 0
+    error = 1
+    warning = 2
+
+
+# Function called by all modules to deliver information to the router
+def create_router_package(code: int, message=None, data=None):
+    return {'code': code, 'message': message, 'data': data}

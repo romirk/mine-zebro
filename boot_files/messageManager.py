@@ -57,14 +57,8 @@ class MessageManager:
         self.input_received = False
         self.__lock.release()
 
-    # MCP to Comms
-    def send_to_user_package(self, output, time, error, process_completed):
-        # Edit data to make it presentable
-        text = output + " Time:" + str(time) + " Error:" + str(error) + "  Completed:" + str(process_completed)
-        self.send_to_user_text(text)
-
 #CameraManager packages use as command_id = frame #id
-    def send_to_user_package2(self, package: dict):
+    def send_to_user_package(self, package: dict):
         # Edit data to make it presentable
         self.send_to_user_text(package)
 
@@ -89,5 +83,6 @@ class MessageManager:
 
 
 #Function called by all threads that need to deliver information to the user
-def create_package(command_id: str, output, timestamp, is_process_complete=None):
-    return {'command_id': command_id, 'output': output, 'timestamp': timestamp, 'is_process_complete': is_process_complete}
+def create_user_package(command_id: str, output, timestamp, has_process_completed=None):
+    return {'command_id': command_id, 'package': output, 'timestamp': timestamp,
+            'is_process_complete': has_process_completed}

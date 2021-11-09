@@ -46,10 +46,8 @@ class CameraManager:
         if len(frame) == 0:
             is_process_complete = False
         command_id = "frame " + str(self.__frame_number)
-        self.__stored_frame = messageManager.create_package(command_id,
-                                                            frame,
-                                                            datetime.now().strftime("%H:%M:%S"),
-                                                            is_process_complete)
+        self.__stored_frame = messageManager.create_user_package(command_id, frame, datetime.now().strftime("%H:%M:%S"),
+                                                                 is_process_complete)
         self.frame_ready = True
         self.__frame_number += 1
         self.__lock.release()
