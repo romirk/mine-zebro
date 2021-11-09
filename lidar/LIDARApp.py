@@ -26,9 +26,9 @@ import RPi.GPIO as GPIO
 
 
 
-DEFAULT_DIST_MID=17
-DEFAULT_DIST_HALF=20
-DEFAULT_DIST_SIDE=20
+DEFAULT_DIST_MID=8
+DEFAULT_DIST_HALF=10
+DEFAULT_DIST_SIDE=12
 
 
 
@@ -136,7 +136,7 @@ class LIDARApp:
     def _info(self,msg):
         return dict(code=0,msg=msg)
 
-    def read(self,args):
+    def read(self,args=[]):
         self.distances=[s.read() for s in self.sensors]
         self.returnf(self._data(dict(zip([1,2,3,4,5],self.distances))))
     
