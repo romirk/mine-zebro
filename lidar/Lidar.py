@@ -29,6 +29,8 @@ class Lidar(VL53L1X):
         self.ADDR_I2C_ID_LOW = 0x19    # Write serial number low byte for I2C address unlock
         self.ADDR_I2C_SEC_ADDR = 0x8a  # Write new I2C address after unlock
 
+        self.enabled=False
+
     def init(self):
         #check for proper sensor
         if self._tca9548a_num == 255:
@@ -47,6 +49,8 @@ class Lidar(VL53L1X):
         self.gpio.setup(self.xshut_pin, self.gpio.OUT, initial=self.gpio.LOW) #pull GPIO xshut low, reset address
         self.address=0x29
         self.i2c_address=self.address
+
+        self.enabled=False
         
     def enable(self):
         self.gpio.setup(self.xshut_pin, self.gpio.IN, pull_up_down=self.gpio.PUD_OFF) #gpio to highZ to turn the chip on
@@ -61,8 +65,14 @@ class Lidar(VL53L1X):
         #start ranging
         self.start_ranging(1)#use short range for rover
         self.set_inter_measurement_period(100)#ms - lower frequency for lower power consumption
+
+        self.enabled=True
         
-        
+    def read(self):
+        if self.enabled:
+            return self.get_distance()
+        else:
+            return None
 
     def _address(self):
         return {

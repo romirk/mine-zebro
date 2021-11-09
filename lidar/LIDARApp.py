@@ -130,16 +130,15 @@ class LIDARApp:
         return dict(code=0,msg=msg)
 
     def read(self,args):
-        pass#I don't know how the lidar works yet
-        #write to self.distances
-
-
+        self.distances=[s.read() for s in self.sensors]
         self.returnf(self._data(dict(zip(["l","hl","m","hr","r"],self.distances))))
     
     def assertsafe(self,args):
         self.read()
-
-        if any([0<self.distances[i]<args[abs(2-i)] for i in range(5)]):#0<self.distances[2]<args[0] or min(self.distances[1::2])<args[1] or min(self.distances[0::4])<args[2]:
+        distances=[{False:d,True:0}[d==None] for d in self.distances] #no measurement (None) -> no update
+        
+        #args in cm -> *10 to mm
+        if any([0<distances[i]<10*args[abs(2-i)] for i in range(5)]):#0<self.distances[2]<args[0] or min(self.distances[1::2])<args[1] or min(self.distances[0::4])<args[2]:
             self.returnf(self._error("Object detected within close range"))
             return
         self.returnf(self._info("No object detected within close range"))
