@@ -10,5 +10,5 @@ class CommsDummyManager(commsApi.AbstractComms):
     def cin(self):
         return input("rinzler>")
 
-    def cout(self, string):
-        print("output>" + string)
+    def cout(self, package):
+        print("output>" + str(package))

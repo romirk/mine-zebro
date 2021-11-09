@@ -1,5 +1,8 @@
 import copy
 import threading
+from datetime import datetime
+
+import messageManager
 
 
 import time
@@ -11,7 +14,7 @@ class CameraManager:
     is_shut_down = False
     time_between_frames = 5 #in seconds
     # variables shared between threads that need locks to write on are:
-    __stored_frame = ""
+    __stored_frame = {}
     frame_ready = False
 
     def __init__(self, camera):
@@ -38,7 +41,12 @@ class CameraManager:
     # store given frame as object attribute
     def __set_frame(self, frame):
         self.__lock.acquire()
-        self.__stored_frame = frame
+        is_process_complete = True
+        if len(frame) == 0:
+            is_process_complete = False
+        self.__stored_frame = messageManager.create_package("cam", frame,
+                                                            datetime.now().strftime("%H:%M:%S"),
+                                                            is_process_complete)
         self.frame_ready = True
         self.__lock.release()
 
@@ -48,7 +56,7 @@ class CameraManager:
         self.__lock.release()
 
     # getter for frames
-    def get_frame(self):
+    def get_package(self):
         self.__lock.acquire()
         frame = copy.deepcopy(self.__stored_frame)
         self.__lock.release()

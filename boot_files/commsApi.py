@@ -13,5 +13,5 @@ class AbstractComms(ABC):
         pass
 
     @abstractmethod
-    def cout(self, string):
+    def cout(self, package):
         pass

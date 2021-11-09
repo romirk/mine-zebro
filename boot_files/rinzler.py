@@ -72,14 +72,9 @@ class Mcp:
 
             # moves frame from cameraManager to user
             if self.cameraManager.frame_ready:
-                frame = self.cameraManager.get_frame()
+                package = self.cameraManager.get_package()
                 self.cameraManager.reset_frame_ready()
-                if len(frame) == 0:
-                    self.messenger.send_to_user_text("Frame could not be received")
-                else:
-                    # TODO replace with actual frame (str(frame))
-                    self.messenger.send_to_user_text("Frame received time: "
-                                                     + datetime.now().strftime("%H:%M:%S"))
+                self.messenger.send_to_user_package2(package)
 
             time.sleep(self.__sleep_interval)
         return
@@ -131,3 +126,20 @@ if __name__ == "__main__":
     #command given to the terminal to restart __main__
     if mcp.internal_state == State.Restart.value:
         os.system("Python rinzler.py")
+
+
+#move status thread in message manager and use "command" to check the battery/motors
+#
+#Processing router: Keep it on hold
+
+#module output: dictionary (code(error(1), warning(2), data(0)) + msg(string) + data (optional json compatible dictionary))
+    #identify outputs belong to which command input
+#router to user: dictionary (is_process_completed, timestamp, (optional)module_output, command_id)
+#mcp to user: same but add mcp to command_id
+#camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
+#
+#
+#
+#
+#define function that creates user package which is shared by mcp and router
+#change shared strings into shared dictionaries
