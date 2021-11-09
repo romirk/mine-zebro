@@ -47,7 +47,11 @@ class LIDARApp:
             s.disable()
         for s in self.sensors:
             sleep(.2)
-            s.init()
+            try:
+                s.init()
+            except:
+                s.disable()
+                print("Loading LIDAR chip %d failed" % (self.sensors.index(s)+1))
     def get_id(self):
         return "ldr"
     def help(self):
