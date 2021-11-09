@@ -13,7 +13,7 @@ class Lidar(VL53L1X):
 
         #code from library
         """Initialize the VL53L1X ToF Sensor from ST"""
-        #self._i2c_bus = i2c_bus
+        self._i2c_bus = 1#i2c_bus - 1 was used before, make sure this is the right one
         self.i2c_address = self.address#i2c_address
         self._tca9548a_num = 255#tca9548a_num
         self._tca9548a_addr = 0#tca9548a_addr
