@@ -1,5 +1,8 @@
 import threading
+from typing import List
+
 import dummyModule
+import module
 import time
 from datetime import datetime
 
@@ -33,21 +36,22 @@ class Router:
         self.__clean_up()
         self.__prepare()
         self.is_shut_down = False
-        self.__add_all_modules()
+        self.__setup_all_modules()
         self.__listen_to_commands()
 
     # Given a module by MCP add to submodules list
     def __add_module(self, module):
         if isinstance(module, module.__class__):
-            module.set_router(self)
             self.__list.add_by_id(module.get_id(), module)
             return
         raise Exception("Can't add non_module object to submodule list")
 
     # Use this method to add all modules to the current router instance
-    def __add_all_modules(self):
+    def __setup_all_modules(self):
         # TODO start all other modules here
-        self.__add_module(dummyModule.DummyManager())
+        self.__add_module(dummyModule.DummyManager(self))
+
+        self.__list.setup() #calls setup method in each module
         return
 
     # loop until command given by mcp (if no command sleep to an appropriate amount of time)
@@ -113,7 +117,7 @@ class Router:
         return
 
 
-#list of submodules contained in the router
+# list of submodules contained in the router
 class Submodules:
     __id_list = ["com", "loco", "dummy"]  # every module needs to implement a getter for their id
     __predefined_max = len(__id_list)  # should be equal to the max number of modules
@@ -122,6 +126,12 @@ class Submodules:
     # List of submodules that is stored by the router
     def __init__(self):
         self.__list = [-1] * self.__predefined_max
+
+    def setup(self):
+        for i in range(self.__predefined_max):
+            obj = self.__list.__getitem__(i)
+            if isinstance(obj, module.Module.__class__):
+                obj.setup()
 
     def check_id(self, id):
         return self.__id_list.__contains__(id)

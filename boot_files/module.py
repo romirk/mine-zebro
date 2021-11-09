@@ -5,6 +5,17 @@ from abc import ABC, abstractmethod
 # See dummyModule.py for how example
 class Module(ABC):
 
+    @abstractmethod
+    def __init__(self, router):
+        if not isinstance(router, router.__class__):
+            raise Exception("Module:" + self.get_id() + " input parameter not a router")
+        self.__router = router
+        pass
+
+    @abstractmethod
+    def setup(self):
+        pass
+
     #The following 3 methods first call super and add functionality
     @abstractmethod
     def get_id(self):
@@ -19,14 +30,6 @@ class Module(ABC):
     # main function of module (note use super().execute before doing anything else)
     @abstractmethod
     def execute(self, command):
-        pass
-
-    #note the following implementations only need to call or return the super() method
-    @abstractmethod
-    def set_router(self, router):
-        if not isinstance(router, router.__class__):
-            raise Exception("Module:" + self.get_id() + " input parameter not a router")
-        self.__router = router
         pass
 
     @abstractmethod

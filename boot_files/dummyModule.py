@@ -5,6 +5,14 @@ import module
 # Example of module class
 class DummyManager(module.Module):
 
+    def __init__(self, router):
+        super().__init__(router)
+        pass
+
+    def setup(self):
+        super().setup()
+        pass
+
     def get_id(self):
         return "dummy"
 
@@ -37,10 +45,6 @@ class DummyManager(module.Module):
         else:
             self.command_does_not_exist(command)
         return
-
-    def set_router(self, router):
-        super().set_router(router)
-        pass
 
     def send_to_mcp(self, data, error):
         super().send_to_mcp(data, error)
