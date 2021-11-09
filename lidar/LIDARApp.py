@@ -20,6 +20,11 @@ assertsafe m/mid/middle:<distance> h/half/halfway:<distance> s/side:<distance>
 from time import sleep
 import traceback
 
+from Lidar import Lidar
+
+import RPi.GPIO as GPIO
+
+
 
 DEFAULT_DIST_MID=17
 DEFAULT_DIST_HALF=20
@@ -34,7 +39,19 @@ class LIDARApp:
         self.checkhalt=checkhaltfunc #function to check halt flag. returns True if the robot should stop
 
         self.distances=[0,0,0,0,0]#left to right (0=left)
+        self.sensors=[Lidar(self.bus,GPIO,i+1) for i in range(5)]
 
+    def init(self):
+        GPIO.setmode(GPIO.BCM)
+        for s in self.sensors:
+            s.disable()
+        for s in self.sensors:
+            sleep(.2)
+            s.init()
+    def get_id(self):
+        return "ldr"
+    def help(self):
+        return "No help implemented"
 
     #function for executing commands
     def execute(self,command):
@@ -97,14 +114,20 @@ class LIDARApp:
             return self._error("Invalid command: %s"%err)
         return self._error("Invalid command")
     
-    def _error(self,err="",data={}):
-        return ((1,err),data)
-    def _warning(self,err="",data={}):
-        return ((2,err),data)
-    def _data(self,data):
-        return (0,data)
+    def _error(self,err,data={}):
+        if data:
+            return dict(code=2,msg=err,data=data)
+        else:
+            return dict(code=2,msg=err)
+    def _warning(self,err,data={}):
+        if data:
+            return dict(code=1,msg=err,data=data)
+        else:
+            return dict(code=1,msg=err)
+    def _data(self,data,msg="Sent data"):
+        return dict(code=0,msg=msg,data=data)
     def _info(self,msg):
-        return ((0,msg),{})
+        return dict(code=0,msg=msg)
 
     def read(self,args):
         pass#I don't know how the lidar works yet
@@ -116,7 +139,7 @@ class LIDARApp:
     def assertsafe(self,args):
         self.read()
 
-        if self.distances[2]<args[0] or min(self.distances[1::2])<args[1] or min(self.distances[0::4])<args[2]:
+        if any([0<self.distances[i]<args[abs(2-i)] for i in range(5)]):#0<self.distances[2]<args[0] or min(self.distances[1::2])<args[1] or min(self.distances[0::4])<args[2]:
             self.returnf(self._error("Object detected within close range"))
             return
         self.returnf(self._info("No object detected within close range"))
