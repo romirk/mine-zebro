@@ -10,6 +10,7 @@ import commsDummy
 import mcpHelper
 import cameraManager
 import cameraDummy
+import multiprocessing
 
 
 # TODO define error messages and exceptions for submodules
@@ -37,13 +38,13 @@ class Mcp:
 
     # setup all required objects and threads for execution
     def __init__(self) -> None:
+        self.is_camera_package_ready = None
         self.internal_state = State.Running.value
 
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
         self.messenger = messageManager.MessageManager(commsDummy.CommsDummyManager())  # TODO change this to real Comms
-        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy())  # TODO change this to real Camera
 
         # setup threads and place in a list
         self.threads = list()
@@ -90,9 +91,9 @@ class Mcp:
                 self.router.lock.release()
 
             # moves frame from cameraManager to user
-            if self.cameraManager.frame_ready:
-                package = self.cameraManager.get_package()
-                self.cameraManager.reset_frame_ready()
+            if bool(self.is_camera_package_ready.value):
+                package = self.camera_package
+                self.is_camera_package_ready.value = 0
                 self.messenger.send_to_user_package(package)
 
             time.sleep(self.__sleep_interval)

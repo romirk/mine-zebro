@@ -1,3 +1,4 @@
+import multiprocessing
 import threading
 import time
 
@@ -6,7 +7,7 @@ from datetime import datetime
 
 # Class holds mcp functionality relating to handling commands, setting up threads
 # Note all methods that receive parameters from commands check if they are valid and if not send respond back to the user
-from boot_files import messageManager
+from boot_files import messageManager, cameraManager
 
 
 class McpHelper:
@@ -55,7 +56,8 @@ class McpHelper:
 
         if data == self._command_not_found_string:
             has_process_completed = False
-        package = messageManager.create_user_package(prefix, data, datetime.now().strftime("%H:%M:%S"),
+        package = messageManager.create_user_package(prefix, datetime.now().strftime("%H:%M:%S"),
+                                                     data,
                                                      has_process_completed)
         self.mcp.messenger.send_to_user_package(package)
 
@@ -97,7 +99,7 @@ class McpHelper:
     def __change_frame_period(self, command: str) -> str:
         try:
             time = command.split("fp=")[1]
-            self.mcp.cameraManager.time_between_frames = float(time)
+            self.mcp.time_between_frames.value = float(time)
             return ""
         except:
             return self._command_not_found_string
@@ -105,7 +107,7 @@ class McpHelper:
     # turns camera on/off
     def __camera(self, command: str) -> str:
         if command == "cameraOn".lower():
-            self.mcp.cameraManager.is_shut_down = False
+            self.mcp.camera_is_shut_down.value = 0
             self.setup_camera_thread().start()
             return "Camera is on"
 
@@ -114,7 +116,7 @@ class McpHelper:
             for thread in self.mcp.threads:
                 if thread.name == "CameraThread":
                     # set to off and wait
-                    self.mcp.cameraManager.is_shut_down = True
+                    self.mcp.camera_is_shut_down.value = 1
                     while thread.is_alive():
                         time.sleep(1)
                     # remove and give feedback
@@ -165,9 +167,17 @@ class McpHelper:
         self.mcp.threads.append(router_thread)
         return router_thread
 
-    def setup_camera_thread(self) -> threading.Thread:
-        camera_thread = threading.Thread(target=self.mcp.cameraManager.listen_to_camera)
+    def setup_camera_thread(self) -> multiprocessing.Process:
+        self.mcp.is_camera_package_ready = multiprocessing.Value('i', 0)
+        self.mcp.time_between_frames = multiprocessing.Value('d', 3.0)
+        self.mcp.camera_package = multiprocessing.Manager().dict()
+        self.mcp.camera_is_shut_down = multiprocessing.Value('i', 0)
+        camera_thread = multiprocessing.Process(target=cameraManager.start,
+                                                args=(self.mcp.is_camera_package_ready,
+                                                      self.mcp.time_between_frames,
+                                                      self.mcp.camera_package,
+                                                      self.mcp.camera_is_shut_down))
         camera_thread.daemon = True
-        camera_thread.setName("CameraThread")
+        camera_thread.name = "CameraThread"
         self.mcp.threads.append(camera_thread)
         return camera_thread

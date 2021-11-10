@@ -4,34 +4,36 @@ from datetime import datetime
 
 import messageManager
 
-
 import time
-
 
 # Wrapper for the camera that forwards frames from camera to mcp
 # Similar logic to messageManager
-from boot_files import cameraApi
+from boot_files import cameraApi, cameraDummy
 
 
 class CameraManager:
-    is_shut_down = True #TODO turn False if camera must start on startup
-    time_between_frames = 5 #in seconds
+    is_shut_down = True  # TODO turn False if camera must start on startup
+    time_between_frames = 5  # in seconds
     # variables shared between threads that need locks to write on are:
-    __stored_frame = {}
-    __frame_number = 0 #idenitfier used to keep track of frames python3 has no upper limit for integers
-    frame_ready = False
+    __frame_number = 0  # idenitfier used to keep track of frames python3 has no upper limit for integers
 
-    def __init__(self, camera: cameraApi.AbstractCamera) -> None:
-        self.__camera = camera
+    def __init__(self, camera: cameraApi.AbstractCamera,
+                 is_package_ready, time_between_frames, package, is_shut_down) -> None:
         self.__lock = threading.Lock()
 
-    #main loop that retrives frames
+        self.__camera = camera
+        self.is_camera_package_ready = is_package_ready
+        self.time_between_frames = time_between_frames
+        self.__camera_package = package
+        self.is_shut_down = is_shut_down
+
+    # main loop that retrives frames
     def listen_to_camera(self) -> None:
         self.__camera.setup()
-        while not self.is_shut_down:
+        while not bool(self.is_shut_down.value):
             frame = self.__get_valid_input()
             self.__set_frame(frame)
-            time.sleep(self.time_between_frames)
+            time.sleep(self.time_between_frames.value)
         self.__camera.exit()
         return
 
@@ -45,26 +47,26 @@ class CameraManager:
     # create the package for the mcp thread to send to comms
     def __set_frame(self, frame: list) -> None:
         self.__lock.acquire()
-        is_process_complete = True
+        has_process_completed = True
         if len(frame) == 0:
-            is_process_complete = False
+            has_process_completed = False
         command_id = "frame " + str(self.__frame_number)
-        self.__stored_frame = messageManager.create_user_package(command_id,
-                                                                 datetime.now().strftime("%H:%M:%S"),
-                                                                 frame,
-                                                                 is_process_complete)
-        self.frame_ready = True
+
+        self.__camera_package["command_id"] = command_id
+        self.__camera_package["timestamp"] = datetime.now().strftime("%H:%M:%S")
+        self.__camera_package["package"]  = frame
+        self.__camera_package["has_process_complete"] = has_process_completed
+
+        self.is_camera_package_ready.value = 1
         self.__frame_number += 1
         self.__lock.release()
 
-    def reset_frame_ready(self) -> None:
-        self.__lock.acquire()
-        self.frame_ready = False
-        self.__lock.release()
 
-    # getter for frames
-    def get_package(self) -> dict:
-        self.__lock.acquire()
-        frame = copy.deepcopy(self.__stored_frame)
-        self.__lock.release()
-        return frame
+def start(is_package_ready, time_between_frames, package, is_shut_down):
+    camera_manager = CameraManager(cameraDummy.CameraDummy(),
+                                   is_package_ready,
+                                   time_between_frames,
+                                   package,
+                                   is_shut_down)
+    camera_manager.listen_to_camera()
+    return
