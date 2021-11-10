@@ -20,9 +20,21 @@ assertsafe m/mid/middle:<distance> h/half/halfway:<distance> s/side:<distance>
 from time import sleep
 import traceback
 
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"boot_file"))
+from module import Module
+
+
+
 from Lidar import Lidar
 
 import RPi.GPIO as GPIO
+
+
+
+
+
+
 
 
 with open("commands.txt","r") as f:
