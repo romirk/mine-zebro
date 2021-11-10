@@ -1,0 +1,9 @@
+
+read
+    reads the distances for each LIDAR module (in mm)
+    0 means no object was seen, None means no measurement was taken
+    
+assertsafe [m/mid/middle/c/centre/center:<dist>] [s/side/o/out/outer:<dist>] [h/half/halfway:<dist>]
+    like read, but compares the distances to see whether there is an object closeby
+    threshold distances can be specified separately for the sensor in the middle, the sensors on the sides, and the sensors in between
+    <dist> in cm
