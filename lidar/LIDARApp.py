@@ -47,6 +47,8 @@ class LIDARApp:
         self.distances=[None]*5#left to right (0=left)
         self.sensors=[Lidar(self.bus,GPIO,i+1) for i in range(5)]
 
+        self.enabled=False
+
     def setup(self):
         #super().setup()
         GPIO.setmode(GPIO.BCM)
@@ -60,6 +62,7 @@ class LIDARApp:
             except:
                 s.disable()
                 print("Loading LIDAR chip %d failed" % (self.sensors.index(s)+1))
+        self.enabled=True
                 
     def get_id(self):
         return "lidar"
@@ -158,14 +161,19 @@ class LIDARApp:
                 s.disable()
                 self.returnf(self._error("Turning on LIDAR chip %d failed" % s.num))
         self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
+        self.enabled=True
     
     def turn_off(self,args=[]):
         for s in self.sensors:
             s.disable()
         self.distances=[None]*5
         self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
+        self.enabled=False
 
     def read(self,args=[]):
+        if not self.enabled:
+            self.returnf(self._warning("Can't check distances: LIDAR is turned off"))
+        
         i=0
         self.distances=[None]*5
         try:
@@ -180,6 +188,10 @@ class LIDARApp:
         return True
     
     def assertsafe(self,args):
+        if not self.enabled:
+            self.returnf(self._error("Can't check distances: LIDAR is turned off"))
+            return
+
         if not self.read():
             return
         distances=[{False:d,True:0}[d==None] for d in self.distances] #no measurement (None) -> no update
