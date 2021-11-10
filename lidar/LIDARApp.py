@@ -49,8 +49,16 @@ DEFAULT_DIST_SIDE=12
 
 
 class LIDARApp(Module):
-    def __init__(self,bus):
-        #super().__init__(router)
+
+    def get_id(self):
+        return "lidar"
+
+    def help(self):
+        return super().help()+HELPTEXT
+
+
+    def __init__(self,router,bus):
+        super().__init__(router)
 
         self.bus=bus
 
@@ -59,8 +67,8 @@ class LIDARApp(Module):
 
         self.enabled=False
 
-    def setup(self):
-        #super().setup()
+    def init(self):
+        #super().init()
         GPIO.setmode(GPIO.BCM)
         for s in self.sensors:
             s.disable()
@@ -74,11 +82,12 @@ class LIDARApp(Module):
                 print("Loading LIDAR chip %d failed" % (self.sensors.index(s)+1))
         self.enabled=True
                 
-    def get_id(self):
-        return "lidar"
 
-    def help(self):
-        return HELPTEXT
+    def get_state(self):
+        if not self.enabled:
+            self.send_output(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
+        else:
+            self.execute("read")
 
     #function for executing commands
     def execute(self,command):
