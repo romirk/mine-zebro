@@ -1,4 +1,10 @@
 import time
+from typing import Union
+
+import module
+from datetime import datetime
+
+import commsApi
 
 import threading
 
@@ -11,21 +17,21 @@ class MessageManager:
     __stored_input = ""
     input_received = False
 
-    def __init__(self, comms):
+    def __init__(self, comms: commsApi.AbstractComms) -> None:
         self.__comms = comms
         self.__comms.setup()
         self.__lock = threading.Lock()
 
     # Comms to MCP methods
     # loop for waiting for user input
-    def listen_to_user(self):
+    def listen_to_user(self) -> None:
         while not self.is_shut_down:
             command = self.__get_valid_input()
             self.__set_command(command)
             time.sleep(self.__sleep_interval)
 
     # Get valid input from comms
-    def __get_valid_input(self):
+    def __get_valid_input(self) -> str:
         user_input = self.__comms.cin()  # blocking method
 
         if len(user_input.split(" ", 1)) < 2:
@@ -34,7 +40,7 @@ class MessageManager:
         return user_input.lower()
 
     # store given command as object attribute
-    def __set_command(self, command):
+    def __set_command(self, command: str) -> None:
         self.__lock.acquire()
         self.__stored_input = command
         self.input_received = True
@@ -52,24 +58,20 @@ class MessageManager:
         self.__lock.release()
         return command
 
-    def reset_input_received(self):
+    def reset_input_received(self) -> None:
         self.__lock.acquire()
         self.input_received = False
         self.__lock.release()
 
-#CameraManager packages use as command_id = frame #id
-    def send_to_user_package(self, package: dict):
-        # Edit data to make it presentable
-        self.send_to_user_text(package)
-
-    def send_to_user_text(self, text):
+    # CameraManager packages use as command_id = frame #id
+    def send_to_user_package(self, package: dict) -> None:
         self.__lock.acquire()
-        self.__comms.cout(text)
+        self.__comms.cout(package)
         self.__lock.release()
 
     # loop that periodically sets command to check battery status and if motors are overheating
     # note if status sleep interval is 0 then disabled
-    def status_loop(self, sleep_interval):
+    def status_loop(self, sleep_interval: float) -> None:
         battery_level = 100
         while not self.is_shut_down and sleep_interval > 0:
             # TODO check for battery status & implement as module or mcp command depending if it's using I2C bus
@@ -82,7 +84,13 @@ class MessageManager:
         return
 
 
-#Function called by all threads that need to deliver information to the user
-def create_user_package(command_id: str, output, timestamp, has_process_completed=None):
+# Function called by all threads that need to deliver information to the user
+def create_user_package(command_id: str, timestamp: str, output: Union[dict, str, list] = None,
+                        has_process_completed: bool = None) -> dict:
     return {'command_id': command_id, 'package': output, 'timestamp': timestamp,
-            'is_process_complete': has_process_completed}
+            'has_process_completed': has_process_completed}
+
+#
+#def mcp_user_package(command_id: str, code: int, message: str, has_process_completed: bool = None) -> dict:
+#    output = module.create_router_package(code, message)
+#    return create_user_package(command_id, datetime.now().strftime("%H:%M:%S"), output, has_process_completed)

@@ -5,8 +5,8 @@ import module
 # Example of module class
 class DummyManager(module.Module):
 
-    def __init__(self, router):
-        super().__init__(router)
+    def __init__(self, router_obj):
+        super().__init__(router_obj)
         pass
 
     def setup(self):

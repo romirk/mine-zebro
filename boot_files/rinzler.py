@@ -3,6 +3,7 @@ from datetime import datetime
 from enum import Enum
 
 import router
+import module
 import messageManager
 import time
 import commsDummy
@@ -35,7 +36,7 @@ class Mcp:
     __status_sleep_interval = 0  # for now use zero so not to check the battery or the motors
 
     # setup all required objects and threads for execution
-    def __init__(self):
+    def __init__(self) -> None:
         self.internal_state = State.Running.value
 
         # initialise all objects
@@ -52,14 +53,14 @@ class Mcp:
         return
 
     # start all threads
-    def start(self):
+    def start(self) -> None:
         for thread in self.threads:
             thread.daemon = True
             thread.start()
         return
 
     # locks are used to avoid deadlock when accessing shared variables
-    def input_output_loop(self):
+    def input_output_loop(self) -> None:
         while self.internal_state == State.Running.value:
 
             # move input from message manager to router or handle if mcp command
@@ -72,9 +73,12 @@ class Mcp:
                 else:
                     if self.router.is_command_loaded:
                         self.messenger.send_to_user_package(
-                            messageManager.create_user_package(prefix, "Command already loaded",
-                                                               datetime.now().strftime(
-                                                                   "%H:%M:%S"), False))
+                            messageManager.create_user_package(prefix,
+                                                               datetime.now().strftime("%H:%M:%S"),
+                                                               module.create_router_package(
+                                                                   module.OutputCode.error.value,
+                                                                   "Command already loaded"),
+                                                               False))
                     else:
                         self.router.load_command(prefix, command)
 
@@ -95,7 +99,7 @@ class Mcp:
         return
 
     # wait for all threads to finish before shutdown
-    def wait(self):
+    def wait(self) -> None:
         for thread in self.threads:
             thread.join()
         return
@@ -126,5 +130,3 @@ if __name__ == "__main__":
     # command given to the terminal to restart __main__
     if mcp.internal_state == State.Restart.value:
         os.system("Python rinzler.py")
-
-
