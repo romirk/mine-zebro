@@ -25,6 +25,10 @@ from Lidar import Lidar
 import RPi.GPIO as GPIO
 
 
+with open("commands.txt","r") as f:
+    HELPTEXT=f.read()
+
+
 
 DEFAULT_DIST_MID=8
 DEFAULT_DIST_HALF=10
@@ -34,6 +38,8 @@ DEFAULT_DIST_SIDE=12
 
 class LIDARApp:
     def __init__(self,bus,returnfunc,checkhaltfunc):
+        #super().__init__(router)
+
         self.bus=bus
         self.returnf=returnfunc #function for sending back data and errors
         self.checkhalt=checkhaltfunc #function to check halt flag. returns True if the robot should stop
@@ -41,7 +47,8 @@ class LIDARApp:
         self.distances=[0,0,0,0,0]#left to right (0=left)
         self.sensors=[Lidar(self.bus,GPIO,i+1) for i in range(5)]
 
-    def init(self):
+    def setup(self):
+        #super().setup()
         GPIO.setmode(GPIO.BCM)
         for s in self.sensors:
             s.disable()
@@ -55,9 +62,10 @@ class LIDARApp:
                 print("Loading LIDAR chip %d failed" % (self.sensors.index(s)+1))
                 
     def get_id(self):
-        return "ldr"
+        return "lidar"
+
     def help(self):
-        return "No help implemented"
+        return HELPTEXT
 
     #function for executing commands
     def execute(self,command):
@@ -97,7 +105,11 @@ class LIDARApp:
                         args[2]=val
                     else:
                         self.returnf(self._invalid_command("Invalid direction: '%s'"%key))
-                        return 
+                        return
+            elif command[0]=="on":
+                func=self.turn_on
+            elif command[0]=="off":
+                func=self.turn_off
                 
             else:
                 self.returnf( self._invalid_command("No valid command specified") )
@@ -136,13 +148,33 @@ class LIDARApp:
     def _info(self,msg):
         return dict(code=0,msg=msg)
 
+
+    def turn_on(self):
+        for s in self.sensors:
+            sleep(.2)
+            try:
+                s.init()
+            except:
+                s.disable()
+                self.returnf(self._error("Turning on LIDAR chip %d failed" % s.num))
+        self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
+    
+    def turn_off(self):
+        for s in self.sensors:
+            s.disable()
+        self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
+
     def read(self,args=[]):
         self.distances=[s.read() for s in self.sensors]
-        self.returnf(self._data(dict(zip([1,2,3,4,5],self.distances))))
+        self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":self.distances[s.num-1]} for s in self.sensors})))
     
     def assertsafe(self,args):
         self.read()
         distances=[{False:d,True:0}[d==None] for d in self.distances] #no measurement (None) -> no update
+
+        if None in self.distances:
+            self.returnf(self._warning("Not all LIDAR chips are operational"))
+
         
         #args in cm -> *10 to mm
         if any([0<distances[i]<10*args[abs(2-i)] for i in range(5)]):#0<self.distances[2]<args[0] or min(self.distances[1::2])<args[1] or min(self.distances[0::4])<args[2]:
@@ -161,7 +193,7 @@ if __name__=="__main__":
     
     
     lidar=LIDARApp(bus,pprint,int)
-    lidar.init()
+    lidar.setup()
     print("LIDAR app testing environment - enter commands or 'exit'")
     while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
         i=input("> ").strip()
