@@ -149,7 +149,7 @@ class LIDARApp:
         return dict(code=0,msg=msg)
 
 
-    def turn_on(self):
+    def turn_on(self,args=[]):
         for s in self.sensors:
             sleep(.2)
             try:
@@ -159,17 +159,28 @@ class LIDARApp:
                 self.returnf(self._error("Turning on LIDAR chip %d failed" % s.num))
         self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
     
-    def turn_off(self):
+    def turn_off(self,args=[]):
         for s in self.sensors:
             s.disable()
         self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
 
     def read(self,args=[]):
-        self.distances=[s.read() for s in self.sensors]
+        i=0
+        self.distances=[]
+        try:
+            while i<5:
+                self.distances[i]=self.sensors[i].read()
+                i+=1
+        except:
+            self.returnf( self._error("Exception occured while reading sensor %d:\n%s"%(i+1,traceback.format_exc())) )
+            return
+
         self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":self.distances[s.num-1]} for s in self.sensors}))
+        return True
     
     def assertsafe(self,args):
-        self.read()
+        if not self.read():
+            return
         distances=[{False:d,True:0}[d==None] for d in self.distances] #no measurement (None) -> no update
 
         if None in self.distances:
