@@ -156,7 +156,7 @@ class LIDARApp:
         for s in self.sensors:
             sleep(.2)
             try:
-                s.init()
+                s.enable()
             except:
                 s.disable()
                 self.returnf(self._error("Turning on LIDAR chip %d failed" % s.num))
