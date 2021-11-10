@@ -44,7 +44,7 @@ class LIDARApp:
         self.returnf=returnfunc #function for sending back data and errors
         self.checkhalt=checkhaltfunc #function to check halt flag. returns True if the robot should stop
 
-        self.distances=[0,0,0,0,0]#left to right (0=left)
+        self.distances=[None]*5#left to right (0=left)
         self.sensors=[Lidar(self.bus,GPIO,i+1) for i in range(5)]
 
     def setup(self):
@@ -162,11 +162,12 @@ class LIDARApp:
     def turn_off(self,args=[]):
         for s in self.sensors:
             s.disable()
+        self.distances=[None]*5
         self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
 
     def read(self,args=[]):
         i=0
-        self.distances=[]
+        self.distances=[None]*5
         try:
             while i<5:
                 self.distances[i]=self.sensors[i].read()
