@@ -39,7 +39,7 @@ class McpHelper:
             return
 
         elif command.startswith("fp="):
-            self.__change_frame_Period(command)
+            self.__change_frame_period(command)
 
         else:
             self.mcp.messenger.send_to_user_text(self._command_not_found_string)

@@ -1,6 +1,9 @@
 from abc import ABC
+from logging import info
 import commsApi
-import serverApi
+from threading import Thread
+import json
+# import serverApi
 
 from flask import Flask, render_template
 from flask_classful import FlaskView
@@ -23,16 +26,35 @@ class ControllerView(FlaskView):
 
 #The submodule is used to setup the flask app and websocket connections. 
 class CommunicationModule(commsApi.AbstractComms):
+    
 
     def setup(self):
         self.__app = Flask(__name__)
-
+        self.__data = ""
+        self.received = False
+        self.lock = False
         #registering the views
         ControllerView.register(self.__app)
+        
     
         self.__app.config['SECRET_KEY'] = 'secret!'
         self.__socketio = SocketIO(self.__app)
         
+        # Preparing for creating a thread for the application. 
+                    
+
+        #Defining the incoming command.
+        @self.__socketio.on('command')
+        def handle_command(command):
+            #Note command is a dictionary object.
+            # data = json.load(command)
+
+            if(self.received == False):
+                self.__data = command["command"]
+                self.received = True
+           
+            print(self.__data)
+
 
         #Defining the different types of messages.
         @self.__socketio.on('message')
@@ -40,12 +62,21 @@ class CommunicationModule(commsApi.AbstractComms):
             print('recieved message: ' , info)
             self.__data = info
 
-        self.__socketio.run(self.__app)
+        kwargs = {'app' : self.__app}
+
+        serverThread = Thread(target=self.__socketio.run, daemon=True, kwargs=kwargs).start()
+        # self.__socketio.run(self.__app)
+        print("TESTING")
         
     def cin(self):
-        return self.__data
+        if(self.received):
+            self.received = False
+            return self.__data
+        return ""
 
+    
     def cout(self, string):
+        self.__socketio.emit('output', string)
         print("output>" + string)
 
 
