@@ -42,6 +42,7 @@ class McpHelper:
 
         elif command.startswith("fp="):
             self.__change_frame_period(command)
+<<<<<<< HEAD
             return
 
         elif command.startswith("camera"):
@@ -51,6 +52,8 @@ class McpHelper:
         elif command == "reset":
             self.__router_reset()
             return
+=======
+>>>>>>> Communication
 
         else:
             self.mcp.messenger.send_to_user_text(self._command_not_found_string)
