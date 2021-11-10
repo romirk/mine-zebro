@@ -20,8 +20,8 @@ assertsafe m/mid/middle:<distance> h/half/halfway:<distance> s/side:<distance>
 from time import sleep
 import traceback
 
-import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"boot_file"))
+import os,sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"boot_files"))
 from module import Module
 
 
@@ -48,13 +48,11 @@ DEFAULT_DIST_SIDE=12
 
 
 
-class LIDARApp:
-    def __init__(self,bus,returnfunc,checkhaltfunc):
+class LIDARApp(Module):
+    def __init__(self,bus):
         #super().__init__(router)
 
         self.bus=bus
-        self.returnf=returnfunc #function for sending back data and errors
-        self.checkhalt=checkhaltfunc #function to check halt flag. returns True if the robot should stop
 
         self.distances=[None]*5#left to right (0=left)
         self.sensors=[Lidar(self.bus,GPIO,i+1) for i in range(5)]
@@ -88,10 +86,10 @@ class LIDARApp:
         func,args=None,[]
 
         try: #in case of an error, report back the exact error
-            if not len(command):    return self.returnf(self._invalid_command("No command specified"))
+            if not len(command):    return self.send_output(self._invalid_command("No command specified"))
             if command[0]=="read": #read values and report back
                 if len(command)>1:
-                    return self.returnf(self._invalid_command("Command 'read' takes no arguments"))
+                    return self.send_output(self._invalid_command("Command 'read' takes no arguments"))
                 func=self.read
                 args=[]
 
@@ -102,14 +100,14 @@ class LIDARApp:
                     try:
                         key,val=term.split(":")
                     except:
-                        self.returnf(self._invalid_command("Invalid argument: '%s'"%term))
+                        self.send_output(self._invalid_command("Invalid argument: '%s'"%term))
                         return
                     
                     try:
                         val=int(val)
                         assert val>0
                     except:
-                        self.returnf(self._invalid_command("Invalid distance: '%s'"%str(val)))
+                        self.send_output(self._invalid_command("Invalid distance: '%s'"%str(val)))
                         return
 
                     if key in ("m","mid","middle","c","centre","center"):
@@ -119,7 +117,7 @@ class LIDARApp:
                     elif key in ("s","side","o","out","outer"):
                         args[2]=val
                     else:
-                        self.returnf(self._invalid_command("Invalid direction: '%s'"%key))
+                        self.send_output(self._invalid_command("Invalid direction: '%s'"%key))
                         return
             elif command[0]=="on":
                 func=self.turn_on
@@ -127,17 +125,17 @@ class LIDARApp:
                 func=self.turn_off
                 
             else:
-                self.returnf( self._invalid_command("No valid command specified") )
+                self.send_output( self._invalid_command("No valid command specified") )
                 return
 
         except:
-            self.returnf( self._invalid_command("Exception occured while reading command:\n%s"%traceback.format_exc()) )
+            self.send_output( self._invalid_command("Exception occured while reading command:\n%s"%traceback.format_exc()) )
             return
 
         try: #try to execute command. send back traceback if it fails (which might result in a dangerous situation for the rover!)
             func(args)
         except:
-            self.returnf( self._error("Exception occured during execution of command:\n%s"%traceback.format_exc()) )
+            self.send_output( self._error("Exception occured during execution of command:\n%s"%traceback.format_exc()) )
             return
 
     #some functions for reoccuring results
@@ -171,20 +169,20 @@ class LIDARApp:
                 s.enable()
             except:
                 s.disable()
-                self.returnf(self._error("Turning on LIDAR chip %d failed" % s.num))
-        self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
+                self.send_output(self._error("Turning on LIDAR chip %d failed" % s.num))
+        self.send_output(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
         self.enabled=True
     
     def turn_off(self,args=[]):
         for s in self.sensors:
             s.disable()
         self.distances=[None]*5
-        self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
+        self.send_output(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
         self.enabled=False
 
     def read(self,args=[]):
         if not self.enabled:
-            self.returnf(self._warning("Can't check distances: LIDAR is turned off"))
+            self.send_output(self._warning("Can't check distances: LIDAR is turned off"))
         
         i=0
         self.distances=[None]*5
@@ -193,15 +191,15 @@ class LIDARApp:
                 self.distances[i]=self.sensors[i].read()
                 i+=1
         except:
-            self.returnf( self._error("Exception occured while reading sensor %d:\n%s"%(i+1,traceback.format_exc())) )
+            self.send_output( self._error("Exception occured while reading sensor %d:\n%s"%(i+1,traceback.format_exc())) )
             return
 
-        self.returnf(self._data({s.num:{"enabled":s.enabled,"distance":self.distances[s.num-1]} for s in self.sensors}))
+        self.send_output(self._data({s.num:{"enabled":s.enabled,"distance":self.distances[s.num-1]} for s in self.sensors}))
         return True
     
     def assertsafe(self,args):
         if not self.enabled:
-            self.returnf(self._error("Can't check distances: LIDAR is turned off"))
+            self.send_output(self._error("Can't check distances: LIDAR is turned off"))
             return
 
         if not self.read():
@@ -209,14 +207,14 @@ class LIDARApp:
         distances=[{False:d,True:0}[d==None] for d in self.distances] #no measurement (None) -> no update
 
         if None in self.distances:
-            self.returnf(self._warning("Not all LIDAR chips are operational"))
+            self.send_output(self._warning("Not all LIDAR chips are operational"))
 
         
         #args in cm -> *10 to mm
         if any([0<distances[i]<10*args[abs(2-i)] for i in range(5)]):#0<self.distances[2]<args[0] or min(self.distances[1::2])<args[1] or min(self.distances[0::4])<args[2]:
-            self.returnf(self._error("Object detected within close range"))
+            self.send_output(self._error("Object detected within close range"))
             return
-        self.returnf(self._info("No object detected within close range"))
+        self.send_output(self._info("No object detected within close range"))
 
 
      
