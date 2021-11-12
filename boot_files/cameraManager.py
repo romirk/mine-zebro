@@ -49,11 +49,11 @@ class CameraManager:
         is_process_complete = True
         if len(frame) == 0:
             is_process_complete = False
-        command_id = "frame " + str(self.__frame_number)  # TODO replace frame
+        command_id = "frame " + str(self.__frame_number)
         self.__stored_frame = messageManager.create_user_package(command_id,
                                                                  datetime.now().strftime("%H:%M:%S"),
-                                                                 "frame received",
-                                                                 # frame.tolist(),
+                                                                 #"frame received", #TODO replace with frame
+                                                                 frame.tolist(),
                                                                  is_process_complete)
         self.frame_ready = True
         self.__frame_number += 1
