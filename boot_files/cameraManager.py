@@ -1,13 +1,11 @@
 import copy
 import threading
-import numpy
+import messageManager
 from datetime import datetime
 
 import messageManager
 
-
 import time
-
 
 # Wrapper for the camera that forwards frames from camera to mcp
 # Similar logic to messageManager
@@ -15,23 +13,25 @@ from boot_files import cameraApi
 
 
 class CameraManager:
-    is_shut_down = False #TODO turn False if camera must start on startup
-    time_between_frames = 0.1 #in seconds
+    is_shut_down = False  # TODO turn False if camera must start on startup
+    time_between_frames = 0.1  # in seconds
     # variables shared between threads that need locks to write on are:
     __stored_frame = {}
-    __frame_number = 0 #idenitfier used to keep track of frames python3 has no upper limit for integers
+    __frame_number = 0  # idenitfier used to keep track of frames python3 has no upper limit for integers
     frame_ready = False
 
-    def __init__(self, camera: cameraApi.AbstractCamera) -> None:
+    def __init__(self, camera: cameraApi.AbstractCamera, message_manager: messageManager) -> None:
         self.__camera = camera
         self.__lock = threading.Lock()
+        self.__message_manager = message_manager
 
-    #main loop that retrives frames
+    # main loop that retrives frames
     def listen_to_camera(self) -> None:
         self.__camera.setup()
         while not self.is_shut_down:
             frame = self.__get_valid_input()
             self.__set_frame(frame)
+            self.send_to_user()
             time.sleep(self.time_between_frames)
         self.__camera.exit()
         return
@@ -49,11 +49,11 @@ class CameraManager:
         is_process_complete = True
         if len(frame) == 0:
             is_process_complete = False
-        command_id = "frame " + str(self.__frame_number) #TODO replace frame
+        command_id = "frame " + str(self.__frame_number)  # TODO replace frame
         self.__stored_frame = messageManager.create_user_package(command_id,
                                                                  datetime.now().strftime("%H:%M:%S"),
                                                                  "frame received",
-                                                                 #frame.tolist(),
+                                                                 # frame.tolist(),
                                                                  is_process_complete)
         self.frame_ready = True
         self.__frame_number += 1
@@ -65,8 +65,7 @@ class CameraManager:
         self.__lock.release()
 
     # getter for frames
-    def get_package(self) -> dict:
+    def send_to_user(self) -> None:
         self.__lock.acquire()
-        frame = copy.deepcopy(self.__stored_frame)
+        self.__message_manager.send_to_user_package(self.__stored_frame)
         self.__lock.release()
-        return frame

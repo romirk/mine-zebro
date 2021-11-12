@@ -37,7 +37,7 @@ class Mcp:
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
         self.messenger = messageManager.MessageManager(messageManager.CommsMock())  # TODO change this to real Comms
-        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy())  # TODO change this to real Camera
+        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(), self.messenger)  # TODO change this to real Camera
 
         # setup threads and place in a list
         self.threads = list()
@@ -84,10 +84,10 @@ class Mcp:
                 self.router.lock.release()
 
             # moves frame from cameraManager to user
-            if self.cameraManager.frame_ready:
-                package = self.cameraManager.get_package()
-                self.cameraManager.reset_frame_ready()
-                self.messenger.send_to_user_package(package)
+            #if self.cameraManager.frame_ready:
+            #    package = self.cameraManager.get_package()
+            #    self.cameraManager.reset_frame_ready()
+            #    self.messenger.send_to_user_package(package)
 
             time.sleep(self.__sleep_interval)
         return
