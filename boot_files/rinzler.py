@@ -5,12 +5,8 @@ from enum import Enum
 import router
 import messageManager
 import time
-<<<<<<< HEAD
-import commsDummy
-=======
 import commsApi
 import communicationModule
->>>>>>> Communication
 import mcpHelper
 import cameraManager
 import cameraDummy
