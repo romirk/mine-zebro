@@ -16,14 +16,7 @@ import cameraDummy
 # TODO define error messages and exceptions for submodules
 # TODO replace threading router thread with a process (geekfreak multiprocessing)
 # TODO open different terminal for output and input
-# TODO
-# Done camera to user: dictionary (command_id= cam + identifier, frame(in place of data), timestamp, is_process_complete)
-# Done define function that creates user package which is shared by mcp and router
-# Done mcp to user: (command_id = mcp, data, timestamp, is_process_complete)
-# Done move status thread in message manager and use "command" to check the battery/motors
-# Done module package: dictionary (code(error(1), warning(2), data(0)) + msg(string) + data (optional json compatible dictionary))
-# router to user: dictionary (is_process_completed, timestamp, (optional)module_output, command_id)
-# (Done add number concatenated with prefix) identify outputs belong to which command input
+# TOD socket.emit('command', {command: 'dummy count'});
 
 # Processing router: Keep it on hold
 

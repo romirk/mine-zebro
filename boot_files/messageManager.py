@@ -1,4 +1,5 @@
 import time
+import json
 from typing import Union
 
 import module
@@ -34,6 +35,10 @@ class MessageManager:
     def __get_valid_input(self) -> str:
         user_input = self.__comms.cin()  # blocking method
 
+        while user_input == "":
+            user_input = self.__comms.cin()
+            time.sleep(1)
+
         if len(user_input.split(" ", 1)) < 2:
             user_input = "mcp " + user_input
 
@@ -66,7 +71,7 @@ class MessageManager:
     # CameraManager packages use as command_id = frame #id
     def send_to_user_package(self, package: dict) -> None:
         self.__lock.acquire()
-        self.__comms.cout(package)
+        self.__comms.cout(json.dumps(package, indent=1))
         self.__lock.release()
 
     # loop that periodically sets command to check battery status and if motors are overheating
