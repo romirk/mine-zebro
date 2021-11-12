@@ -36,7 +36,7 @@ class Mcp:
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
-        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
+        self.messenger = messageManager.MessageManager(messageManager.CommsMock())  # TODO change this to real Comms
         self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy())  # TODO change this to real Camera
 
         # setup threads and place in a list

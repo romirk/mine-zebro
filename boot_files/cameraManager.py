@@ -1,5 +1,6 @@
 import copy
 import threading
+import numpy
 from datetime import datetime
 
 import messageManager
@@ -14,8 +15,8 @@ from boot_files import cameraApi
 
 
 class CameraManager:
-    is_shut_down = True #TODO turn False if camera must start on startup
-    time_between_frames = 5 #in seconds
+    is_shut_down = False #TODO turn False if camera must start on startup
+    time_between_frames = 0.1 #in seconds
     # variables shared between threads that need locks to write on are:
     __stored_frame = {}
     __frame_number = 0 #idenitfier used to keep track of frames python3 has no upper limit for integers
@@ -43,15 +44,16 @@ class CameraManager:
             return []
 
     # create the package for the mcp thread to send to comms
-    def __set_frame(self, frame: list) -> None:
+    def __set_frame(self, frame) -> None:
         self.__lock.acquire()
         is_process_complete = True
         if len(frame) == 0:
             is_process_complete = False
-        command_id = "frame " + str(self.__frame_number)
+        command_id = "frame " + str(self.__frame_number) #TODO replace frame
         self.__stored_frame = messageManager.create_user_package(command_id,
                                                                  datetime.now().strftime("%H:%M:%S"),
-                                                                 frame,
+                                                                 "frame received",
+                                                                 #frame.tolist(),
                                                                  is_process_complete)
         self.frame_ready = True
         self.__frame_number += 1

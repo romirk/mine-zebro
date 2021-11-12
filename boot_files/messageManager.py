@@ -1,5 +1,6 @@
 import time
 import json
+import commsApi
 from typing import Union
 
 import module
@@ -71,7 +72,9 @@ class MessageManager:
     # CameraManager packages use as command_id = frame #id
     def send_to_user_package(self, package: dict) -> None:
         self.__lock.acquire()
-        self.__comms.cout(json.dumps(package, indent=1))
+        #array is not json serialisable hence turn into python list
+        temp = json.dumps(package, indent=1)
+        self.__comms.cout(temp)
         self.__lock.release()
 
     # loop that periodically sets command to check battery status and if motors are overheating
@@ -99,3 +102,16 @@ def create_user_package(command_id: str, timestamp: str, output: Union[dict, str
 #def mcp_user_package(command_id: str, code: int, message: str, has_process_completed: bool = None) -> dict:
 #    output = module.create_router_package(code, message)
 #    return create_user_package(command_id, datetime.now().strftime("%H:%M:%S"), output, has_process_completed)
+
+
+#comms Implementation using the terminal as input/package
+class CommsMock(commsApi.AbstractComms):
+
+    def setup(self) -> None:
+        return
+
+    def cin(self) -> str:
+        return input("rinzler>")
+
+    def cout(self, output:str) -> None:
+        print("output>" + output)
