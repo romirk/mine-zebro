@@ -5,6 +5,14 @@ import module
 # Example of module class
 class DummyManager(module.Module):
 
+    def __init__(self, router_obj):
+        super().__init__(router_obj)
+        pass
+
+    def setup(self):
+        super().setup()
+        pass
+
     def get_id(self):
         return "dummy"
 
@@ -12,7 +20,7 @@ class DummyManager(module.Module):
         text = super().help()
         text += " count: Count from 0-4 with rests in between\n"
         text += " loop:  Count from 0 until hold command given\n"
-        self.send_to_mcp(text, 0)
+        self.send_to_router(module.OutputCode.data.value, "", text)
         pass
 
     def execute(self, command):
@@ -21,13 +29,13 @@ class DummyManager(module.Module):
         if command == "count":
             for i in range(5):
                 data = str(i)
-                self.send_to_mcp(data, 0)
+                self.send_to_router(module.OutputCode.data.value, "Counting", data)
                 i += 1
 
         elif command == "loop":
-            while not self.check_if_hold():
+            while not self.check_if_halt():
                 data = str(number)
-                self.send_to_mcp(data, 0)
+                self.send_to_router(module.OutputCode.data.value, "Counting", data)
                 number += 1
                 time.sleep(5)
 
@@ -38,15 +46,11 @@ class DummyManager(module.Module):
             self.command_does_not_exist(command)
         return
 
-    def set_router(self, router):
-        super().set_router(router)
-        pass
+    def send_to_router(self, code, msg=None, data=None):
+        super().send_to_router(code, msg, data)
 
-    def send_to_mcp(self, data, error):
-        super().send_to_mcp(data, error)
-
-    def check_if_hold(self):
-        return super().check_if_hold()
+    def check_if_halt(self):
+        return super().check_if_halt()
 
     def command_does_not_exist(self, command):
         super().command_does_not_exist(command)
