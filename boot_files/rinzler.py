@@ -36,7 +36,7 @@ class Mcp:
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
-        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
+        self.messenger = messageManager.MessageManager(messageManager.CommsMock())  # TODO change this to real Comms
         self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(), self.messenger)  # TODO change this to real Camera
 
         # setup threads and place in a list
@@ -54,7 +54,7 @@ class Mcp:
         return
 
     # locks are used to avoid deadlock when accessing shared variables
-    def input_output_loop(self) -> None:
+    def mcp_loop(self) -> None:
         while self.internal_state == State.Running.value:
 
             # move input from message manager to router or handle if mcp command
@@ -107,9 +107,8 @@ if __name__ == "__main__":
     mcp = Mcp()
     mcp.start()
 
-    # keep main thread busy until state changes
-    while mcp.internal_state == State.Running.value:
-        time.sleep(1)
+    #start mcp loop
+    mcp.mcp_loop()
 
     # wait for all threads to finish to shutdown safely
     if mcp.internal_state == State.ShutDown.value or mcp.internal_state == State.Restart.value:

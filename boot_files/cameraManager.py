@@ -13,7 +13,7 @@ from boot_files import cameraApi
 
 
 class CameraManager:
-    is_shut_down = False  # TODO turn False if camera must start on startup
+    is_shut_down = True  # TODO turn False if camera must start on startup
     time_between_frames = 0.1  # in seconds
     # variables shared between threads that need locks to write on are:
     __stored_frame = {}

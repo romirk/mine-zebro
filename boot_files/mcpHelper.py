@@ -147,10 +147,6 @@ class McpHelper:
         listen_to_user_thread.setName("UserInputThread")
         self.mcp.threads.append(listen_to_user_thread)
 
-        in_out_thread = threading.Thread(target=self.mcp.input_output_loop)
-        in_out_thread.setName("In/OutThread")
-        self.mcp.threads.append(in_out_thread)
-
         status_thread = threading.Thread(target=self.mcp.messenger.status_loop,
                                          args=(status_sleep_interval,))
         status_thread.setName("StatusThread")
