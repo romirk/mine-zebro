@@ -26,8 +26,6 @@ import cameraDummy
 # 3)start all threads
 class Mcp:
     __sleep_interval = 1
-    # __status_sleep_interval = 0.5  # how often to check motors for overheating and battery
-    __status_sleep_interval = 0  # for now use zero so not to check the battery or the motors
 
     # setup all required objects and threads for execution
     def __init__(self) -> None:
@@ -43,7 +41,7 @@ class Mcp:
         self.threads = list()
         self.mcp_helper.setup_router_thread()
         self.mcp_helper.setup_camera_thread()
-        self.mcp_helper.setup_non_restartable_threads(self.__status_sleep_interval)
+        self.mcp_helper.setup_non_restartable_threads()
         return
 
     # start all threads

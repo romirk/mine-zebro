@@ -94,6 +94,11 @@ class Router:
             time.sleep(1)
         self.lock.acquire()
 
+        if self.__command == "battery":
+            self.__prefix = "battery"
+        elif self.__command == "motors":
+            self.__prefix = "motors"
+
         self.package = messageManager.create_user_package(self.__prefix,
                                                           datetime.now().strftime("%H:%M:%S"),
                                                           module_output,

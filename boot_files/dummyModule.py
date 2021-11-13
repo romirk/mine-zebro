@@ -42,6 +42,12 @@ class DummyManager(module.Module):
         elif command == "help":
             self.help()
 
+        elif command == "battery":
+            self.send_to_router(module.OutputCode.warning.value, "Battery %")
+
+        elif command == "motors":
+            self.send_to_router(module.OutputCode.warning.value, "Motors are fine")
+
         else:
             self.command_does_not_exist(command)
         return
