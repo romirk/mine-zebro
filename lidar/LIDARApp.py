@@ -67,6 +67,8 @@ class LIDARApp(Module):
 
         self.enabled=False
 
+    def setup(self):
+        self.init()
     def init(self):
         #super().init()
         GPIO.setmode(GPIO.BCM)
@@ -82,7 +84,6 @@ class LIDARApp(Module):
                 print("Loading LIDAR chip %d failed" % (self.sensors.index(s)+1))
         self.enabled=True
                 
-
     def get_state(self):
         if not self.enabled:
             self.send_output(self._data({s.num:{"enabled":s.enabled,"distance":None} for s in self.sensors}))
@@ -169,6 +170,9 @@ class LIDARApp(Module):
         return dict(code=0,msg=msg,data=data)
     def _info(self,msg):
         return dict(code=0,msg=msg)
+
+    def send_output(packet):
+        self.send_to_router(**packet)
 
 
     def turn_on(self,args=[]):
