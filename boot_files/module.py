@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import router
+#import router
 try: #prevent errors when testing on computer
     from smbus2 import SMBus
 except: SMBus = int
@@ -80,23 +80,23 @@ class Module(ABC):
     #functions for creating packages
     def _halt(self):
         return self._error("Execution halted")
-    def _invalid_command(self,err=""):
+    def _invalid_command(self,err=None):
         if err:
             return self._error("Invalid command: %s"%err)
         return self._error("Invalid command")
     
-    def _error(self,err,data={}):
+    def _error(self,err,data=None):
         if data:
             return create_router_package(code=OutputCode.error.value,msg=err,data=data)
         else:
             return create_router_package(code=OutputCode.error.value,msg=err)
-    def _warning(self,err,data={}):
+    def _warning(self,err,data=None):
         if data:
             return create_router_package(code=OutputCode.warning.value,msg=err,data=data)
         else:
             return create_router_package(code=OutputCode.warning.value,msg=err)
-    def _info(self,msg):
-        return create_router_package(code=OutputCode.data.value,msg=msg)
+    def _info(self,msg,data=None):
+        return create_router_package(code=OutputCode.data.value,msg=msg,data=data)
     def _data(self,data,msg="Sent data"):
         return create_router_package(code=OutputCode.data.value,msg=msg,data=data)
 
