@@ -1,0 +1,131 @@
+
+
+
+go <step>[:<count>] [<step>[:<count>]...
+    <step>
+        f/fd/forward/forwards
+            take a step forwards
+        b/bd/back/backward/backwards
+            take a step backwards
+        l/left
+            take a step to the left
+        r/right
+            take a step to the right
+        u/up/standup/stand_up
+            move all legs down
+        d/down/liedown/lie_down
+            move all legs up
+        s/sit
+            move back and middle legs up and front legs down
+        z/bow
+            move front and middle legs up and back legs down
+        r/relax
+            relax all legs; turn off all motors
+    <count>
+        <positive integer>
+            number of times to execute the step
+
+
+set legs:<legs> [position:<position> [direction:<direction>] [speed:<speed>] [time:<time>]] [state:<state>] [relax] [force]
+   [legs:<legs> [position:<position> [direction:<direction>] [speed:<speed>] [time:<time>]] [state:<state>] [relax] [force]...
+
+    l/leg/legs/m/motor/motors
+    <legs>
+        all
+            all legs
+        <any combination of 1,2,3,4,5,6>
+            the legs affected by each change
+
+    p/pos/position
+    <position>
+        u/up
+            straight up, as used for lying down
+        d/down
+            straight down, as used for standing up
+        t/td/touch/touchdown
+            touchdown angle (just in front of straight down)
+        l/lo/lift/liftoff
+            liftoff angle (just past straight down)
+        c/current
+            current leg position
+        <integer>
+            position in degrees
+     
+    d/dir/direction
+    <direction>
+        f/fd/forward/forwards
+        b/bd/back/backward/backwards
+        cw/clockwise
+        ccw/counterclockwise
+        c/closest
+        s/safe/safest
+    
+    s/spd/speed
+        (cannot be used with time)
+    <speed>
+        f/fast
+        s/slow
+        n/normal
+    
+    t/time
+        (cannot be used with speed)
+    <time>
+        <int>
+            number of 50Hz|20ms ticks
+        <int>s
+            number of seconds
+        <int>ms
+            number of ms
+    
+    r/relax
+        cannot be used with other motions
+    
+    state
+        cannot be used with other motions
+    <state>
+        enabled
+        disabled
+    
+    force
+        force command even if leg is disabled
+
+get [legs:<legs>] [temperature] [position] [state] [relaxed]
+    m/motor/motors/l/leg/legs
+    <legs>
+        all
+            all legs(default)
+        <any combination of 1,2,3,4,5,6>
+            the legs affected by each change
+    t/temp/temperature
+        measure temperature
+    p/pos/position/a/angle
+        measure leg position
+    s/state
+        return leg state (enabled/disabled)
+    r/relaxed
+        return leg relaxation (relaxed or not)
+    
+
+
+EXAMPLES:
+
+go fd:3 l:5 f
+    go forwards 3 steps, take 5 steps to the left, take 1 step forwards again
+
+set m:all relax
+    telax all motors
+set m:12 p:down direction:f m:3456 position:up speed:slow force
+    move legs 1 and 2 up by rotating fowards. concurrently, move the rest down slowly, even if they are disabled
+set m:1 state:enable
+    enable leg 1
+
+get
+    get all data on all motors
+get m:all temperature
+    get temperatures on all motors
+get m:12 state relaxed
+    get state (enabled/disabled) and relaxation status of legs 1 and 2
+
+
+
+

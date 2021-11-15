@@ -5,13 +5,13 @@ from abc import ABC, abstractmethod
 class AbstractComms(ABC):
 
     @abstractmethod
-    def setup(self):
+    def setup(self) -> None:
         pass
 
     @abstractmethod
-    def cin(self):
+    def cin(self) -> str:
         pass
 
     @abstractmethod
-    def cout(self, string):
+    def cout(self, package: dict) -> None:
         pass
