@@ -120,6 +120,10 @@ from ZebroLeg import ZebroLeg, angle_between, abs_angle_difference
 import CPG
 from locomotion_constants import *
 
+import os,sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"boot_files"))
+from module import Module
+
 from time import sleep
 import traceback
 
@@ -140,7 +144,7 @@ sit/s
 bow/z
 relax/r""".split("\n")]
 
-class LocomotionApp:
+class LocomotionApp(Module):
     def __init__(self,router,bus):
         super().__init__(router,bus)
         self.bus=bus
