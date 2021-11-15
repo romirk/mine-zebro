@@ -74,7 +74,7 @@ class Module(ABC):
     def send_output(self, packet=None, code=0, msg=None, data=None):
         if not packet:
             packet = create_router_package(code=code, msg=msg, data=data)
-        self.__router.send_package_to_mcp(package, False)
+        self.__router.send_package_to_mcp(packet, False)
 
 
     #functions for creating packages
