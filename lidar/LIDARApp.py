@@ -1,8 +1,7 @@
 
 """
 
-LIDAR App (might use I2C idk
-
+LIDAR App
 
 
 commands
@@ -58,7 +57,7 @@ class LIDARApp(Module):
 
 
     def __init__(self,router,bus):
-        super().__init__(router)
+        super().__init__(router,bus)
 
         self.bus=bus
 
@@ -147,33 +146,6 @@ class LIDARApp(Module):
         except:
             self.send_output( self._error("Exception occured during execution of command:\n%s"%traceback.format_exc()) )
             return
-
-    #some functions for reoccuring results
-    def _halt(self):
-        return self._error("Execution halted by TRON")
-    def _invalid_command(self,err=""):
-        if err:
-            return self._error("Invalid command: %s"%err)
-        return self._error("Invalid command")
-    
-    def _error(self,err,data={}):
-        if data:
-            return dict(code=2,msg=err,data=data)
-        else:
-            return dict(code=2,msg=err)
-    def _warning(self,err,data={}):
-        if data:
-            return dict(code=1,msg=err,data=data)
-        else:
-            return dict(code=1,msg=err)
-    def _data(self,data,msg="Sent data"):
-        return dict(code=0,msg=msg,data=data)
-    def _info(self,msg):
-        return dict(code=0,msg=msg)
-
-    def send_output(packet):
-        self.send_to_router(**packet)
-
 
     def turn_on(self,args=[]):
         for s in self.sensors:
