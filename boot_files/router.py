@@ -5,6 +5,10 @@ import dummyModule
 import messageManager
 import module
 import time
+try: #prevent errors when testing on computer
+    from smbus2 import SMBus
+except: SMBus = int
+
 from datetime import datetime
 
 
@@ -27,6 +31,7 @@ class Router:
     def __init__(self) -> None:
         self.__list = Submodules()  # list of submodules
         self.lock = threading.Lock()
+        self.__bus = SMBus(1)  # create bus
 
     # initialisation before entering listening loop
     def start(self) -> None:
@@ -43,7 +48,7 @@ class Router:
     # Use this method to add all modules to the current router instance
     def __setup_all_modules(self) -> None:
         # TODO start all other modules here
-        self.__add_module(dummyModule.DummyManager(self))
+        self.__add_module(dummyModule.DummyManager(self, self.__bus))
 
         self.__list.setup()  # calls setup method in each module
         return
@@ -94,6 +99,7 @@ class Router:
             time.sleep(1)
         self.lock.acquire()
 
+        #in case of automated call to check battery or motors place the appropriate prefix
         if self.__command == "battery":
             self.__prefix = "battery"
         elif self.__command == "motors":

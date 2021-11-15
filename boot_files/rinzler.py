@@ -69,7 +69,7 @@ class Mcp:
                                                                datetime.now().strftime("%H:%M:%S"),
                                                                module.create_router_package(
                                                                    module.OutputCode.error.value,
-                                                                   "Command already loaded"),
+                                                                   "Router command already executing, retry later"),
                                                                False))
                     else:
                         self.router.load_command(prefix, command)
