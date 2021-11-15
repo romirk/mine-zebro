@@ -86,15 +86,9 @@ class Module(ABC):
         return self._error("Invalid command")
     
     def _error(self,err,data=None):
-        if data:
-            return create_router_package(code=OutputCode.error.value,msg=err,data=data)
-        else:
-            return create_router_package(code=OutputCode.error.value,msg=err)
+        return create_router_package(code=OutputCode.error.value,msg=err,data=data)
     def _warning(self,err,data=None):
-        if data:
-            return create_router_package(code=OutputCode.warning.value,msg=err,data=data)
-        else:
-            return create_router_package(code=OutputCode.warning.value,msg=err)
+        return create_router_package(code=OutputCode.warning.value,msg=err,data=data)
     def _info(self,msg,data=None):
         return create_router_package(code=OutputCode.data.value,msg=msg,data=data)
     def _data(self,data,msg="Sent data"):
@@ -106,5 +100,5 @@ class Module(ABC):
 
 
 # Function called by all modules to deliver information to the router
-def create_router_package(code: int = OutputCode.data.value, msg: str = "", data={}):
+def create_router_package(code: int = OutputCode.data.value, msg: str = "", data=None):
     return dict(code=code, msg=msg, data=data)
