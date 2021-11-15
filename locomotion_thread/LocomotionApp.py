@@ -663,7 +663,7 @@ if __name__=="__main__":
 
     class Router:
         __halt_module_execution=False
-        def send_package_to_mcp(package,_):
+        def send_package_to_mcp(self,package,_):
             pprint(package)
     
     
