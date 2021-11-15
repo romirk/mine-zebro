@@ -210,8 +210,12 @@ if __name__=="__main__":
 
     bus=SMBus(1) #create bus
     
-    
-    lidar=LIDARApp(bus,pprint,int)
+    class Router:
+        __halt_module_execution=False
+        def send_package_to_mcp(package,_):
+            pprint(package)
+            
+    lidar=LIDARApp(Router(),bus)
     lidar.setup()
     print("LIDAR app testing environment - enter commands or 'exit'")
     while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
