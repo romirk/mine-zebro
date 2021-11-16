@@ -10,7 +10,7 @@ import time
 
 # Wrapper for the camera that forwards frames from camera to mcp
 # Similar logic to messageManager
-from boot_files import cameraApi
+import cameraApi
 
 
 class CameraManager:

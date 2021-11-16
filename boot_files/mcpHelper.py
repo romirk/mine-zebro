@@ -6,7 +6,7 @@ from datetime import datetime
 
 # Class holds mcp functionality relating to handling commands, setting up threads
 # Note all methods that receive parameters from commands check if they are valid and if not send respond back to the user
-from boot_files import messageManager
+import messageManager
 
 
 class McpHelper:

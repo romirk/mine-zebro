@@ -11,7 +11,11 @@ class Sensors:
         pass
 
     def readBME280(self):
+<<<<<<< Updated upstream
         temperature, pressure, humidity = bme.readBME280All()
+=======
+        temperature, pressure, humidity = bme.readBME280All();
+>>>>>>> Stashed changes
         data =[temperature, pressure, humidity]
         return data
 

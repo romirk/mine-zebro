@@ -1,0 +1,15 @@
+
+
+read
+    begins reading the sensor values at the default interval values. 
+    if any of them are not ready then we can check that the final arrival date has been completed.
+    
+    time:x (time parameter specifies the number of seconds it needs to read for.)
+
+    gp:x (gp specifies the geophone period)
+    bp:x (bp species CME sensor )
+    wp: (wp specifies wp)
+
+status
+    command returns information about the current sensor setup.
+    
