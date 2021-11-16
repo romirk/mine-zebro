@@ -181,6 +181,10 @@ class LocomotionApp(Module):
 
 
 
+    def get_state(self):
+        self.execute("get")
+
+
     #function for executing commands
     def execute(self,command):
         command=command.split() #commands consist of terms separated by spaces
