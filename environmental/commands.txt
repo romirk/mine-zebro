@@ -1,0 +1,15 @@
+
+
+read
+    reads sensor values
+long d/duration:<duration> s/samples:<samples> p/period/t/interval:<interval>
+    d/duration
+        total duration of measurement
+        <duration>
+            integer (seconds), possibly prefixed with "s" (seconds) or "m" for minutes
+    s/samples:<samples>
+        total number of samples
+    p/period/t/interval:<interval>
+        measurement interval in seconds, possibly prefixed with "s" (seconds) or "m" for minutes
+
+    exactly 2 of these options must be specified

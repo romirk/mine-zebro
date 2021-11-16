@@ -18,17 +18,29 @@
 # https://www.raspberrypi-spy.co.uk/
 #
 #--------------------------------------
-import smbus
+
+#changed by Marijn Adriaanse
+
+
+
+
+#import smbus
 import time
 from ctypes import c_short
 from ctypes import c_byte
 from ctypes import c_ubyte
 
-DEVICE = 0x76 # Default device I2C address
+DEVICE = 0x77 # Default device I2C address IS 0x77 not 0x76
 
 
-bus = smbus.SMBus(1) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
+#bus = smbus.SMBus(1) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
                      # Rev 1 Pi uses bus 0
+
+def setBus(newbus):
+  global bus
+  bus=newbus
+
+
 
 def getShort(data, index):
   # return two bytes from data as a signed 16-bit value
