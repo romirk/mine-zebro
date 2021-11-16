@@ -29,6 +29,7 @@ class MessageManager:
     # loop for waiting for user input
     def listen_to_user(self) -> None:
         while not self.is_shut_down:
+            time.sleep(1)
             command = self.__get_valid_input()
             self.__set_command(command)
             time.sleep(self.__sleep_interval)

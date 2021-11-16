@@ -20,18 +20,7 @@ from datetime import datetime
 # only one module can communicate with the MCP throughout the bus at a time thus only one connection used
 # Establishes connection between module(server) and MCP
 class Router:
-    # Private Variables only accessed by Router
     __sleep_interval = 3  # used by thread to sleep after seeing no command was given (in seconds)
-
-    # __command = ""
-    # __prefix = ""
-
-    # Public Variables & Flags
-    # package = ""  # package data from modules read by MCP from here
-    # is_command_loaded = False
-    # is_package_loaded = False
-    # is_shut_down = False
-    # halt_module_execution = False
 
     def __init__(self, shared_data) -> None:
         self.__list = Submodules()  # list of submodules
@@ -43,13 +32,13 @@ class Router:
     def start(self) -> None:
         self.__clean_up()
         self.__prepare()
-        self.shared_data[Variable.is_shut_down.value] = False
+        self.shared_data[Str.is_shut_down.value] = False
         self.__setup_all_modules()
         self.listen_to_commands()
 
     # Given a module by MCP add to submodules list
-    def __add_module(self, module: module.Module) -> None:
-        self.__list.add_by_id(module.get_id(), module)
+    def __add_module(self, new_module: module.Module) -> None:
+        self.__list.add_by_id(new_module.get_id(), new_module)
 
     # Use this method to add all modules to the current router instance
     def __setup_all_modules(self) -> None:
@@ -61,14 +50,14 @@ class Router:
 
     # loop until command given by mcp (if no command sleep to an appropriate amount of time)
     def listen_to_commands(self) -> None:
-        while not self.shared_data[Variable.is_shut_down.value]:
+        while not self.shared_data[Str.is_shut_down.value]:
             # If no command to execute sleep
-            if not self.shared_data[Variable.is_command_loaded.value]:
+            if not self.shared_data[Str.is_command_loaded.value]:
                 time.sleep(self.__sleep_interval)
             else:
                 # else execute
                 server_id = "".join(
-                    [i for i in self.shared_data[Variable.prefix.value] if
+                    [i for i in self.shared_data[Str.prefix.value] if
                      not i.isdigit()])  # remove identifier which is a number
                 if not self.__list.check_id(server_id):
                     self.send_package_to_mcp(module.create_router_package(module.OutputCode.error.value,
@@ -78,7 +67,7 @@ class Router:
                 else:
                     server = self.__list.get_by_id(server_id)
                     self.__prepare()
-                    server.execute(self.shared_data[Variable.command.value])  # blocking method
+                    server.execute(self.shared_data[Str.command.value])  # blocking method
                     self.send_package_to_mcp(module.create_router_package(module.OutputCode.data.value,
                                                                           "Completed"),
                                              True)
@@ -88,45 +77,35 @@ class Router:
     # called before each command is executed
     def __prepare(self) -> None:
         self.lock.acquire()
-        # self.package = ""
-        self.shared_data[Variable.is_halt.value] = False
+        self.shared_data[Str.is_halt.value] = False
         self.lock.release()
 
     # called after each command is executed
     def __clean_up(self) -> None:
         self.lock.acquire()
-        self.shared_data[Variable.is_command_loaded.value] = False
-        self.shared_data[Variable.command.value] = ""
-        self.shared_data[Variable.prefix.value] = ""
+        self.shared_data[Str.is_command_loaded.value] = False
+        self.shared_data[Str.command.value] = ""
+        self.shared_data[Str.prefix.value] = ""
         self.lock.release()
 
     # called by active module to return data to mcp
     def send_package_to_mcp(self, module_output: dict, has_process_completed: bool) -> None:
-        while self.shared_data[Variable.is_package_ready.value]:
+        while self.shared_data[Str.is_package_ready.value]:
             time.sleep(1)
         self.lock.acquire()
 
         # in case of automated call to check battery or motors place the appropriate prefix
-        if self.shared_data[Variable.command.value] == "battery":
-            self.shared_data[Variable.prefix.value] = "battery"
-        elif self.shared_data[Variable.command.value] == "motors":
-            self.shared_data[Variable.prefix.value] = "motors"
+        if self.shared_data[Str.command.value] == "battery":
+            self.shared_data[Str.prefix.value] = "battery"
+        elif self.shared_data[Str.command.value] == "motors":
+            self.shared_data[Str.prefix.value] = "motors"
 
-        self.shared_data[Variable.package.value] = messageManager.create_user_package(
-            self.shared_data[Variable.prefix.value],
+        self.shared_data[Str.package.value] = messageManager.create_user_package(
+            self.shared_data[Str.prefix.value],
             datetime.now().strftime("%H:%M:%S"),
             module_output,
             has_process_completed)
-        self.shared_data[Variable.is_package_ready.value] = True
-        self.lock.release()
-
-    # TODO move this to rinzler
-    # called by mcp to load a command to be executed
-    def load_command(self, prefix: str, command: str) -> None:
-        self.lock.acquire()
-        self.shared_data[Variable.command.value] = command
-        self.shared_data[Variable.prefix.value] = prefix
-        self.shared_data[Variable.is_command_loaded] = True
+        self.shared_data[Str.is_package_ready.value] = True
         self.lock.release()
 
     # Use this method to remove all modules from the list
@@ -163,11 +142,11 @@ class Submodules:
             return self.__id_list.index(identifier)
         raise Exception("Submodule list: id <" + identifier + "> does not exist")
 
-    def add_by_id(self, identifier: str, submodule: module.Module):
+    def add_by_id(self, identifier: str, new_module: module.Module):
         index = self.__map_id_to_index(identifier)
-        if not self.is_in_list(submodule):
+        if not self.is_in_list(new_module):
             self.__size += 1
-            return self.__list.insert(index, submodule)
+            return self.__list.insert(index, new_module)
         else:
             raise Exception("Submodule list: Module is already loaded of given id")
 
@@ -182,7 +161,7 @@ class Submodules:
 
 
 # Class shows all internal states mcp can be active in
-class Variable(Enum):
+class Str(Enum):
     is_shut_down = "is_shut_down"
     is_halt = "is_halt"
     is_command_loaded = "is_command_loaded"
@@ -194,7 +173,7 @@ class Variable(Enum):
 
 def start(shared_data: DictProxy):
     router = Router(shared_data)
-    print("helkdjfaklf")
+    print("Router Process has started")
 
     router.start()
     return

@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from enum import Enum
 
+from router import Str
 import router
 import module
 import messageManager
@@ -32,7 +33,7 @@ class Mcp:
         self.internal_state = State.Running.value
 
         # shared router variables
-        self.router_shared_data = None
+        self.router_data = None
 
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
@@ -65,7 +66,7 @@ class Mcp:
                 if prefix.startswith("mcp"):
                     self.mcp_helper.handle_command(prefix, command)
                 else:
-                    if self.router_shared_data[router.Variable.is_command_loaded.value]:
+                    if self.router_data[Str.is_command_loaded.value]:
                         self.messenger.send_to_user_package(
                             messageManager.create_user_package(prefix,
                                                                datetime.now().strftime("%H:%M:%S"),
@@ -75,17 +76,16 @@ class Mcp:
                                                                False))
                     else:
                         #self.router.load_command(prefix, command)
-                        self.router_shared_data[router.Variable.command.value] = command
-                        self.router_shared_data[router.Variable.prefix.value] = prefix
-                        self.router_shared_data[router.Variable.is_command_loaded] = True
-                        self.router_shared_data[router.Variable.command.value] = command
-                        self.router_shared_data[router.Variable.is_command_loaded.value] = True
+                        self.router_data[Str.command.value] = command
+                        self.router_data[Str.prefix.value] = prefix
+                        self.router_data[Str.command.value] = command
+                        self.router_data[Str.is_command_loaded.value] = True
 
             # move package from router to message manager
-            if self.router_shared_data[router.Variable.is_package_ready.value]:
+            if self.router_data[Str.is_package_ready.value]:
                 #self.router.lock.acquire()
-                self.messenger.send_to_user_package(self.router_shared_data[router.Variable.package.value])
-                self.router_shared_data[router.Variable.is_package_ready.value] = False
+                self.messenger.send_to_user_package(self.router_data[Str.package.value])
+                self.router_data[Str.is_package_ready.value] = False
                 #self.router.lock.release()
 
             time.sleep(self.__sleep_interval)
@@ -111,7 +111,8 @@ if __name__ == "__main__":
 
     mcp = Mcp()
     mcp.start()
-    time.sleep(3)
+    #wait a bit for all threads to start just to be safe
+    time.sleep(1)
 
     #start mcp loop
     mcp.mcp_loop()

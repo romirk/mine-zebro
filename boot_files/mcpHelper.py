@@ -27,7 +27,7 @@ class McpHelper:
             self.mcp.internal_state = rinzler.State.ShutDown.value
 
         elif command == "halt":
-            self.mcp.router.halt_module_execution = True
+            self.mcp.router_data[router.Str.is_halt.value] = True
 
         elif command.startswith("lights"):
             data = self.__lights(command)
@@ -64,8 +64,8 @@ class McpHelper:
 
     # stops all loops so all threads can join the main thread
     def __shutdown_procedure(self) -> None:
-        self.mcp.router.is_shut_down = True
-        self.mcp.router.halt_module_execution = True
+        self.mcp.router_data[router.Str.is_shut_down.value] = True
+        self.mcp.router_data[router.Str.is_halt.value] = True
         self.mcp.messenger.is_shut_down = True
         self.mcp.cameraManager.is_shut_down = True
         return
@@ -129,14 +129,16 @@ class McpHelper:
         # find thread
         for thread in self.mcp.threads:
             if thread.name == "RouterThread":
-                # set to off and wait
-                self.mcp.router.halt_module_execution = True
-                self.mcp.router.is_shut_down = True
-                while thread.is_alive():
-                    time.sleep(1)
-                # remove thread and clear router object and give feedback
-                self.mcp.threads.remove(thread)
-                self.mcp.router.clear_modules_list()
+                thread.kill()
+
+                ## set to off and wait
+                #self.mcp.router.halt_module_execution = True
+                #self.mcp.router.is_shut_down = True
+                #while thread.is_alive():
+                #    time.sleep(1)
+                ## remove thread and clear router object and give feedback
+                #self.mcp.threads.remove(thread)
+                #self.mcp.router.clear_modules_list()
 
                 self.setup_router_thread().start()
                 break
@@ -155,16 +157,16 @@ class McpHelper:
         return
 
     def setup_router_thread(self) -> multiprocessing.Process:
-        self.mcp.router_shared_data = multiprocessing.Manager().dict()
-        self.mcp.router_shared_data[router.Variable.is_shut_down.value] = False
-        self.mcp.router_shared_data[router.Variable.is_halt.value] = False
-        self.mcp.router_shared_data[router.Variable.is_command_loaded.value] = False
-        self.mcp.router_shared_data[router.Variable.is_package_ready.value] = False
-        self.mcp.router_shared_data[router.Variable.prefix.value] = ""
-        self.mcp.router_shared_data[router.Variable.command.value] = ""
-        self.mcp.router_shared_data[router.Variable.package.value] = dict
+        self.mcp.router_data = multiprocessing.Manager().dict()
+        self.mcp.router_data[router.Str.is_shut_down.value] = False
+        self.mcp.router_data[router.Str.is_halt.value] = False
+        self.mcp.router_data[router.Str.is_command_loaded.value] = False
+        self.mcp.router_data[router.Str.is_package_ready.value] = False
+        self.mcp.router_data[router.Str.prefix.value] = ""
+        self.mcp.router_data[router.Str.command.value] = ""
+        self.mcp.router_data[router.Str.package.value] = dict
 
-        router_thread = multiprocessing.Process(target=router.start, args=(self.mcp.router_shared_data,))
+        router_thread = multiprocessing.Process(target=router.start, args=(self.mcp.router_data,))
         router_thread.daemon = True
         router_thread.name = "RouterThread"
         self.mcp.threads.append(router_thread)
