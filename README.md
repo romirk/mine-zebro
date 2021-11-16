@@ -39,3 +39,5 @@ I2C:
 - `sudo apt install i2c-tools` (so we can see connected devices using `sudo i2cdetect -y 1`)
 - `pip3 install smbus2`
 
+Lidar:
+- `pip3 install python-vl53l1x` (I think)
