@@ -26,8 +26,6 @@ import cameraDummy
 # 3)start all threads
 class Mcp:
     __sleep_interval = 1
-    # __status_sleep_interval = 0.5  # how often to check motors for overheating and battery
-    __status_sleep_interval = 0  # for now use zero so not to check the battery or the motors
 
     # setup all required objects and threads for execution
     def __init__(self) -> None:
@@ -36,14 +34,14 @@ class Mcp:
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router()
-        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
-        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy())  # TODO change this to real Camera
+        self.messenger = messageManager.MessageManager(messageManager.CommsMock())  # TODO change this to real Comms
+        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(), self.messenger)  # TODO change this to real Camera
 
         # setup threads and place in a list
         self.threads = list()
         self.mcp_helper.setup_router_thread()
         self.mcp_helper.setup_camera_thread()
-        self.mcp_helper.setup_non_restartable_threads(self.__status_sleep_interval)
+        self.mcp_helper.setup_non_restartable_threads()
         return
 
     # start all threads
@@ -54,7 +52,7 @@ class Mcp:
         return
 
     # locks are used to avoid deadlock when accessing shared variables
-    def input_output_loop(self) -> None:
+    def mcp_loop(self) -> None:
         while self.internal_state == State.Running.value:
 
             # move input from message manager to router or handle if mcp command
@@ -71,7 +69,7 @@ class Mcp:
                                                                datetime.now().strftime("%H:%M:%S"),
                                                                module.create_router_package(
                                                                    module.OutputCode.error.value,
-                                                                   "Command already loaded"),
+                                                                   "Router command already executing, retry later"),
                                                                False))
                     else:
                         self.router.load_command(prefix, command)
@@ -82,12 +80,6 @@ class Mcp:
                 self.messenger.send_to_user_package(self.router.package)
                 self.router.is_package_loaded = False
                 self.router.lock.release()
-
-            # moves frame from cameraManager to user
-            if self.cameraManager.frame_ready:
-                package = self.cameraManager.get_package()
-                self.cameraManager.reset_frame_ready()
-                self.messenger.send_to_user_package(package)
 
             time.sleep(self.__sleep_interval)
         return
@@ -113,9 +105,8 @@ if __name__ == "__main__":
     mcp = Mcp()
     mcp.start()
 
-    # keep main thread busy until state changes
-    while mcp.internal_state == State.Running.value:
-        time.sleep(1)
+    #start mcp loop
+    mcp.mcp_loop()
 
     # wait for all threads to finish to shutdown safely
     if mcp.internal_state == State.ShutDown.value or mcp.internal_state == State.Restart.value:
