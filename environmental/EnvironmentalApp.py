@@ -184,7 +184,7 @@ class EnvironmentalApp(Module):
 
         t0=time()+.5# add some for a fair start
         for t in times:
-            if wait_until(t+t0):
+            if self.wait_until(t+t0):
                 data.append((time(),self.read()))
             else:
                 self.send_output(self._halt())
