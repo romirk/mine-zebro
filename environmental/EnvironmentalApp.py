@@ -16,8 +16,8 @@ import bme280 as bme
 
 
 
-
-os.makedirs(MEASUREMENT_PATH)
+if not os.path.exists(MEASUREMENT_PATH):
+    os.makedirs(MEASUREMENT_PATH)
 
 
 
@@ -177,7 +177,7 @@ class EnvironmentalApp(Module):
                 times.append(t)
                 t+=settings["interval"]
         else: #samples and interval
-            times=[interval*x for x in range(samples)]
+            times=[settings["interval"]*x for x in range(settings["samples"])]
 
 
         data=[]
