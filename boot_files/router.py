@@ -1,13 +1,17 @@
 import threading
+from enum import Enum
+from multiprocessing.managers import DictProxy
 from typing import List, Union
 
 import dummyModule
 import messageManager
 import module
 import time
-try: #prevent errors when testing on computer
+
+try:  # prevent errors when testing on computer
     from smbus2 import SMBus
-except: SMBus = int
+except:
+    SMBus = int
 
 from datetime import datetime
 
@@ -18,28 +22,30 @@ from datetime import datetime
 class Router:
     # Private Variables only accessed by Router
     __sleep_interval = 3  # used by thread to sleep after seeing no command was given (in seconds)
-    __command = ""
-    __prefix = ""
+
+    # __command = ""
+    # __prefix = ""
 
     # Public Variables & Flags
-    package = ""  # package data from modules read by MCP from here
-    is_command_loaded = False
-    is_package_loaded = False
-    is_shut_down = False
-    halt_module_execution = False
+    # package = ""  # package data from modules read by MCP from here
+    # is_command_loaded = False
+    # is_package_loaded = False
+    # is_shut_down = False
+    # halt_module_execution = False
 
-    def __init__(self) -> None:
+    def __init__(self, shared_data) -> None:
         self.__list = Submodules()  # list of submodules
         self.lock = threading.Lock()
         self.__bus = SMBus(1)  # create bus
+        self.shared_data = shared_data
 
     # initialisation before entering listening loop
     def start(self) -> None:
         self.__clean_up()
         self.__prepare()
-        self.is_shut_down = False
+        self.shared_data[Variable.is_shut_down.value] = False
         self.__setup_all_modules()
-        self.__listen_to_commands()
+        self.listen_to_commands()
 
     # Given a module by MCP add to submodules list
     def __add_module(self, module: module.Module) -> None:
@@ -54,15 +60,16 @@ class Router:
         return
 
     # loop until command given by mcp (if no command sleep to an appropriate amount of time)
-    def __listen_to_commands(self) -> None:
-        while not self.is_shut_down:
+    def listen_to_commands(self) -> None:
+        while not self.shared_data[Variable.is_shut_down.value]:
             # If no command to execute sleep
-            if not self.is_command_loaded:
+            if not self.shared_data[Variable.is_command_loaded.value]:
                 time.sleep(self.__sleep_interval)
             else:
                 # else execute
                 server_id = "".join(
-                    [i for i in self.__prefix if not i.isdigit()])  # remove identifier which is a number
+                    [i for i in self.shared_data[Variable.prefix.value] if
+                     not i.isdigit()])  # remove identifier which is a number
                 if not self.__list.check_id(server_id):
                     self.send_package_to_mcp(module.create_router_package(module.OutputCode.error.value,
                                                                           "Failed to fetch module: " + str(server_id)),
@@ -71,7 +78,7 @@ class Router:
                 else:
                     server = self.__list.get_by_id(server_id)
                     self.__prepare()
-                    server.execute(self.__command)  # blocking method
+                    server.execute(self.shared_data[Variable.command.value])  # blocking method
                     self.send_package_to_mcp(module.create_router_package(module.OutputCode.data.value,
                                                                           "Completed"),
                                              True)
@@ -81,43 +88,45 @@ class Router:
     # called before each command is executed
     def __prepare(self) -> None:
         self.lock.acquire()
-        self.package = ""
-        self.halt_module_execution = False
+        # self.package = ""
+        self.shared_data[Variable.is_halt.value] = False
         self.lock.release()
 
     # called after each command is executed
     def __clean_up(self) -> None:
         self.lock.acquire()
-        self.is_command_loaded = False
-        self.__command = ""
-        self.__prefix = ""
+        self.shared_data[Variable.is_command_loaded.value] = False
+        self.shared_data[Variable.command.value] = ""
+        self.shared_data[Variable.prefix.value] = ""
         self.lock.release()
 
     # called by active module to return data to mcp
     def send_package_to_mcp(self, module_output: dict, has_process_completed: bool) -> None:
-        while self.is_package_loaded:
+        while self.shared_data[Variable.is_package_ready.value]:
             time.sleep(1)
         self.lock.acquire()
 
-        #in case of automated call to check battery or motors place the appropriate prefix
-        if self.__command == "battery":
-            self.__prefix = "battery"
-        elif self.__command == "motors":
-            self.__prefix = "motors"
+        # in case of automated call to check battery or motors place the appropriate prefix
+        if self.shared_data[Variable.command.value] == "battery":
+            self.shared_data[Variable.prefix.value] = "battery"
+        elif self.shared_data[Variable.command.value] == "motors":
+            self.shared_data[Variable.prefix.value] = "motors"
 
-        self.package = messageManager.create_user_package(self.__prefix,
-                                                          datetime.now().strftime("%H:%M:%S"),
-                                                          module_output,
-                                                          has_process_completed)
-        self.is_package_loaded = True
+        self.shared_data[Variable.package.value] = messageManager.create_user_package(
+            self.shared_data[Variable.prefix.value],
+            datetime.now().strftime("%H:%M:%S"),
+            module_output,
+            has_process_completed)
+        self.shared_data[Variable.is_package_ready.value] = True
         self.lock.release()
 
+    # TODO move this to rinzler
     # called by mcp to load a command to be executed
     def load_command(self, prefix: str, command: str) -> None:
         self.lock.acquire()
-        self.__command = command
-        self.__prefix = prefix
-        self.is_command_loaded = True
+        self.shared_data[Variable.command.value] = command
+        self.shared_data[Variable.prefix.value] = prefix
+        self.shared_data[Variable.is_command_loaded] = True
         self.lock.release()
 
     # Use this method to remove all modules from the list
@@ -170,3 +179,22 @@ class Submodules:
     # Getter for modules
     def get_by_id(self, identifier: str) -> Union[module.Module, int]:
         return self.__list[self.__map_id_to_index(identifier)]
+
+
+# Class shows all internal states mcp can be active in
+class Variable(Enum):
+    is_shut_down = "is_shut_down"
+    is_halt = "is_halt"
+    is_command_loaded = "is_command_loaded"
+    is_package_ready = "is_package_ready"
+    prefix = "prefix"
+    command = "command"
+    package = "package"
+
+
+def start(shared_data: DictProxy):
+    router = Router(shared_data)
+    print("helkdjfaklf")
+
+    router.start()
+    return

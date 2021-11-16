@@ -2,11 +2,12 @@ import threading
 import time
 
 import rinzler
+import multiprocessing
 from datetime import datetime
 
 # Class holds mcp functionality relating to handling commands, setting up threads
 # Note all methods that receive parameters from commands check if they are valid and if not send respond back to the user
-from boot_files import messageManager
+from boot_files import messageManager, router
 
 
 class McpHelper:
@@ -153,10 +154,19 @@ class McpHelper:
 
         return
 
-    def setup_router_thread(self) -> threading.Thread:
-        router_thread = threading.Thread(target=self.mcp.router.start)
+    def setup_router_thread(self) -> multiprocessing.Process:
+        self.mcp.router_shared_data = multiprocessing.Manager().dict()
+        self.mcp.router_shared_data[router.Variable.is_shut_down.value] = False
+        self.mcp.router_shared_data[router.Variable.is_halt.value] = False
+        self.mcp.router_shared_data[router.Variable.is_command_loaded.value] = False
+        self.mcp.router_shared_data[router.Variable.is_package_ready.value] = False
+        self.mcp.router_shared_data[router.Variable.prefix.value] = ""
+        self.mcp.router_shared_data[router.Variable.command.value] = ""
+        self.mcp.router_shared_data[router.Variable.package.value] = dict
+
+        router_thread = multiprocessing.Process(target=router.start, args=(self.mcp.router_shared_data,))
         router_thread.daemon = True
-        router_thread.setName("RouterThread")
+        router_thread.name = "RouterThread"
         self.mcp.threads.append(router_thread)
         return router_thread
 
