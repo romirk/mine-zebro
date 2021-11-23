@@ -1,5 +1,6 @@
 import time
 
+from boot_files import module
 from module import Module
 
 try: #prevent errors when testing on computer

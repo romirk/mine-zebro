@@ -1,12 +1,8 @@
 from abc import ABC, abstractmethod
-<<<<<<< HEAD
-# import router
-=======
-#import router
+
 try: #prevent errors when testing on computer
     from smbus2 import SMBus
 except: SMBus = int
->>>>>>> global-development
 
 # Abstract class that all modules inherit from
 # See dummyModule.py for how example

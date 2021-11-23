@@ -1,12 +1,5 @@
 import cv2
-import cameraApi
 
-class cameraModule(cameraApi.AbstractCamera):
+class cameraModule():
     def setup(self):
         return super().setup()
-
-    def get_frame():
-
-    
-    def frame_capture():
-        
