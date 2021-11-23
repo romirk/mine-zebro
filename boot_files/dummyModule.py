@@ -1,9 +1,10 @@
 import time
-import module
+
+from module import Module
 
 
 # Example of module class
-class DummyManager(module.Module):
+class DummyManager(Module):
 
     def __init__(self, router_obj):
         super().__init__(router_obj)

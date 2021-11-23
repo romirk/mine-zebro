@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import router
+# import router
 
 # Abstract class that all modules inherit from
 # See dummyModule.py for how example

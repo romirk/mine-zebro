@@ -1,5 +1,5 @@
 
-from module import Module
+import module
 import math
 import board
 import busio
@@ -12,7 +12,7 @@ import traceback
 i2c = busio.I2C(board.SCL, board.SDA)
 
 
-class sensors(Module):
+class sensors(module.Module):
 #Sensor reading timings in milliseconds
     #Sensor period timing
     bme_period = 500
