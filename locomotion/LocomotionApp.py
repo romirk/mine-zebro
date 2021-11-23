@@ -4,9 +4,12 @@
 USAGE
 
 initialisation:
-    loc=LocomotionApp(bus=I2Cbus, returnfunc=outputfunction, checkhaltfunc=check_halt_flag)
+    loc=LocomotionApp(router,bus)
     loc.init()#uses I2C bus
-
+    
+get state:
+    loc.get_state()
+    
 run command:
     loc.execute(commandstring)
 
@@ -117,6 +120,10 @@ from ZebroLeg import ZebroLeg, angle_between, abs_angle_difference
 import CPG
 from locomotion_constants import *
 
+import os,sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"boot_files"))
+from module import Module
+
 from time import sleep
 import traceback
 
@@ -137,11 +144,10 @@ sit/s
 bow/z
 relax/r""".split("\n")]
 
-class LocomotionApp:
-    def __init__(self,bus=None,returnfunc=print,checkhaltfunc=int):
+class LocomotionApp(Module):
+    def __init__(self,router,bus):
+        super().__init__(router,bus)
         self.bus=bus
-        self.returnf=returnfunc #function for sending back data and errors
-        self.checkhalt=checkhaltfunc #function to check halt flag. returns True if the robot should stop
         
 
         #create legs
@@ -153,6 +159,8 @@ class LocomotionApp:
         self.laststep="custom"
 
 
+    def setup(self):
+        self.init()
     def init(self):
 
         for leg in self.legs:
@@ -169,8 +177,12 @@ class LocomotionApp:
 
     #return helptext
     def help(self):
-        return HELPTEXT
+        return super().help()+HELPTEXT
 
+
+
+    def get_state(self):
+        self.execute("get")
 
 
     #function for executing commands
@@ -180,7 +192,7 @@ class LocomotionApp:
 
         try: #in case of an error, report back the exact error
         #if 1:
-            if not len(command):    return self.returnf(self._invalid_command("No command specified"))
+            if not len(command):    return self.send_output(self._invalid_command("No command specified"))
             if command[0]=="go": #go dir1:count dir2 dir3
                 func=self.go
 
@@ -211,14 +223,14 @@ class LocomotionApp:
                     elif direction in ("r","relax"):
                         dir=STEP_RELAX
                     else:
-                        self.returnf( self._invalid_command("Unknown direction: '%s'"%direction) )
+                        self.send_output( self._invalid_command("Unknown direction: '%s'"%direction) )
                         return
                     
                     try:
                         count=int(count)
                         assert count>=1
                     except:
-                        self.returnf( self._invalid_command("Invalid count: '%s'"%count))
+                        self.send_output( self._invalid_command("Invalid count: '%s'"%count))
                         return
                     
                     args.append((dir,count)) 
@@ -250,12 +262,12 @@ class LocomotionApp:
                                 if len(set(setting["motors"]).intersection(set([1,2,3,4,5,6])))!=len(setting["motors"]):
                                     raise Exception
                             except:
-                                self.returnf( self._invalid_command("Invalid list of legs: '%s'"%value))
+                                self.send_output( self._invalid_command("Invalid list of legs: '%s'"%value))
                                 return
                         
                     elif setting: #if not setting, 
                         if not(key in ("r","relax","state")) and setting["relax"]:
-                            self.returnf( self._invalid_command("Cannot relax and move at the same time") )
+                            self.send_output( self._invalid_command("Cannot relax and move at the same time") )
                             return
                         
                         if key in ("p","pos","position"): #position
@@ -274,14 +286,14 @@ class LocomotionApp:
                                 try:
                                     value=int(value)%360
                                 except:
-                                    self.returnf( self._invalid_command("Invalid position: '%s'"%value) )
+                                    self.send_output( self._invalid_command("Invalid position: '%s'"%value) )
                                     return #invalid position
                                 else:
                                     setting["position"]=value
                                     
                         elif key in ("d","dir","direction"): #direction
                             if setting["direction"]!=None:
-                                self.returnf( self._invalid_command("Multiple directions given") )
+                                self.send_output( self._invalid_command("Multiple directions given") )
                                 return
 
                             if value in ("f","fd","forward","forwards"):
@@ -297,7 +309,7 @@ class LocomotionApp:
                             elif value in ("s","safe","safest"): #closest, but prevent standing up backwards
                                 setting["direction"]=LEG_DIR_SAFE
                             else:
-                                self.returnf( self._invalid_command("Invalid direction '%s'"%value) )
+                                self.send_output( self._invalid_command("Invalid direction '%s'"%value) )
                                 return
                             
 
@@ -306,7 +318,7 @@ class LocomotionApp:
                             if setting["relax"]!=None:   return self._invalid_command("Multiple relaxes given")
 
                             if value:
-                                self.returnf( self._invalid_command("Relax takes no values: '%s'"%term) )
+                                self.send_output( self._invalid_command("Relax takes no values: '%s'"%term) )
                                 return
                             setting["relax"]=True
 
@@ -314,25 +326,25 @@ class LocomotionApp:
                             if setting["force"]!=None:   return self._invalid_command("Multiple forces given")
 
                             if value:
-                                self.returnf( self._invalid_command("Force takes no values: '%s'"%term))
+                                self.send_output( self._invalid_command("Force takes no values: '%s'"%term))
                                 return
                             setting["force"]=True
 
                         elif key in ("state",): #turn on/off leg control
                             if any([setting[k]!=None for k in ["position","direction","time","speed","relax"]]):
-                                self.returnf( self._invalid_command("Cannot change leg state and do other things at the same time") )
+                                self.send_output( self._invalid_command("Cannot change leg state and do other things at the same time") )
                                 return
                             if setting["state"]!=None:   return self._invalid_command("Multiple states given")
 
                             if value in ("enabled","disabled"):
                                 setting["state"]=value
                             else:
-                                self.returnf(self._invalid_command("Invalid state: '%s'"%value))
+                                self.send_output(self._invalid_command("Invalid state: '%s'"%value))
                                 return
                             
                         elif key in ("s","spd","speed"): #speed
                             if setting["speed"]!=None or setting["time"]!=None:
-                                self.returnf( self._invalid_command("Multiple speeds/times given") )
+                                self.send_output( self._invalid_command("Multiple speeds/times given") )
                                 return
 
                             if value in ("f","fast"):
@@ -342,12 +354,12 @@ class LocomotionApp:
                             elif value in ("n","normal"):
                                 setting["speed"]=LEG_SPEED_NORMAL
                             else:
-                                self.returnf( self._invalid_command("Invalid speed: '%s'"%value) )
+                                self.send_output( self._invalid_command("Invalid speed: '%s'"%value) )
                                 return
                         
                         elif key in ("t","time"): #time
                             if setting["speed"]!=None or setting["time"]!=None:
-                                self.returnf( self._invalid_command("Multiple speeds/times given"))
+                                self.send_output( self._invalid_command("Multiple speeds/times given"))
                                 return
 
                             try:
@@ -358,20 +370,20 @@ class LocomotionApp:
                                 else:
                                     setting["time"]=int(value) #50Hz frames
                             except:
-                                self.returnf( self._invalid_command("Invalid time duration: '%s'"%value) )
+                                self.send_output( self._invalid_command("Invalid time duration: '%s'"%value) )
                                 return
 
                         else:
-                            self.returnf( self._invalid_command("Unknown parameter: '%s'"%term))
+                            self.send_output( self._invalid_command("Unknown parameter: '%s'"%term))
                             return
                     else:
-                        self.returnf(self._invalid_command("Motors must be first parameter"))#invalid command, must give motors as first parameter
+                        self.send_output(self._invalid_command("Motors must be first parameter"))#invalid command, must give motors as first parameter
                         return
 
 
                 for setting in settings: #fill in defaults
                     if all([setting[parameter]==None for parameter in ("state","position","relax")]): #for when you have direction but no speed etc
-                        self.returnf(self._invalid_command("No actual change specified"))
+                        self.send_output(self._invalid_command("No actual change specified"))
                         return
                     if setting["direction"]==None:  setting["direction"]=LEG_DIR_SAFE
                     if setting["speed"]==None and setting["time"]==None:
@@ -379,7 +391,7 @@ class LocomotionApp:
                     #state, force have None/False defaults we don't need to change
 
                 if not settings:
-                    self.returnf( self._invalid_command("No action specified") )
+                    self.send_output( self._invalid_command("No action specified") )
                     return
 
                 args=settings
@@ -407,7 +419,7 @@ class LocomotionApp:
                         parameters["relaxed"]=True
                     elif key in ("m","motor","motors","l","leg","legs"):
                         if motors:
-                            self.returnf(self._invalid_command("Can only specify one set of legs"))
+                            self.send_output(self._invalid_command("Can only specify one set of legs"))
                             return
                         
                         if value=="all":
@@ -415,13 +427,13 @@ class LocomotionApp:
                         else:
                             motors=list(map(int,value))
                             if len(set(motors).intersection(set([1,2,3,4,5,6])))!=len(motors):
-                                self.returnf(self._invalid_command("Invalid list of legs: '%s'"%value))
+                                self.send_output(self._invalid_command("Invalid list of legs: '%s'"%value))
                                 return
                     else:
-                        self.returnf( self._invalid_command("Invalid argument: '%s'"%term) )
+                        self.send_output( self._invalid_command("Invalid argument: '%s'"%term) )
                         return
                     if value and term in ("temp","temperature","t","pos","position","p","a","angle","state","s","relaxed","r"):
-                        self.returnf(self._invalid_command("Parameter takes no value: %s"%term))
+                        self.send_output(self._invalid_command("Parameter takes no value: %s"%term))
                         return
 
                 if not motors:
@@ -432,39 +444,19 @@ class LocomotionApp:
                 
                 args=[motors,parameters]
             else:
-                self.returnf( self._invalid_command("No valid action specified") )
+                self.send_output( self._invalid_command("No valid action specified") )
                 return
 
         except:
-            self.returnf( self._invalid_command("Exception occured while reading command:\n%s"%traceback.format_exc()) )
+            self.send_output( self._invalid_command("Exception occured while reading command:\n%s"%traceback.format_exc()) )
             return
 
         try: #try to execute command. send back traceback if it fails (which might result in a dangerous situation for the rover!)
             func(args)
         except:
-            self.returnf( self._error("Exception occured during execution of command:\n%s"%traceback.format_exc()) )
+            self.send_output( self._error("Exception occured during execution of command:\n%s"%traceback.format_exc()) )
             return
 
-    #some functions for reoccuring results
-    def _halt(self):
-        return self._error("Execution halted by TRON")
-    def _invalid_command(self,err=""):
-        if err:
-            return self._error("Invalid command: %s"%err)
-        return self._error("Invalid command")
-    
-    def _error(self,err,data={}):
-        if data:
-            return dict(code=2,msg=err,data=data)
-        else:
-            return dict(code=2,msg=err)
-    def _warning(self,err,data={}):
-        if data:
-            return dict(code=1,msg=err,data=data)
-        else:
-            return dict(code=1,msg=err)
-    def _data(self,data,msg="Sent data"):
-        return dict(code=0,msg=msg,data=data)
 
     #used for initialisation
     def standUp(self):
@@ -480,14 +472,14 @@ class LocomotionApp:
 
             if d!=self.laststep and d!=STEP_DOWN and d!=STEP_UP and d!=STEP_RELAX: #move legs to neutral standup position when starting the lext move, unless it was standing up anyway, and don't whey lying down or relaxing
                 if not self.standUp(): #move legs down
-                    self.returnf(self._warning("Error occured while standing up, halting step execution"))
+                    self.send_output(self._error("Error occured while standing up, halting step execution"))
                     return
                 sleep(1)
             
             #test for last step direction
             for i in range(count):
-                if self.checkhalt():
-                    self.returnf(self._halt())
+                if self.check_halt_flag():
+                    self.send_output(self._halt())
                     return
                 
                 #test for last step direction
@@ -498,7 +490,7 @@ class LocomotionApp:
                 
 
                 if not self.set(instructions,newstate=d): #execute, if it fails, stop and return
-                    self.returnf(self._warning("Error occured, halting step execution"))
+                    self.send_output(self._error("Error occured, halting step execution"))
                     return
                 self.laststep=d
                 
@@ -525,11 +517,11 @@ class LocomotionApp:
                 #if it is too hot and force is not specified, halt execution, send back error with motor data
                 if self.legs[m-1].isOverheated():
                     if s["force"]:
-                        self.returnf(self._warning("Forcing overheated leg %d"%m))#send back warning when forced
+                        self.send_output(self._warning("Forcing overheated leg %d"%m))#send back warning when forced
                     else:
                         if self.legs[m-1].enabled: #disabled legs are neglected
                             halt=True
-                            self.returnf(self._error("Leg %d overheated"%m)) #send back error
+                            self.send_output(self._error("Leg %d overheated"%m)) #send back error
                     
         if halt:    return
 
@@ -585,7 +577,7 @@ class LocomotionApp:
                         err=True
                         self.legs[m-1].relax()
                         self.legs[m-1].disable()
-                        self.returnf(self._error("Leg %d stuck; relaxed and disabled leg"%m))
+                        self.send_output(self._error("Leg %d stuck; relaxed and disabled leg"%m))
 
                         self.laststep="custom" #stuck leg means we have an nonstandard leg position
                     
@@ -624,7 +616,7 @@ class LocomotionApp:
             if parameters["relaxed"]:
                 out[m]["relaxed"]=self.legs[m-1].relaxed
 
-        self.returnf(self._data(out))
+        self.send_output(self._data(out))
         
         #pprint(args)
 
@@ -675,9 +667,15 @@ if __name__=="__main__":
     from smbus2 import SMBus
 
     bus=SMBus(1) #create bus
+
+
+    class Router:
+        halt_module_execution=False
+        def send_package_to_mcp(self,package,_):
+            pprint(package)
     
     
-    loc=LocomotionApp(bus,pprint,int)
+    loc=LocomotionApp(Router(),bus)
     loc.init()
     print("Locomotion app testing environment - enter locomotion commands or 'exit'")
     while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7

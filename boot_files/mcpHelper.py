@@ -1,12 +1,14 @@
 import threading
 import time
 
+from router import Str
 import rinzler
+import multiprocessing
 from datetime import datetime
 
 # Class holds mcp functionality relating to handling commands, setting up threads
 # Note all methods that receive parameters from commands check if they are valid and if not send respond back to the user
-import messageManager
+from boot_files import messageManager, router
 
 
 class McpHelper:
@@ -26,7 +28,7 @@ class McpHelper:
             self.mcp.internal_state = rinzler.State.ShutDown.value
 
         elif command == "halt":
-            self.mcp.router.halt_module_execution = True
+            self.mcp.router_data[router.Str.is_halt.value] = True
 
         elif command.startswith("lights"):
             data = self.__lights(command)
@@ -63,8 +65,8 @@ class McpHelper:
 
     # stops all loops so all threads can join the main thread
     def __shutdown_procedure(self) -> None:
-        self.mcp.router.is_shut_down = True
-        self.mcp.router.halt_module_execution = True
+        self.mcp.router_data[router.Str.is_shut_down.value] = True
+        self.mcp.router_data[router.Str.is_halt.value] = True
         self.mcp.messenger.is_shut_down = True
         self.mcp.cameraManager.is_shut_down = True
         return
@@ -89,15 +91,15 @@ class McpHelper:
         text += " lightsON or OFF:  turns lights on or off respectively:\n"
         text += " cameraON or OFF:  turns camera on or off respectively:\n"
         text += " fp=:              change the period between each frame (in seconds)\n"
-        text += " reset:            resets all modules and router flags\n"
+        text += " reset:            kills current process and restarts all modules and router\n"
 
         return text
 
     # change how often a frame is taken from the camera and send to comms
     def __change_frame_period(self, command: str) -> str:
         try:
-            time = command.split("fp=")[1]
-            self.mcp.cameraManager.time_between_frames = float(time)
+            period = command.split("fp=")[1]
+            self.mcp.cameraManager.time_between_frames = float(period)
             return ""
         except:
             return self._command_not_found_string
@@ -128,40 +130,36 @@ class McpHelper:
         # find thread
         for thread in self.mcp.threads:
             if thread.name == "RouterThread":
-                # set to off and wait
-                self.mcp.router.halt_module_execution = True
-                self.mcp.router.is_shut_down = True
-                while thread.is_alive():
-                    time.sleep(1)
-                # remove thread and clear router object and give feedback
-                self.mcp.threads.remove(thread)
-                self.mcp.router.clear_modules_list()
-
+                thread.kill()
                 self.setup_router_thread().start()
                 break
         return True
 
     # Setup threads methods
-    def setup_non_restartable_threads(self, status_sleep_interval: float) -> None:
+    def setup_non_restartable_threads(self) -> None:
         listen_to_user_thread = threading.Thread(target=self.mcp.messenger.listen_to_user)
         listen_to_user_thread.setName("UserInputThread")
         self.mcp.threads.append(listen_to_user_thread)
 
-        in_out_thread = threading.Thread(target=self.mcp.input_output_loop)
-        in_out_thread.setName("In/OutThread")
-        self.mcp.threads.append(in_out_thread)
-
-        status_thread = threading.Thread(target=self.mcp.messenger.status_loop,
-                                         args=(status_sleep_interval,))
+        status_thread = threading.Thread(target=self.mcp.messenger.status_loop)
         status_thread.setName("StatusThread")
         self.mcp.threads.append(status_thread)
 
         return
 
-    def setup_router_thread(self) -> threading.Thread:
-        router_thread = threading.Thread(target=self.mcp.router.start)
+    def setup_router_thread(self) -> multiprocessing.Process:
+        self.mcp.router_data = multiprocessing.Manager().dict()
+        self.mcp.router_data[Str.is_shut_down.value] = False
+        self.mcp.router_data[Str.is_halt.value] = False
+        self.mcp.router_data[Str.is_command_loaded.value] = False
+        self.mcp.router_data[Str.is_package_ready.value] = False
+        self.mcp.router_data[Str.prefix.value] = ""
+        self.mcp.router_data[Str.command.value] = ""
+        self.mcp.router_data[Str.package.value] = dict
+
+        router_thread = multiprocessing.Process(target=router.start, args=(self.mcp.router_data,))
         router_thread.daemon = True
-        router_thread.setName("RouterThread")
+        router_thread.name = "RouterThread"
         self.mcp.threads.append(router_thread)
         return router_thread
 
