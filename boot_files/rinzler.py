@@ -37,7 +37,7 @@ class Mcp:
 
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
-        self.messenger = messageManager.MessageManager(messageManager.CommsMock())  # TODO change this to real Comms
+        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
         self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(),
                                                          self.messenger)  # TODO change this to real Camera
 
