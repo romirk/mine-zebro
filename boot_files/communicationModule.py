@@ -3,6 +3,7 @@ from logging import info
 import commsApi
 from threading import Thread
 import json
+import cameraDummy
 # import serverApi
 
 from flask import Flask, render_template
@@ -21,7 +22,10 @@ class ControllerView(FlaskView):
     #Note: Within the html file, Flask specific notation is used to define javascript and css files in the html document.
     #Check how main.js has been implemented for a concrete idea on how it works. 
     def index(self):
-        return render_template('index.html')
+        # return render_template('index.html')
+        return 
+    
+    
 
 
 #The submodule is used to setup the flask app and websocket connections. 
@@ -29,18 +33,21 @@ class CommunicationModule(commsApi.AbstractComms):
     
 
     def setup(self):
-        self.__app = Flask(__name__)
+        self.__app = Flask(__name__, static_folder="../MineRoverInterface/MineRoverInterface/rover-interface/build", static_url_path="/")
         self.__data = ""
         self.received = False
         self.lock = False
         #registering the views
-        ControllerView.register(self.__app)
+        # ControllerView.register(self.__app)
         
     
         self.__app.config['SECRET_KEY'] = 'secret!'
         self.__socketio = SocketIO(self.__app)
         
         # Preparing for creating a thread for the application. 
+        @self.__app.route("/")
+        def index():
+            return self.__app.send_static_file('index.html')
                     
 
         #Defining the incoming command.

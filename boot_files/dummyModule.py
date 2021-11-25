@@ -1,13 +1,13 @@
 import time
 
-from module import Module
 
+import module;
 try: #prevent errors when testing on computer
     from smbus2 import SMBus
 except: SMBus = int
 
 # Example of module class
-class DummyManager(Module):
+class DummyManager(module.Module):
 
     def __init__(self, router_obj, bus: SMBus = None):
         super().__init__(router_obj, bus)

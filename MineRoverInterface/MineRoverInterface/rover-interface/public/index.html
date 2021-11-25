@@ -47,7 +47,11 @@
     -->
   </body>
 </html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script src = "%PUBLIC_URL%/socketing.js"></script>
 <script>
+  
+
 
   var LOC_CANVAS=document.getElementById("LOC_CANVAS");
   var LOC_CTX=LOC_CANVAS.getContext("2d");
@@ -102,7 +106,7 @@
     }
     
     LOC_CTX.lineCap = "round";
-    
+     
       LOC_CTX.arc(x+LOC_LEG_RADIUS*Math.cos(rad),
           y+LOC_LEG_RADIUS*Math.sin(rad),
           LOC_LEG_RADIUS,
@@ -115,7 +119,7 @@
     LOC_CTX.beginPath();
     LOC_CTX.lineWidth*=1.5;
     LOC_CTX.strokeStyle=loc_gradient([255,50,20],[0,0,200],(temp-15)/(45-15))
-    
+     
     LOC_CTX.moveTo(x,y);
     c=loc_3d_transform([C[0],C[1]+side*0.5]);
     LOC_CTX.lineTo(c[0],c[1]);

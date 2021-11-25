@@ -1,5 +1,8 @@
 console.log("Hello world test")
 
+const socket = io();
+
+
 socket.on('connect', function(){
     socket.emit('command', {command: ""});
 });
