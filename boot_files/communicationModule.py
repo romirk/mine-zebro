@@ -3,9 +3,10 @@ from logging import info
 import commsApi
 from threading import Thread
 import json
+import cameraModule
 # import serverApi
 
-from flask import Flask, render_template
+from flask import Flask, render_template, Response
 from flask_classful import FlaskView
 from flask_socketio import SocketIO
 
@@ -16,6 +17,7 @@ from flask_socketio import SocketIO
 #We use this view to initialize the connection with a HTTP get request by the client. 
 class ControllerView(FlaskView):
     route_base = '/control/'
+
 
     #This method is called on the first HTTP Get request by the client. The html file is sent to the user
     #Note: Within the html file, Flask specific notation is used to define javascript and css files in the html document.
@@ -36,12 +38,25 @@ class CommunicationModule(commsApi.AbstractComms):
         #registering the views
         ControllerView.register(self.__app)
         
+        #create a camera module instance
+        self.camera = cameraModule.camera()
+        self.camera.setup()
+
     
         self.__app.config['SECRET_KEY'] = 'secret!'
         self.__socketio = SocketIO(self.__app)
         
         # Preparing for creating a thread for the application. 
-                    
+
+        #Defining the application routes
+        @self.__app.route('/video_feed')
+        def video_feed():
+            if(self.camera.isOn):
+                return Response(self.camera.generateImage(),mimetype='multipart/x-mixed-replace; boundary=frame')
+            
+
+
+
 
         #Defining the incoming command.
         @self.__socketio.on('command')
@@ -50,8 +65,11 @@ class CommunicationModule(commsApi.AbstractComms):
             # data = json.load(command)
 
             if(self.received == False):
-                self.__data = command["command"]
-                self.received = True
+                if(command["command"].startswith('camera')):
+                    self.camera.readCommand(command["command"])
+                else:    
+                    self.__data = command["command"]
+                    self.received = True
            
             print(self.__data)
 
@@ -66,7 +84,7 @@ class CommunicationModule(commsApi.AbstractComms):
 
         serverThread = Thread(target=self.__socketio.run, daemon=True, kwargs=kwargs).start()
         # self.__socketio.run(self.__app)
-        print("TESTING")
+        # print("TESTING")
         
     def cin(self):
         if(self.received):
