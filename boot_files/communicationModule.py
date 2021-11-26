@@ -88,7 +88,7 @@ class CommunicationModule(commsApi.AbstractComms):
             print('recieved message: ' , info)
             self.__data = info
 
-        kwargs = {'app' : self.__app}
+        kwargs = {'app' : self.__app, 'host': '0.0.0.0', 'port' : 8000}
 
         serverThread = Thread(target=self.__socketio.run, daemon=True, kwargs=kwargs).start()
         # self.__socketio.run(self.__app)
