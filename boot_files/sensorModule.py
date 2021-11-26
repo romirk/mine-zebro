@@ -169,7 +169,7 @@ class sensors(module.Module):
 
 if __name__ == "__main__":
     print("Starting sensor read")
-    sensors  = Sensors()
+    sensors  = sensors()
     while True:
         command = input()
         try:

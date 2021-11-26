@@ -37,7 +37,7 @@ class CameraManager:
         return
 
     # Get valid input from the camera (check for crashes or errors)
-    def __get_valid_input(self) -> []:
+    def __get_valid_input(self) -> None:
         if self.__camera.frame_capture():
             return self.__camera.get_frame()
         else:

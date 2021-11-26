@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import cv2
-
-class cameraModule():
-    def setup(self):
-        return super().setup()
-=======
 import cv2 as cv
 import cameraApi
 import os
@@ -75,4 +68,3 @@ class camera():
 #     # When everything done, release the capture
 #     cap.release()
 #     cv.destroyAllWindows()
->>>>>>> camera-updated
