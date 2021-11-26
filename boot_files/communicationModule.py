@@ -3,11 +3,8 @@ from logging import info
 import commsApi
 from threading import Thread
 import json
-<<<<<<< HEAD
 import cameraModule
-=======
 import cameraDummy
->>>>>>> user-interface
 # import serverApi
 
 from flask import Flask, render_template, Response
@@ -54,7 +51,6 @@ class CommunicationModule(commsApi.AbstractComms):
         self.__socketio = SocketIO(self.__app)
         
         # Preparing for creating a thread for the application. 
-<<<<<<< HEAD
 
         #Defining the application routes
         @self.__app.route('/video_feed')
@@ -65,12 +61,10 @@ class CommunicationModule(commsApi.AbstractComms):
 
 
 
-=======
         @self.__app.route("/")
         def index():
             return self.__app.send_static_file('index.html')
                     
->>>>>>> user-interface
 
         #Defining the incoming command.
         @self.__socketio.on('command')

@@ -1,9 +1,6 @@
 import time
 
-<<<<<<< HEAD
 import module
-=======
->>>>>>> user-interface
 
 import module;
 try: #prevent errors when testing on computer

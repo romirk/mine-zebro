@@ -30,6 +30,7 @@ function Tabs() {
         </div>
         <div class="itembig">
           <h1 className="titleBar"> CAMERA </h1>
+          <img src ="/video_feed"></img>
           <button className="control button6" role="button">
             LIGHT 1
           </button>
