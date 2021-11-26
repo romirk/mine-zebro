@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>React App</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script src = "%PUBLIC_URL%/socketing.js"></script>
+<script src = "%PUBLIC_URL%/communication.js"></script>
+<script>
+  
+
+
+  var LOC_CANVAS=document.getElementById("LOC_CANVAS");
+  var LOC_CTX=LOC_CANVAS.getContext("2d");
+  
+  
+  
+  
+  var LOC_DATA={
+      1:{temperature:0,position:0,state:"enabled",relaxed:0},
+      2:{temperature:0,position:0,state:"enabled",relaxed:0},
+      3:{temperature:0,position:0,state:"enabled",relaxed:0},
+      4:{temperature:0,position:0,state:"enabled",relaxed:0},
+      5:{temperature:0,position:0,state:"enabled",relaxed:0},
+      6:{temperature:0,position:0,state:"enabled",relaxed:0}};
+  
+  
+      
+  function loc_gradient(c1,c2,f) {
+    f=Math.max(0,Math.min(1,f));
+    //alert(f);
+    return "rgb("+Math.round(c1[0]*f+c2[0]*(1-f))+","+Math.round(c1[1]*f+c2[1]*(1-f))+","+Math.round(c1[2]*f+c2[2]*(1-f))+")";
+  }
+  
+  
+  function loc_3d_transform(c) {
+    return [c[0]+c[1]*0.4,-c[1]*0.8];
+  }
+  
+  function loc_draw_leg(C,a,enabled,relaxed,side,temp) {
+    var LOC_ANGLE_OFFSET=20;
+    var LOC_LEG_RADIUS=1;
+    
+    
+    c=loc_3d_transform(C);
+    var x=c[0];
+    var y=c[1];
+    var rad=(a-90+LOC_ANGLE_OFFSET)/180*Math.PI;
+  
+    
+    LOC_CTX.beginPath();
+    
+    if(relaxed) {
+      LOC_CTX.lineWidth=.15;
+    } else {
+      LOC_CTX.lineWidth=2*.15;
+    }
+    
+    if(enabled) {
+      LOC_CTX.strokeStyle="#00aa00";
+    } else {
+      LOC_CTX.strokeStyle="#aa0000";
+    }
+    
+    LOC_CTX.lineCap = "round";
+     
+      LOC_CTX.arc(x+LOC_LEG_RADIUS*Math.cos(rad),
+          y+LOC_LEG_RADIUS*Math.sin(rad),
+          LOC_LEG_RADIUS,
+          rad,
+          rad+Math.PI);
+      LOC_CTX.stroke();
+    LOC_CTX.closePath();
+    
+    //axles
+    LOC_CTX.beginPath();
+    LOC_CTX.lineWidth*=1.5;
+    LOC_CTX.strokeStyle=loc_gradient([255,50,20],[0,0,200],(temp-15)/(45-15))
+     
+    LOC_CTX.moveTo(x,y);
+    c=loc_3d_transform([C[0],C[1]+side*0.5]);
+    LOC_CTX.lineTo(c[0],c[1]);
+    
+    LOC_CTX.stroke();
+    LOC_CTX.closePath();
+    
+    
+  }
+  
+  function loc_draw_body(dz) {
+    var LOC_BODY=[
+      [3.5,2],[2.5,2],[.5,2.5],[-.5,2.5],[-2.5,2],[-3.5,2],[-4,0],
+      [-3.5,-2],[-2.5,-2],[-.5,-2.5],[.5,-2.5],[2.5,-2],[3.5,-2],
+      [3.8,-1],[4.2,-.75],[4.5,-.25],[4.5,.25],[4.2,.75],[3.8,1]];
+      
+    LOC_CTX.fillStyle = 'rgba(150, 150, 150, 0.5)';
+    LOC_CTX.beginPath();
+    var c;
+    
+    c=loc_3d_transform(LOC_BODY[LOC_BODY.length-1]);
+    LOC_CTX.moveTo(c[0],c[1]-dz);
+    for(let i = 0; i<LOC_BODY.length; i++) {
+      c=loc_3d_transform(LOC_BODY[i]);
+      LOC_CTX.lineTo(c[0],c[1]-dz);
+    }
+    LOC_CTX.closePath();
+    LOC_CTX.fill();
+  }
+  
+  
+  function loc_redraw() {
+    var LOC_LEG_COORDS=[[3,2.5],[3,-2.5],[0,3],[0,-3],[-3,2.5],[-3,-2.5]];
+    
+    LOC_CTX.clearRect(-10,-10,20,20);
+  
+    //far legs
+    for(let leg=1; leg<=6; leg+=2) {
+      loc_draw_leg(LOC_LEG_COORDS[leg-1],LOC_DATA[leg].position,(LOC_DATA[leg].state=="enabled"),LOC_DATA[leg].relaxed,-1,LOC_DATA[leg].temperature);
+      }
+    //far motors
+    
+    //frame
+    //loc_draw_body(-0.5);
+    //loc_draw_body(1);
+    loc_draw_body(0);
+    //close motors
+    
+    //close legs
+    for(let leg=2; leg<=6; leg+=2) {
+      loc_draw_leg(LOC_LEG_COORDS[leg-1],LOC_DATA[leg].position,(LOC_DATA[leg].state=="enabled"),LOC_DATA[leg].relaxed,1,LOC_DATA[leg].temperature);
+      }
+  
+  }
+  
+  
+  function loc_resize() {
+    var LOC_W=LOC_CANVAS.parentElement.offsetWidth;
+      var LOC_H=LOC_CANVAS.parentElement.offsetHeight;
+    LOC_CANVAS.width=LOC_W;
+    LOC_CANVAS.height=LOC_H;
+    
+      var LOC_SIZE=Math.min(LOC_W,LOC_H)*0.09; //W:H=2:1
+    
+    LOC_CTX.clearRect(-10,-10,10,10);
+    LOC_CTX.setTransform(LOC_SIZE,0,0,LOC_SIZE,LOC_W/2,LOC_H/2);
+    
+    loc_redraw();
+  }
+  
+  
+  function update_loc_data(data) {
+    for(let leg=1; leg<=6; leg++) {
+      if(data[leg]!=undefined) {
+        if(data[leg].temperature!=undefined)	LOC_DATA[leg].temperature=data[leg].temperature;
+        if(data[leg].position!=undefined)		LOC_DATA[leg].position=data[leg].position;
+        if(data[leg].state!=undefined) 			LOC_DATA[leg].state=data[leg].state;
+        if(data[leg].relaxed!=undefined)		LOC_DATA[leg].relaxed=data[leg].relaxed;
+      }
+    }
+    loc_redraw();
+  }
+  
+  
+  
+  loc_resize();
+  
+  
+  update_loc_data({1:{position:300},5:{state:"disabled"},2:{relaxed:true,temperature:30}});
+  
+  
+  
+  
+  </script>

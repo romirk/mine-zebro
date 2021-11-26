@@ -1,0 +1,115 @@
+
+li {
+    list-style-type: none;
+    background-color: rgb(63, 77, 158);
+    
+}
+
+.navBar {
+    display: flex;
+    justify-content: space-around;
+    min-height: 10vh;
+    align-items: center;
+    background-color: rgb(63, 77, 158);
+}
+
+.title{
+    font-size: 40px;
+    font-weight: 599;
+    text-transform: uppercase;
+    font-family:'Bebas Neue', cursive;
+    color: rgb(219, 227, 248);
+    background-color: rgb(63, 77, 158);
+    
+}
+
+.title:hover{
+    cursor: pointer;
+    -webkit-mask-image: linear-gradient(-75deg, rgba(0,0,0,.3) 30%, #000 50%, rgba(0,0,0,.3) 70%);
+    -webkit-mask-size: 200%;
+    animation: shine 2.5s linear infinite;
+}
+
+@keyframes shine {
+    from { -webkit-mask-position: 150%; }
+    to { -webkit-mask-position: -50%; }
+  }
+
+.stats{
+    font-size: 20px;
+    font-weight: normal;
+    font-family: 'Bebas Neue', cursive;
+    display: flex;
+    justify-content: space-around;
+    width: 40%;
+    color: rgb(219, 227, 248);
+    background-color: rgb(63, 77, 158);
+    
+}
+
+.logo{
+    cursor: pointer;
+    height: auto;
+    max-width: 100px;
+    background-color: rgb(63, 77, 158);
+    -webkit-transform: scale(1);
+	transform: scale(1);
+	-webkit-transition: .3s ease-in-out;
+	transition: .3s ease-in-out;
+}
+
+.logo:hover{
+    border-radius: 100px;
+    -webkit-transform: scale(0.9);
+	transform: scale(0.9);
+}
+
+.battery{
+    cursor: pointer;
+    color: rgb(95, 194, 29);
+    background-color: rgb(63, 77, 158);
+    width: 50px;
+    height: auto;
+    -webkit-transform: scale(1);
+	transform: scale(1);
+	-webkit-transition: .3s ease-in-out;
+	transition: .3s ease-in-out;
+    
+}
+
+.battery:hover{
+    -webkit-transform: scale(0.9);
+	transform: scale(0.9);
+}
+
+.stats1{
+    transition-duration: 0.4s;
+}
+
+.stats1:hover{
+    cursor: pointer;
+    -webkit-mask-image: linear-gradient(-75deg, rgba(0,0,0,.3) 30%, #000 50%, rgba(0,0,0,.3) 70%);
+    -webkit-mask-size: 200%;
+    animation: shine 2.5s linear infinite;
+}
+
+.stats2:hover{
+    cursor: pointer;
+    -webkit-mask-image: linear-gradient(-75deg, rgba(0,0,0,.3) 30%, #000 50%, rgba(0,0,0,.3) 70%);
+    -webkit-mask-size: 200%;
+    animation: shine 2.5s linear infinite;
+}
+
+.stats3:hover{
+    cursor: pointer;
+    -webkit-mask-image: linear-gradient(-75deg, rgba(0,0,0,.3) 30%, #000 50%, rgba(0,0,0,.3) 70%);
+    -webkit-mask-size: 200%;
+    animation: shine 2.5s linear infinite;
+}
+
+.stats4:hover{
+    cursor: pointer;
+    -webkit-mask-image: linear-gradient(-75deg, rgba(0,0,0,.3) 30%, #000 50%, rgba(0,0,0,.3) 70%);
+    -webkit-mask-size: 200%;
+    animation: shine 2.5s linear infinite;
+}

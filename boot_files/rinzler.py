@@ -65,7 +65,7 @@ class Mcp:
                 prefix = self.messenger.get_destination()
                 command = self.messenger.get_command()
                 self.messenger.reset_input_received()
-
+        
                 # move input from message manager to router iff no input loaded or handle if mcp command
                 if prefix.startswith("mcp"):
                     self.mcp_helper.handle_command(prefix, command)

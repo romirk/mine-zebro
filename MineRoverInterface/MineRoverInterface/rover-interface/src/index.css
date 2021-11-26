@@ -1,0 +1,8 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: rgb(230, 227, 227);
+  viewport-fit: cover;
+  overflow: hidden;
+}
