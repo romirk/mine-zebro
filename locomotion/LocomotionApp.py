@@ -521,7 +521,9 @@ class LocomotionApp(Module):
                     else:
                         if self.legs[m-1].enabled: #disabled legs are neglected
                             halt=True
-                            self.send_output(self._error("Leg %d overheated"%m)) #send back error
+                            self.legs[m-1].relax()
+                            self.legs[m-1].disable()
+                            self.send_output(self._error("Leg %d overheated; relaxed and disabled leg."%m)) #send back error
                     
         if halt:    return
 
@@ -609,6 +611,15 @@ class LocomotionApp(Module):
             out[m]={}
             if parameters["temperature"]:
                 out[m]["temperature"]=self.legs[m-1].readTemperature()
+                #if it is too hot and force is not specified, halt execution, send back error with motor data
+                if not self.legs[m-1].overheated: #internal variable, read as "if leg /was/ not overheated"
+                    if self.legs[m-1].isOverheated(): #if the leg is JUST NOW detected to be overheated (so that the leg can be re-enabled with force without the occasional "get" getting in the way)
+                        self.legs[m-1].relax()
+                        self.legs[m-1].disable()
+                        self.send_output(self._error("Leg %d overheated; relaxed and disabled leg."%m)) #send back error
+                elif legs[m-1].isOverheated():
+                    self.send_output(self._warning("Leg %d overheated"%m)) #send back error
+                        
             if parameters["position"]:
                 out[m]["position"]=self.legs[m-1].readAngle()
             if parameters["state"]:
