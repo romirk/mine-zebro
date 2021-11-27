@@ -97,7 +97,7 @@ class McpHelper:
             return self._command_not_found_string
         
     def __check_lights(self):
-        if self.leds.keep_safe():
+        if self.leds.keep_safe(): #returns True if the power had to be decreased
             package = messageManager.create_user_package("mcp", "Turned light power down to prevent overheating", datetime.now().strftime("%H:%M:%S"),
                                                          False) #should this be this??? it should DEFINITELY not tell the system a command has finished whe this is sent halfway through
             self.mcp.messenger.send_to_user_package(package)
