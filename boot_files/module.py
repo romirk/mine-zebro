@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-#import router
-try: #prevent errors when testing on computer
+import router
+
+try:  # prevent errors when testing on computer
     from smbus2 import SMBus
-except: SMBus = int
+except:
+    SMBus = int
 
 # Abstract class that all modules inherit from
 # See dummyModule.py for how example
 from enum import Enum
-
 
 
 class OutputCode(Enum):
@@ -25,9 +26,8 @@ class Module(ABC):
         self.__router = router_obj
         self.__bus = bus
 
-
     ### ABOUT
-        
+
     # id must not include any digits
     @abstractmethod
     def get_id(self) -> str:
@@ -38,9 +38,6 @@ class Module(ABC):
         text = str(self.get_id()) + " module commands\n"
         return text
 
-
-
-
     ### I2C INSTRUCTIONS
 
     # run whatever needs to be done to set up the system
@@ -48,7 +45,7 @@ class Module(ABC):
     def setup(self) -> None:
         pass
 
-    #get system status. behaves like execute
+    # get system status. behaves like execute
     def get_status(self):
         pass
 
@@ -57,8 +54,6 @@ class Module(ABC):
     def execute(self, command: str) -> None:
         pass
 
-
-
     ### HALTING EXECUTION
 
     # method that check if module should stop execution
@@ -66,37 +61,34 @@ class Module(ABC):
         temp = self.__router.shared_data[router.Str.is_halt.value]
         return temp
 
-
-
     ### OUTPUT
-    
+
     # method delivers data to mcp
     def send_output(self, packet=None, code=0, msg=None, data=None):
         if not packet:
             packet = create_router_package(code=code, msg=msg, data=data)
         self.__router.send_package_to_mcp(packet, False)
 
-
-    #functions for creating packages
+    # functions for creating packages
     def _halt(self):
         return self._error("Execution halted")
-    def _invalid_command(self,err=None):
+
+    def _invalid_command(self, err=None):
         if err:
-            return self._error("Invalid command: %s"%err)
+            return self._error("Invalid command: %s" % err)
         return self._error("Invalid command")
-    
-    def _error(self,err,data=None):
-        return create_router_package(code=OutputCode.error.value,msg=err,data=data)
-    def _warning(self,err,data=None):
-        return create_router_package(code=OutputCode.warning.value,msg=err,data=data)
-    def _info(self,msg,data=None):
-        return create_router_package(code=OutputCode.data.value,msg=msg,data=data)
-    def _data(self,data,msg="Sent data"):
-        return create_router_package(code=OutputCode.data.value,msg=msg,data=data)
 
+    def _error(self, err, data=None):
+        return create_router_package(code=OutputCode.error.value, msg=err, data=data)
 
+    def _warning(self, err, data=None):
+        return create_router_package(code=OutputCode.warning.value, msg=err, data=data)
 
+    def _info(self, msg, data=None):
+        return create_router_package(code=OutputCode.data.value, msg=msg, data=data)
 
+    def _data(self, data, msg="Sent data"):
+        return create_router_package(code=OutputCode.data.value, msg=msg, data=data)
 
 
 # Function called by all modules to deliver information to the router

@@ -26,6 +26,7 @@ class DummyManager(module.Module):
         text = super().help()
         text += " count: Count from 0-4 with rests in between\n"
         text += " loop:  Count from 0 until hold command given\n"
+        text += " echo:  Returns first parameter given \n"
         return text#self.send_output(module.OutputCode.data.value, "", text)
 
     def execute(self, command):
@@ -34,7 +35,7 @@ class DummyManager(module.Module):
         if command == "count":
             for i in range(5):
                 data = str(i)
-                self.send_output(self._data(data,"Counting"))
+                self.send_output(self._data(data, "Counting"))
                 i += 1
 
         elif command == "loop":
@@ -43,6 +44,9 @@ class DummyManager(module.Module):
                 self.send_output(code=module.OutputCode.data.value, msg="Counting", data=data)
                 number += 1
                 time.sleep(5)
+
+        elif command.split(" ").__getitem__(0) == "echo":
+            self.send_output(self._data(command.split(" ").__getitem__(1)))
 
         elif command == "help":
             self.send_output(self._info(self.help()))
@@ -54,5 +58,5 @@ class DummyManager(module.Module):
             self.send_output(code=module.OutputCode.warning.value, msg="Motors are fine")
 
         else:
-            self.send_output(self.invalid_command())
+            self.send_output(super()._invalid_command())
         return

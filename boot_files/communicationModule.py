@@ -4,7 +4,6 @@ import commsApi
 from threading import Thread
 import json
 import cameraModule
-import cameraDummy
 # import serverApi
 
 from flask import Flask, render_template, Response
