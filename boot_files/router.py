@@ -106,6 +106,7 @@ class Router:
             module_output,
             has_process_completed)
         self.shared_data[Str.is_package_ready.value] = True
+
         self.lock.release()
         self.shared_data[Str.event.value].set()
 

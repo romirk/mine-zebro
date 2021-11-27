@@ -13,8 +13,6 @@ import time
 import commsApi
 import communicationModule
 import mcpHelper
-import cameraManager
-import cameraDummy
 
 #tries to import lights so it detects if the host is a rover or pc
 try:
@@ -48,13 +46,10 @@ class Mcp:
         self.mcp_helper = mcpHelper.McpHelper(self)
         #self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
         self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc, self.event)
-        self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(),
-                                                         self.messenger)  # TODO change this to real Camera
 
         # setup threads and place in a list
         self.threads = list()
         self.mcp_helper.setup_router_thread()
-        self.mcp_helper.setup_camera_thread()
         self.mcp_helper.setup_non_restartable_threads()
         return
 
@@ -104,8 +99,8 @@ class Mcp:
 
             self.mcp_helper.check_lights()
 
-            self.event.clear()
             self.event.wait()
+            self.event.clear()
             #time.sleep(self.__sleep_interval)
         return
 

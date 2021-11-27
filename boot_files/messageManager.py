@@ -98,7 +98,7 @@ class MessageManager:
                 time.sleep(self.__sleep_interval)
 
             if counter >= self.__status_counter_max:
-                if number % 2 == 0 and counter:  # check if even
+                if number % 2 != 0 and counter:  # check if odd
                     if self.__isPc:
                         self.__set_command("dummy battery")
                     else:
