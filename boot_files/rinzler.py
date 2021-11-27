@@ -14,12 +14,8 @@ import cameraManager
 import cameraDummy
 
 
-# TODO define error messages and exceptions for submodules
-# TODO replace threading router thread with a process (geekfreak multiprocessing)
-# TODO open different terminal for output and input
-# TOD socket.emit('command', {command: 'dummy count'});
+# TODO use this for regular commms socket.emit('command', {command: 'dummy count'});
 
-# Processing router: Keep it on hold
 
 # Boot procedure
 # 1)setup all essential objects (router,messenger,camera,mcp_helper)
@@ -37,8 +33,8 @@ class Mcp:
 
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
-        #self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
-        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())
+        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
+        # self.messenger = messageManager.MessageManager(messageManager.CommsMock())
         self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(),
                                                          self.messenger)  # TODO change this to real Camera
 
@@ -65,7 +61,7 @@ class Mcp:
                 prefix = self.messenger.get_destination()
                 command = self.messenger.get_command()
                 self.messenger.reset_input_received()
-        
+
                 # move input from message manager to router iff no input loaded or handle if mcp command
                 if prefix.startswith("mcp"):
                     self.mcp_helper.handle_command(prefix, command)
@@ -91,8 +87,7 @@ class Mcp:
                 self.router_data[Str.is_package_ready.value] = False
                 # self.router.lock.release()
 
-
-            self.mcp_helper.__check_lights()
+            self.mcp_helper.check_lights()
 
             time.sleep(self.__sleep_interval)
         return

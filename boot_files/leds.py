@@ -27,7 +27,7 @@ class LEDs:
     def stop(self):
         self.pwm.stop()
         
-    def set_power(self,power):
+    def set_power(self, power):
         self.update_cooldown()
 
         self.pwm.changeDutyCycle(25*self.power)
