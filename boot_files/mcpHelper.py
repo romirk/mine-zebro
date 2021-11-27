@@ -6,6 +6,8 @@ import rinzler
 import multiprocessing
 from datetime import datetime
 
+from leds import LEDs
+
 # Class holds mcp functionality relating to handling commands, setting up threads
 # Note all methods that receive parameters from commands check if they are valid and if not send respond back to the user
 import messageManager, router
@@ -16,6 +18,8 @@ class McpHelper:
 
     def __init__(self, mcp) -> None:
         self.mcp = mcp
+        self.leds=LEDs()
+        self.leds.start() #turns on pwm, but at 0 power
 
     def handle_command(self, prefix: str, command: str) -> None:
         data = ""
@@ -73,13 +77,30 @@ class McpHelper:
 
     # turns lights on/off
     def __lights(self, command: str) -> str:
-        # TODO add lights functionality
-        if command == "lightsOn".lower():
-            return "lights" + str(True)
-        elif command == "lightsOff".lower():
-            return "lights" + str(False)
+        _,pwr=command.split(" ",1)
+        if pwr in ("0","off"):
+            self.leds.set_power(0)
+            return "lights off"
+        elif pwr in ("1","on"):
+            self.leds.set_power(1)
+            return "lights on on lowest setting"
+        elif pwr == "2":
+            self.leds.set_power(2)
+            return "lights on on 2nd power setting"
+        elif pwr == "3":
+            self.leds.set_power(3)
+            return "lights on on 3nd power setting"
+        elif pwr == "4":
+            self.leds.set_power(4)
+            return "lights on on 4th (maximum) power setting"
         else:
             return self._command_not_found_string
+        
+    def __check_lights(self):
+        if self.leds.keep_safe():
+            package = messageManager.create_user_package("mcp", "Turned light power down to prevent overheating", datetime.now().strftime("%H:%M:%S"),
+                                                         False) #should this be this??? it should DEFINITELY not tell the system a command has finished whe this is sent halfway through
+            self.mcp.messenger.send_to_user_package(package)
 
     # returns information on available commands
     def __help(self) -> str:

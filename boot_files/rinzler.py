@@ -91,6 +91,9 @@ class Mcp:
                 self.router_data[Str.is_package_ready.value] = False
                 # self.router.lock.release()
 
+
+            self.mcp_helper.__check_lights()
+
             time.sleep(self.__sleep_interval)
         return
 
