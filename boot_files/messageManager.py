@@ -14,25 +14,26 @@ import threading
 # Wrapper for comms that transfers messages between comms and mcp
 class MessageManager:
     is_shut_down = False
-    __status_sleep_interval = 60  # how often to check motors for overheating or battery in seconds (set to 0 so not to check)
+    __status_counter_max = 60  # how often to check motors for overheating or battery in seconds (set to 0 so not to check)
     __sleep_interval = 1
+    __status_sleep_interval = 3
     # variables shared that need locks to write on are:
     __stored_input = ""
     input_received = False
 
-    def __init__(self, comms: commsApi.AbstractComms) -> None:
+    def __init__(self, comms: commsApi.AbstractComms, is_pc:bool) -> None:
         self.__comms = comms
         self.__comms.setup()
         self.__lock = threading.Lock()
+        self.__isPc = is_pc
 
     # Comms to MCP methods
     # loop for waiting for user input
     def listen_to_user(self) -> None:
         while not self.is_shut_down:
-            time.sleep(1) #needed since it blocks processes from starting for some reason in not present
+            time.sleep(1) #needed since it blocks processes from starting
             command = self.__get_valid_input()
             self.__set_command(command)
-            time.sleep(self.__sleep_interval)
 
     # Get valid input from comms
     def __get_valid_input(self) -> str:
@@ -40,7 +41,7 @@ class MessageManager:
 
         while user_input == "":
             user_input = self.__comms.cin()
-            time.sleep(1)
+            time.sleep(self.__sleep_interval)
 
         if len(user_input.split(" ", 1)) < 2:
             user_input = "mcp " + user_input
@@ -74,33 +75,38 @@ class MessageManager:
     # CameraManager packages use as command_id = frame #id
     def send_to_user_package(self, package: dict) -> None:
         self.__lock.acquire()
-        # array is not json serialisable hence turn into python list
+        # array is not json serializable hence turn into python list
         temp = json.dumps(package, indent=1)
         self.__comms.cout(temp)
         self.__lock.release()
 
     # loop that periodically sets command to check battery status and if motors are overheating
     # note if status sleep interval is 0 then disabled
+    # disabled battery check
     def status_loop(self) -> None:
-        counter = self.__status_sleep_interval #when counter > status_sleep_interval send one of commands
+        counter = self.__status_counter_max #when counter > status_sleep_interval send one of commands
         number = 0 #used to choose which of the two checks to do
-        while not self.is_shut_down and self.__status_sleep_interval > 0:
+        while not self.is_shut_down and self.__status_counter_max > 0:
             # TODO check for battery status & implement as module or mcp command depending if it's using I2C bus
             # TODO add check for overheating
             #wait for user to stop sending data
             while self.input_received:
                 time.sleep(self.__sleep_interval)
 
-            if counter >= self.__status_sleep_interval:
-                if number % 2 == 0 and counter:
-                    self.__set_command("dummy battery")
+            if counter >= self.__status_counter_max:
+                if number % 2 == 0 and counter: #check if even
+                    if self.__isPc:
+                        self.__set_command("dummy battery")
+                    else:
+                        self.__set_command("loc get m:all temperature")
                 else:
-                    self.__set_command("dummy motors")
+                    if self.__isPc:
+                        self.__set_command("dummy battery")
                 number += 1
                 counter = 0
 
-            counter += 3 #counter increase by waiting time
-            time.sleep(3)
+            counter += self.__status_sleep_interval #counter increase by waiting time
+            time.sleep(self.__status_sleep_interval)
 
         return
 

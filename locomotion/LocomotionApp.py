@@ -1,5 +1,4 @@
 
-
 """
 USAGE
 
@@ -24,8 +23,7 @@ get prefix:
 
 """
 
-
-#Locomotion app to manage all locomotion i2c related commands
+# Locomotion app to manage all locomotion i2c related commands
 
 
 # Things the locomotion system should be able to do:
@@ -40,7 +38,7 @@ get prefix:
 # - possibly lidar stuff????
 
 
-#command structure
+# command structure
 """
 
 type:
@@ -120,8 +118,8 @@ from ZebroLeg import ZebroLeg, angle_between, abs_angle_difference
 import CPG
 from locomotion_constants import *
 
-import os,sys
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"boot_files"))
+import os ,sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) ,"boot_files"))
 from module import Module
 
 from time import sleep
@@ -129,11 +127,11 @@ import traceback
 
 
 
-with open("commands.txt","r") as f:
-    HELPTEXT=f.read()
+with open("commands.txt" ,"r") as f:
+    HELPTEX T =f.read()
 
 
-GO_DIRECTIONS=[l.split("/") for l in """\
+GO_DIRECTION S =[l.split("/") for l in """\
 fd/forward/forwards/f
 bd/back/backward/backwards
 left/l
@@ -145,18 +143,17 @@ bow/z
 relax/r""".split("\n")]
 
 class LocomotionApp(Module):
-    def __init__(self,router,bus):
-        super().__init__(router,bus)
-        self.bus=bus
-        
+    def __init__(self ,router ,bus):
+        super().__init__(router ,bus)
+        self.bu s =bus
 
-        #create legs
-        self.NUMBER_OF_LEGS=6
+        # create legs
+        self.NUMBER_OF_LEG S =6
 
-        self.legs=[ZebroLeg(i, bus, self) for i in range(self.NUMBER_OF_LEGS)]
+        self.leg s =[ZebroLeg(i, bus, self) for i in range(self.NUMBER_OF_LEGS)]
         self.CPG = CPG.CPG(self.legs)
 
-        self.laststep="custom"
+        self.lastste p ="custom"
 
 
     def setup(self):
@@ -170,458 +167,460 @@ class LocomotionApp(Module):
         self.standUp()
         sleep(1.1)  # must be larger than 1, as each leg gets a a 1 sec hardcoded time in standUp function
 
-
-    #for router: give prefix
+    # for router: give prefix
     def get_id(self):
         return "loc"
 
-    #return helptext
+    # return helptext
     def help(self):
-        return super().help()+HELPTEXT
+        return super().help( ) +HELPTEXT
 
 
 
     def get_state(self):
         self.execute("get")
 
+    # function for executing commands
+    def execute(self ,command):
+        comman d =command.split()  # commands consist of terms separated by spaces
+        func ,arg s =None ,[]
 
-    #function for executing commands
-    def execute(self,command):
-        command=command.split() #commands consist of terms separated by spaces
-        func,args=None,[]
-
-        try: #in case of an error, report back the exact error
-        #if 1:
+        try:  # in case of an error, report back the exact error
+        # if 1:
             if not len(command):    return self.send_output(self._invalid_command("No command specified"))
-            if command[0]=="go": #go dir1:count dir2 dir3
-                func=self.go
+            if command[0 ]= ="go":  # go dir1:count dir2 dir3
+                fun c =self.go
 
                 
                 for term in command[1:]:
                     try:
-                        direction,count=term.split(":")
+                        direction ,coun t =term.split(":")
                     except:
-                        direction=term
-                        count="1"
+                        directio n =term
+                        coun t ="1"
 
-                    if direction in ("f","fd","forward","forwards"):
-                        dir=STEP_FORWARDS
-                    elif direction in ("b","bd","back","backward","backwards"):
-                        dir=STEP_BACKWARDS
-                    elif direction in ("l","left"):
-                        dir=STEP_LEFT
-                    elif direction in ("r","right"):
-                        dir=STEP_RIGHT
-                    elif direction in ("u","up","standup","stand_up"):
-                        dir=STEP_UP
-                    elif direction in ("d","down","liedown","lie_down"):
-                        dir=STEP_DOWN
-                    elif direction in ("s","sit"):
-                        dir=STEP_SIT
-                    elif direction in ("z","bow"):
-                        dir=STEP_BOW
-                    elif direction in ("r","relax"):
-                        dir=STEP_RELAX
+                    if direction in ("f" ,"fd" ,"forward" ,"forwards"):
+                        di r =STEP_FORWARDS
+                    elif direction in ("b" ,"bd" ,"back" ,"backward" ,"backwards"):
+                        di r =STEP_BACKWARDS
+                    elif direction in ("l" ,"left"):
+                        di r =STEP_LEFT
+                    elif direction in ("r" ,"right"):
+                        di r =STEP_RIGHT
+                    elif direction in ("u" ,"up" ,"standup" ,"stand_up"):
+                        di r =STEP_UP
+                    elif direction in ("d" ,"down" ,"liedown" ,"lie_down"):
+                        di r =STEP_DOWN
+                    elif direction in ("s" ,"sit"):
+                        di r =STEP_SIT
+                    elif direction in ("z" ,"bow"):
+                        di r =STEP_BOW
+                    elif direction in ("r" ,"relax"):
+                        di r =STEP_RELAX
                     else:
-                        self.send_output( self._invalid_command("Unknown direction: '%s'"%direction) )
+                        self.send_output( self._invalid_command("Unknown direction: '%s' " %direction) )
                         return
                     
                     try:
-                        count=int(count)
-                        assert count>=1
+                        coun t =int(count)
+                        assert coun t> =1
                     except:
-                        self.send_output( self._invalid_command("Invalid count: '%s'"%count))
+                        self.send_output( self._invalid_command("Invalid count: '%s' " %count))
                         return
                     
-                    args.append((dir,count)) 
+                    args.append((dir ,count))
 
-            elif command[0]=="set":
-                func=self.set
+            elif command[0 ]= ="set":
+                fun c =self.set
 
-                settings=[]
+                setting s =[]
 
-                setting=None#dict(motors=[],position=None,direction=None,speed=None,time=None,relax=None)
+                settin g =None  # dict(motors=[],position=None,direction=None,speed=None,time=None,relax=None)
 
                 
                 for term in command[1:]:
                     try:
-                        key,value=term.split(":")
+                        key ,valu e =term.split(":")
                     except:
-                        key=term
-                        value=""
+                        ke y =term
+                        valu e =""
                         
-                    if key in ("m","motor","motors","leg","legs","l"): #motor allocation creates new setting
-                        setting=dict(motors=[],position=None,direction=None,speed=None,time=None,relax=None,state=None,force=None)
-                        settings.append(setting) #same object; changes to setting will affect the dict in settings
+                    if key in ("m" ,"motor" ,"motors" ,"leg" ,"legs" ,"l"):  # motor allocation creates new setting
+                        settin g =dict(motors=[] ,position=None ,direction=None ,speed=None ,time=None ,relax=None
+                                       ,state=None ,force=None)
+                        settings.append(setting)  # same object; changes to setting will affect the dict in settings
 
-                        if value=="all":
-                            setting["motors"]=[1,2,3,4,5,6]
+                        if valu e= ="all":
+                            setting["motors" ] =[1 ,2 ,3 ,4 ,5 ,6]
                         else:
                             try:
-                                setting["motors"]=list(map(int,value))
-                                if len(set(setting["motors"]).intersection(set([1,2,3,4,5,6])))!=len(setting["motors"]):
+                                setting["motors" ] =list(map(int ,value))
+                                if len(set(setting["motors"]).intersection(set([1 ,2 ,3 ,4 ,5 ,6])) )! =len \
+                                        (setting["motors"]):
                                     raise Exception
                             except:
-                                self.send_output( self._invalid_command("Invalid list of legs: '%s'"%value))
+                                self.send_output( self._invalid_command("Invalid list of legs: '%s' " %value))
                                 return
                         
-                    elif setting: #if not setting, 
-                        if not(key in ("r","relax","state")) and setting["relax"]:
+                    elif setting:  # if not setting,
+                        if no t(key in ("r" ,"relax" ,"state")) and setting["relax"]:
                             self.send_output( self._invalid_command("Cannot relax and move at the same time") )
                             return
                         
-                        if key in ("p","pos","position"): #position
-                            if setting["position"]!=None:   return self._invalid_command("Multiple positions given")
-                            if value in ("u","up"):
-                                setting["position"]=LEG_POS_UP
-                            elif value in ("d","down"):
-                                setting["position"]=LEG_POS_DOWN
-                            elif value in ("t","td","touch","touchdown"):
-                                setting["position"]=LEG_POS_TOUCHDOWN
-                            elif value in ("l","lo","lift","liftoff"):
-                                setting["position"]=LEG_POS_LIFTOFF
-                            elif value in ("c","current"):
-                                setting["position"]=LEG_POS_CURRENT
+                        if key in ("p" ,"pos" ,"position"):  # position
+                            if setting["position" ]! =None:   return self._invalid_command("Multiple positions given")
+                            if value in ("u" ,"up"):
+                                setting["position" ] =LEG_POS_UP
+                            elif value in ("d" ,"down"):
+                                setting["position" ] =LEG_POS_DOWN
+                            elif value in ("t" ,"td" ,"touch" ,"touchdown"):
+                                setting["position" ] =LEG_POS_TOUCHDOWN
+                            elif value in ("l" ,"lo" ,"lift" ,"liftoff"):
+                                setting["position" ] =LEG_POS_LIFTOFF
+                            elif value in ("c" ,"current"):
+                                setting["position" ] =LEG_POS_CURRENT
                             else:
                                 try:
-                                    value=int(value)%360
+                                    valu e =int(value ) %360
                                 except:
-                                    self.send_output( self._invalid_command("Invalid position: '%s'"%value) )
-                                    return #invalid position
+                                    self.send_output( self._invalid_command("Invalid position: '%s' " %value) )
+                                    return  # invalid position
                                 else:
-                                    setting["position"]=value
+                                    setting["position" ] =value
                                     
-                        elif key in ("d","dir","direction"): #direction
-                            if setting["direction"]!=None:
+                        elif key in ("d" ,"dir" ,"direction"):  # direction
+                            if setting["direction" ]! =None:
                                 self.send_output( self._invalid_command("Multiple directions given") )
                                 return
 
-                            if value in ("f","fd","forward","forwards"):
-                                setting["direction"]=LEG_DIR_FORWARDS
-                            elif value in ("b","bd","back","backward","backwards"):
-                                setting["direction"]=LEG_DIR_BACKWARDS
-                            elif value in ("cw","clockwise"):
-                                setting["direction"]=LEG_DIR_CW
-                            elif value in ("ccw","counterclockwise"):
-                                setting["direction"]=LEG_DIR_CCW
-                            elif value in ("c","closest"):
-                                setting["direction"]=LEG_DIR_CLOSEST
-                            elif value in ("s","safe","safest"): #closest, but prevent standing up backwards
-                                setting["direction"]=LEG_DIR_SAFE
+                            if value in ("f" ,"fd" ,"forward" ,"forwards"):
+                                setting["direction" ] =LEG_DIR_FORWARDS
+                            elif value in ("b" ,"bd" ,"back" ,"backward" ,"backwards"):
+                                setting["direction" ] =LEG_DIR_BACKWARDS
+                            elif value in ("cw" ,"clockwise"):
+                                setting["direction" ] =LEG_DIR_CW
+                            elif value in ("ccw" ,"counterclockwise"):
+                                setting["direction" ] =LEG_DIR_CCW
+                            elif value in ("c" ,"closest"):
+                                setting["direction" ] =LEG_DIR_CLOSEST
+                            elif value in ("s" ,"safe" ,"safest"):  # closest, but prevent standing up backwards
+                                setting["direction" ] =LEG_DIR_SAFE
                             else:
-                                self.send_output( self._invalid_command("Invalid direction '%s'"%value) )
+                                self.send_output( self._invalid_command("Invalid direction '%s' " %value) )
                                 return
                             
 
-                        elif key in ("r","relax"): #relax
-                            if any([setting[k]!=None for k in ["position","direction","time","speed","state"]]):    return self._invalid_command("Cannot relax and move/change state at the same time")
-                            if setting["relax"]!=None:   return self._invalid_command("Multiple relaxes given")
+                        elif key in ("r" ,"relax"):  # relax
+                            if any([setting[k ]! =None for k in ["position" ,"direction" ,"time" ,"speed"
+                                                                 ,"state"]]):    return self._invalid_command \
+                                ("Cannot relax and move/change state at the same time")
+                            if setting["relax" ]! =None:   return self._invalid_command("Multiple relaxes given")
 
                             if value:
-                                self.send_output( self._invalid_command("Relax takes no values: '%s'"%term) )
+                                self.send_output( self._invalid_command("Relax takes no values: '%s' " %term) )
                                 return
-                            setting["relax"]=True
+                            setting["relax" ] =True
 
-                        elif key in ("force",): #force - neglect leg state(enabled/disabled)
-                            if setting["force"]!=None:   return self._invalid_command("Multiple forces given")
+                        elif key in ("force",):  # force - neglect leg state(enabled/disabled)
+                            if setting["force" ]! =None:   return self._invalid_command("Multiple forces given")
 
                             if value:
-                                self.send_output( self._invalid_command("Force takes no values: '%s'"%term))
+                                self.send_output( self._invalid_command("Force takes no values: '%s' " %term))
                                 return
-                            setting["force"]=True
+                            setting["force" ] =True
 
-                        elif key in ("state",): #turn on/off leg control
-                            if any([setting[k]!=None for k in ["position","direction","time","speed","relax"]]):
-                                self.send_output( self._invalid_command("Cannot change leg state and do other things at the same time") )
+                        elif key in ("state",):  # turn on/off leg control
+                            if any([setting[k ]! =None for k in ["position" ,"direction" ,"time" ,"speed" ,"relax"]]):
+                                self.send_output( self._invalid_command
+                                    ("Cannot change leg state and do other things at the same time") )
                                 return
-                            if setting["state"]!=None:   return self._invalid_command("Multiple states given")
+                            if setting["state" ]! =None:   return self._invalid_command("Multiple states given")
 
-                            if value in ("enabled","disabled"):
-                                setting["state"]=value
+                            if value in ("enabled" ,"disabled"):
+                                setting["state" ] =value
                             else:
-                                self.send_output(self._invalid_command("Invalid state: '%s'"%value))
+                                self.send_output(self._invalid_command("Invalid state: '%s' " %value))
                                 return
                             
-                        elif key in ("s","spd","speed"): #speed
-                            if setting["speed"]!=None or setting["time"]!=None:
+                        elif key in ("s" ,"spd" ,"speed"):  # speed
+                            if setting["speed" ]! =None or setting["time" ]! =None:
                                 self.send_output( self._invalid_command("Multiple speeds/times given") )
                                 return
 
-                            if value in ("f","fast"):
-                                setting["speed"]=LEG_SPEED_FAST
-                            elif value in ("s","slow"):
-                                setting["speed"]=LEG_SPEED_SLOW
-                            elif value in ("n","normal"):
-                                setting["speed"]=LEG_SPEED_NORMAL
+                            if value in ("f" ,"fast"):
+                                setting["speed" ] =LEG_SPEED_FAST
+                            elif value in ("s" ,"slow"):
+                                setting["speed" ] =LEG_SPEED_SLOW
+                            elif value in ("n" ,"normal"):
+                                setting["speed" ] =LEG_SPEED_NORMAL
                             else:
-                                self.send_output( self._invalid_command("Invalid speed: '%s'"%value) )
+                                self.send_output( self._invalid_command("Invalid speed: '%s' " %value) )
                                 return
                         
-                        elif key in ("t","time"): #time
-                            if setting["speed"]!=None or setting["time"]!=None:
+                        elif key in ("t" ,"time"):  # time
+                            if setting["speed" ]! =None or setting["time" ]! =None:
                                 self.send_output( self._invalid_command("Multiple speeds/times given"))
                                 return
 
                             try:
                                 if value.endswith("ms"):
-                                    setting["time"]=int(value[:-2])/1000*50
+                                    setting["time" ] =int(value[:-2] ) /100 0 *50
                                 elif value.endswith("s"):
-                                    setting["time"]=int(value[:-1])*50
+                                    setting["time" ] =int(value[:-1] ) *50
                                 else:
-                                    setting["time"]=int(value) #50Hz frames
+                                    setting["time" ] =int(value)  # 50Hz frames
                             except:
-                                self.send_output( self._invalid_command("Invalid time duration: '%s'"%value) )
+                                self.send_output( self._invalid_command("Invalid time duration: '%s' " %value) )
                                 return
 
                         else:
-                            self.send_output( self._invalid_command("Unknown parameter: '%s'"%term))
+                            self.send_output( self._invalid_command("Unknown parameter: '%s' " %term))
                             return
                     else:
-                        self.send_output(self._invalid_command("Motors must be first parameter"))#invalid command, must give motors as first parameter
+                        self.send_output(self._invalid_command
+                            ("Motors must be first parameter")  )  # invalid command, must give motors as first parameter
                         return
 
 
-                for setting in settings: #fill in defaults
-                    if all([setting[parameter]==None for parameter in ("state","position","relax")]): #for when you have direction but no speed etc
+                for setting in settings:  # fill in defaults
+                    if all([setting[parameter ]= =None for parameter in ("state" ,"position" ,"relax")]):  # for when you have direction but no speed etc
                         self.send_output(self._invalid_command("No actual change specified"))
                         return
-                    if setting["direction"]==None:  setting["direction"]=LEG_DIR_SAFE
-                    if setting["speed"]==None and setting["time"]==None:
-                        setting["speed"]=LEG_SPEED_NORMAL
-                    #state, force have None/False defaults we don't need to change
+                    if setting["direction" ]= =None:  setting["direction" ] =LEG_DIR_SAFE
+                    if setting["speed" ]= =None and setting["time" ]= =None:
+                        setting["speed" ] =LEG_SPEED_NORMAL
+                    # state, force have None/False defaults we don't need to change
 
                 if not settings:
                     self.send_output( self._invalid_command("No action specified") )
                     return
 
-                args=settings
+                arg s =settings
                     
-            elif command[0]=="get":
-                func=self.get
+            elif command[0 ]= ="get":
+                fun c =self.get
 
-                parameters=dict(temperature=False,position=False,state=False,relaxed=False)
-                motors=[]
+                parameter s =dict(temperature=False ,position=False ,state=False ,relaxed=False)
+                motor s =[]
 
                 for term in command[1:]:
                     try:
-                        key,value=term.split(":")
+                        key ,valu e =term.split(":")
                     except:
-                        key=term
-                        value=""
+                        ke y =term
+                        valu e =""
 
-                    if term in ("temp","temperature","t"):
-                        parameters["temperature"]=True
-                    elif term in ("pos","position","p","a","angle"):
-                        parameters["position"]=True
-                    elif term in ("state","s"):
-                        parameters["state"]=True
-                    elif term in ("relaxed","r"):
-                        parameters["relaxed"]=True
-                    elif key in ("m","motor","motors","l","leg","legs"):
+                    if term in ("temp" ,"temperature" ,"t"):
+                        parameters["temperature" ] =True
+                    elif term in ("pos" ,"position" ,"p" ,"a" ,"angle"):
+                        parameters["position" ] =True
+                    elif term in ("state" ,"s"):
+                        parameters["state" ] =True
+                    elif term in ("relaxed" ,"r"):
+                        parameters["relaxed" ] =True
+                    elif key in ("m" ,"motor" ,"motors" ,"l" ,"leg" ,"legs"):
                         if motors:
                             self.send_output(self._invalid_command("Can only specify one set of legs"))
                             return
                         
-                        if value=="all":
-                            motors=[1,2,3,4,5,6]
+                        if valu e= ="all":
+                            motor s =[1 ,2 ,3 ,4 ,5 ,6]
                         else:
-                            motors=list(map(int,value))
-                            if len(set(motors).intersection(set([1,2,3,4,5,6])))!=len(motors):
-                                self.send_output(self._invalid_command("Invalid list of legs: '%s'"%value))
+                            motor s =list(map(int ,value))
+                            if len(set(motors).intersection(set([1 ,2 ,3 ,4 ,5 ,6])) )! =len(motors):
+                                self.send_output(self._invalid_command("Invalid list of legs: '%s' " %value))
                                 return
                     else:
-                        self.send_output( self._invalid_command("Invalid argument: '%s'"%term) )
+                        self.send_output( self._invalid_command("Invalid argument: '%s' " %term) )
                         return
-                    if value and term in ("temp","temperature","t","pos","position","p","a","angle","state","s","relaxed","r"):
-                        self.send_output(self._invalid_command("Parameter takes no value: %s"%term))
+                    if value and term in \
+                    ("temp", "temperature", "t", "pos", "position", "p", "a", "angle", "state", "s", "relaxed", "r"):
+                        self.send_output(self._invalid_command("Parameter takes no value: %s" % term))
                         return
 
                 if not motors:
-                    motors=[1,2,3,4,5,6]
+                    motors = [1, 2, 3, 4, 5, 6]
                 if not any(parameters.values()):
                     for key in parameters.keys():
-                        parameters[key]=True
-                
-                args=[motors,parameters]
+                        parameters[key] = True
+
+                args = [motors, parameters]
             else:
-                self.send_output( self._invalid_command("No valid action specified") )
+                self.send_output(self._invalid_command("No valid action specified"))
                 return
 
         except:
-            self.send_output( self._invalid_command("Exception occured while reading command:\n%s"%traceback.format_exc()) )
+            self.send_output(
+                self._invalid_command("Exception occured while reading command:\n%s" % traceback.format_exc()))
             return
 
-        try: #try to execute command. send back traceback if it fails (which might result in a dangerous situation for the rover!)
+        try:  # try to execute command. send back traceback if it fails (which might result in a dangerous situation for the rover!)
             func(args)
         except:
-            self.send_output( self._error("Exception occured during execution of command:\n%s"%traceback.format_exc()) )
+            self.send_output(self._error("Exception occured during execution of command:\n%s" % traceback.format_exc()))
             return
 
-
-    #used for initialisation
+    # used for initialisation
     def standUp(self):
-        return self.set([dict(motors=[1,2,3,4,5,6],position="down",direction="safe")],newstate="up")
+        return self.set([dict(motors=[1, 2, 3, 4, 5, 6], position="down", direction="safe")], newstate="up")
 
-    #high level step commands
-    def go(self,args):
+    # high level step commands
+    def go(self, args):
 
-        for direction,count in args:
-            d=direction
-            if direction in (STEP_LEFT,STEP_RIGHT):   d=STEP_TURN
-            elif direction in (STEP_FORWARDS,STEP_BACKWARDS):  d=STEP_STRAIGHT
+        for direction, count in args:
+            d = direction
+            if direction in (STEP_LEFT, STEP_RIGHT):
+                d = STEP_TURN
+            elif direction in (STEP_FORWARDS, STEP_BACKWARDS):
+                d = STEP_STRAIGHT
 
-            if d!=self.laststep and d!=STEP_DOWN and d!=STEP_UP and d!=STEP_RELAX: #move legs to neutral standup position when starting the lext move, unless it was standing up anyway, and don't whey lying down or relaxing
-                if not self.standUp(): #move legs down
+            if d != self.laststep and d != STEP_DOWN and d != STEP_UP and d != STEP_RELAX:  # move legs to neutral standup position when starting the lext move, unless it was standing up anyway, and don't whey lying down or relaxing
+                if not self.standUp():  # move legs down
                     self.send_output(self._error("Error occured while standing up, halting step execution"))
                     return
                 sleep(1)
-            
-            #test for last step direction
+
+            # test for last step direction
             for i in range(count):
                 if self.check_halt_flag():
                     self.send_output(self._halt())
                     return
-                
-                #test for last step direction
-                #increment step count
 
-                #generate command pattern
-                instructions=self.CPG.create_step(direction)
-                
+                # test for last step direction
+                # increment step count
 
-                if not self.set(instructions,newstate=d): #execute, if it fails, stop and return
+                # generate command pattern
+                instructions = self.CPG.create_step(direction)
+
+                if not self.set(instructions, newstate=d):  # execute, if it fails, stop and return
                     self.send_output(self._error("Error occured, halting step execution"))
                     return
-                self.laststep=d
-                
+                self.laststep = d
 
-        #use CPG or self.set? last one might be the best tbh
-        
-        #pprint(args)
+        # use CPG or self.set? last one might be the best tbh
 
-    #low level leg commands
-    def set(self,args,newstate="custom"):
-        #fill in all missing parameters using defaults
-        defaults=dict(motors=[],position=None,direction="safe",speed=None,time=None,relax=None,state=None,force=None)
+        # pprint(args)
+
+    # low level leg commands
+    def set(self, args, newstate="custom"):
+        # fill in all missing parameters using defaults
+        defaults = dict(motors=[], position=None, direction="safe", speed=None, time=None, relax=None, state=None,
+                        force=None)
         for setting in args:
-            for key,value in defaults.items():
-                setting.setdefault(key,value)
+            for key, value in defaults.items():
+                setting.setdefault(key, value)
 
-        
-        #check all relevant motors for temperature and overflow etc.
-        halt=False
+        # check all relevant motors for temperature and overflow etc.
+        halt = False
         for s in args:
             for m in s["motors"]:
-                #check motor temperature
-                self.legs[m-1].readTemperature()
-                #if it is too hot and force is not specified, halt execution, send back error with motor data
-                if self.legs[m-1].isOverheated():
+                # check motor temperature
+                self.legs[m - 1].readTemperature()
+                # if it is too hot and force is not specified, halt execution, send back error with motor data
+                if self.legs[m - 1].isOverheated():
                     if s["force"]:
-                        self.send_output(self._warning("Forcing overheated leg %d"%m))#send back warning when forced
+                        self.send_output(
+                            self._warning("Forcing overheated leg %d" % m))  # send back warning when forced
                     else:
-                        if self.legs[m-1].enabled: #disabled legs are neglected
-                            halt=True
-                            self.send_output(self._error("Leg %d overheated"%m)) #send back error
-                    
+                        if self.legs[m - 1].enabled:  # disabled legs are neglected
+                            halt = True
+                            self.send_output(self._error("Leg %d overheated" % m))  # send back error
+
         if halt:    return
 
-        moving_motors=set()
-        #actually execute
-        for s in args: #s is one set of motor settings
-            #timing stuff?
+        moving_motors = set()
+        # actually execute
+        for s in args:  # s is one set of motor settings
+            # timing stuff?
             if s["state"]:
                 for m in s["motors"]:
-                    if s["state"]=="enabled":
-                        self.legs[m-1].enable()
+                    if s["state"] == "enabled":
+                        self.legs[m - 1].enable()
                     else:
-                        self.legs[m-1].disable()
+                        self.legs[m - 1].disable()
             elif s["relax"]:
                 for m in s["motors"]:
-                    self.legs[m-1].relax()
-            else: #actual /movement/
-                #get current position
-                angles=[self.legs[m-1].readAngle() for m in s["motors"]]
+                    self.legs[m - 1].relax()
+            else:  # actual /movement/
+                # get current position
+                angles = [self.legs[m - 1].readAngle() for m in s["motors"]]
 
                 moving_motors.update(s["motors"])
-                
-                #note down start time? should the legs do this themselves?
-                
+
+                # note down start time? should the legs do this themselves?
+
                 for m in s["motors"]:
-                    self.legs[m-1].smartCommand(position=s["position"],direction=s["direction"],time=s["time"],speed=s["speed"],force=s["force"])
+                    self.legs[m - 1].smartCommand(position=s["position"], direction=s["direction"], time=s["time"],
+                                                  speed=s["speed"], force=s["force"])
 
-        moving_motors=list(moving_motors)
+        moving_motors = list(moving_motors)
 
-        #wait some time so that everything has started properly
+        # wait some time so that everything has started properly
         sleep(0.1)
-        
-        
-        #wait for legs to complete
-        err=False
-        done=False
-        t=5 #for sleep .1
+
+        # wait for legs to complete
+        err = False
+        done = False
+        t = 5  # for sleep .1
         while not done:
-            done=True #mark true unless a leg is found that isn't ready yet
+            done = True  # mark true unless a leg is found that isn't ready yet
             for m in moving_motors:
-                #read position
-                if not self.legs[m-1].isDone():
-                    self.legs[m-1].readAngle() #don't look at legs that have finished
-                
-                #check if leg has finished moving
-                if not self.legs[m-1].isDone():
-                    done=False #still busy
+                # read position
+                if not self.legs[m - 1].isDone():
+                    self.legs[m - 1].readAngle()  # don't look at legs that have finished
 
-                    #Check if legs are stuck using time
-                    #if they get stuck: relax and disable them, set laststep to custom, continue waiting for other legs
-                    #if an error occured, reversed
-                    if self.legs[m-1].isStuck(t):
-                        err=True
-                        self.legs[m-1].relax()
-                        self.legs[m-1].disable()
-                        self.send_output(self._error("Leg %d stuck; relaxed and disabled leg"%m))
+                # check if leg has finished moving
+                if not self.legs[m - 1].isDone():
+                    done = False  # still busy
 
-                        self.laststep="custom" #stuck leg means we have an nonstandard leg position
-                    
-                    
-                
-            t+=3 #update time
-            sleep(3*0.02)#total delay will be slightly worse but that's ok
+                    # Check if legs are stuck using time
+                    # if they get stuck: relax and disable them, set laststep to custom, continue waiting for other legs
+                    # if an error occured, reversed
+                    if self.legs[m - 1].isStuck(t):
+                        err = True
+                        self.legs[m - 1].relax()
+                        self.legs[m - 1].disable()
+                        self.send_output(self._error("Leg %d stuck; relaxed and disabled leg" % m))
 
-        #get new information on legs now that motions have ended, about all relevant motors
-        self.get([sum([list(setting["motors"]) for setting in args],[]),dict(position=True,temperature=True,state=True,relaxed=True)])
+                        self.laststep = "custom"  # stuck leg means we have an nonstandard leg position
 
-        if err: #leg got stuck
+            t += 3  # update time
+            sleep(3 * 0.02)  # total delay will be slightly worse but that's ok
+
+        # get new information on legs now that motions have ended, about all relevant motors
+        self.get([sum([list(setting["motors"]) for setting in args], []),
+                  dict(position=True, temperature=True, state=True, relaxed=True)])
+
+        if err:  # leg got stuck
             return
 
-        #if a leg gets stuck, laststep should be set to custom either way
-        self.laststep=newstate
-        
-        #pprint(args)
-        return True #success, needed for step function
+        # if a leg gets stuck, laststep should be set to custom either way
+        self.laststep = newstate
 
-    #get leg data without changing anything
-    def get(self,args):
-        motors,parameters=args
+        # pprint(args)
+        return True  # success, needed for step function
 
-        out={}#output in motor:data format
+    # get leg data without changing anything
+    def get(self, args):
+        motors, parameters = args
 
-        #read data from motors
+        out = {}  # output in motor:data format
+
+        # read data from motors
         for m in motors:
-            out[m]={}
+            out[m] = {}
             if parameters["temperature"]:
-                out[m]["temperature"]=self.legs[m-1].readTemperature()
+                out[m]["temperature"] = self.legs[m - 1].readTemperature()
             if parameters["position"]:
-                out[m]["position"]=self.legs[m-1].readAngle()
+                out[m]["position"] = self.legs[m - 1].readAngle()
             if parameters["state"]:
-                out[m]["state"]={True:"enabled",False:"disabled"}[self.legs[m-1].enabled]
+                out[m]["state"] = {True: "enabled", False: "disabled"}[self.legs[m - 1].enabled]
             if parameters["relaxed"]:
-                out[m]["relaxed"]=self.legs[m-1].relaxed
+                out[m]["relaxed"] = self.legs[m - 1].relaxed
 
         self.send_output(self._data(out))
-        
-        #pprint(args)
 
-
-
+        # pprint(args)
 
 
 """
@@ -648,44 +647,32 @@ Steps to executing a set of motor commands
 
 """
 
-
-
-
-
-
-
-
-
-
-
-
-
-     
-if __name__=="__main__":
+if __name__ == "__main__":
     from pprint import pprint
 
     from smbus2 import SMBus
 
-    bus=SMBus(1) #create bus
+    bus = SMBus(1)  # create bus
 
 
     class Router:
-        halt_module_execution=False
-        def send_package_to_mcp(self,package,_):
+        halt_module_execution = False
+
+        def send_package_to_mcp(self, package, _):
             pprint(package)
-    
-    
-    loc=LocomotionApp(Router(),bus)
+
+
+    loc = LocomotionApp(Router(), bus)
     loc.init()
     print("Locomotion app testing environment - enter locomotion commands or 'exit'")
-    while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
-        i=input("> ").strip()
-        if i=="exit":
+    while True:  # (i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
+        i = input("> ").strip()
+        if i == "exit":
             break
         elif i.startswith("read"):
-            l=int(i.split()[1])
+            l = int(i.split()[1])
             for x in range(100):
-                print(loc.legs[l-1].readAngle())
+                print(loc.legs[l - 1].readAngle())
                 sleep(.5)
         elif i:
             loc.execute(i)

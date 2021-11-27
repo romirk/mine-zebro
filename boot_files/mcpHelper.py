@@ -1,10 +1,10 @@
+import multiprocessing
 import threading
 import time
-
-from router import Str
-import rinzler
-import multiprocessing
 from datetime import datetime
+
+import rinzler
+from router import Str
 
 try:
     from leds import LEDs
@@ -24,11 +24,9 @@ class McpHelper:
         self.leds = LEDs()
 
         # checks to see if the program is run on pc or on the rover
-        if isinstance(self.leds, int):
-            self.isPc = True
-        else:
+        if not isinstance(self.leds, int):
             self.leds.start()  # turns on pwm, but at 0 power
-            self.isPc = False
+            self.mcp.isPc = False
 
     def handle_command(self, prefix: str, command: str) -> None:
         data = ""
@@ -88,30 +86,30 @@ class McpHelper:
     def __lights(self, command: str) -> str:
         _, pwr = command.split(" ", 1)
         if pwr in ("0", "off"):
-            if not self.isPc:
+            if not self.mcp.isPc:
                 self.leds.set_power(0)
             return "lights off"
         elif pwr in ("1", "on"):
-            if not self.isPc:
+            if not self.mcp.isPc:
                 self.leds.set_power(1)
             return "lights on on lowest setting"
         elif pwr == "2":
-            if not self.isPc:
+            if not self.mcp.isPc:
                 self.leds.set_power(2)
             return "lights on on 2nd power setting"
         elif pwr == "3":
-            if not self.isPc:
+            if not self.mcp.isPc:
                 self.leds.set_power(3)
             return "lights on on 3nd power setting"
         elif pwr == "4":
-            if not self.isPc:
+            if not self.mcp.isPc:
                 self.leds.set_power(4)
             return "lights on on 4th (maximum) power setting"
         else:
             return self._command_not_found_string
 
     def check_lights(self):
-        if not self.isPc:
+        if not self.mcp.isPc:
             if self.leds.keep_safe():  # returns True if the power had to be decreased
                 package = messageManager.create_user_package("mcp", "Turned light power down to prevent overheating",
                                                              datetime.now().strftime("%H:%M:%S"),

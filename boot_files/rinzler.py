@@ -27,14 +27,15 @@ class Mcp:
     # setup all required objects and threads for execution
     def __init__(self) -> None:
         self.internal_state = State.Running.value
+        self.isPc = True
 
         # shared router variables
         self.router_data = None
 
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
-        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
-        # self.messenger = messageManager.MessageManager(messageManager.CommsMock())
+        #self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
+        self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.isPc)
         self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(),
                                                          self.messenger)  # TODO change this to real Camera
 
