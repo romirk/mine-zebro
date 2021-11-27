@@ -22,9 +22,9 @@ class LEDs:
         gpio.setup(LED_PIN,gpio.OUT)
         self.pwm=gpio.PWM(LED_PIN,10000)
 
-    def on(self):
+    def start(self):
         self.pwm.start(0)
-    def off(self):
+    def stop(self):
         self.pwm.stop()
         
     def set_power(self,power):
@@ -49,10 +49,13 @@ class LEDs:
 
 if __name__=="__main__":
     lights=LEDs()
-    lights.on()
-    while True:
-        if lights.cooldown>0.7:
-            time.sleep(10)
-        for p in range(5):
-            lights.power(p)
-            time.sleep(1)
+    lights.start()
+    try:
+        while True:
+            if lights.cooldown>0.7:
+                time.sleep(10)
+            for p in range(5):
+                lights.power(p)
+                time.sleep(1)
+    except KeyboardInterrupt:
+        lights.stop()
