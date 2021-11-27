@@ -21,6 +21,9 @@ class McpHelper:
 
     def __init__(self, mcp) -> None:
         self.mcp = mcp
+        #setting up some important multithreading objects
+        self.manager = multiprocessing.Manager()
+        self.mcp.event = self.manager.Event()
         self.leds = LEDs()
 
         # checks to see if the program is run on the rover and not a linux pc
@@ -183,11 +186,12 @@ class McpHelper:
         return
 
     def setup_router_thread(self) -> multiprocessing.Process:
-        manager = multiprocessing.Manager()
-        self.mcp.routerLock = manager.Lock()
 
-        self.mcp.router_data = manager.dict()
+        self.mcp.routerLock = self.manager.Lock()
+
+        self.mcp.router_data = self.manager.dict()
         self.mcp.router_data[Str.lock.value] = self.mcp.routerLock
+        self.mcp.router_data[Str.event.value] = self.mcp.event
         self.mcp.router_data[Str.is_shut_down.value] = False
         self.mcp.router_data[Str.is_halt.value] = False
         self.mcp.router_data[Str.is_command_loaded.value] = False

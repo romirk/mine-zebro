@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import platform
+import threading
 from datetime import datetime
 from enum import Enum
 
@@ -35,6 +36,8 @@ class Mcp:
     # setup all required objects and threads for execution
     def __init__(self, is_host_pc) -> None:
         self.routerLock = None
+        self.event = None
+
         self.internal_state = State.Running.value
         self.is_host_pc = is_host_pc
 
@@ -44,7 +47,7 @@ class Mcp:
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
         #self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule())  # TODO change this to real Comms
-        self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc)
+        self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc, self.event)
         self.cameraManager = cameraManager.CameraManager(cameraDummy.CameraDummy(),
                                                          self.messenger)  # TODO change this to real Camera
 
@@ -101,7 +104,9 @@ class Mcp:
 
             self.mcp_helper.check_lights()
 
-            time.sleep(self.__sleep_interval)
+            self.event.clear()
+            self.event.wait()
+            #time.sleep(self.__sleep_interval)
         return
 
     # wait for all threads to finish before shutdown
@@ -129,7 +134,10 @@ if __name__ == "__main__":
     else:
         multiprocessing.set_start_method("forkserver")
         mcp = Mcp(False)
+
+    #start all non mcp threads
     mcp.start()
+
     # wait a bit for all threads to start just to be safe
     time.sleep(1)
 

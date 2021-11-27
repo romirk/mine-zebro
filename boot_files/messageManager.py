@@ -21,17 +21,18 @@ class MessageManager:
     __stored_input = ""
     input_received = False
 
-    def __init__(self, comms: commsApi.AbstractComms, is_pc:bool) -> None:
+    def __init__(self, comms: commsApi.AbstractComms, is_pc: bool, event: threading.Event.__class__) -> None:
         self.__comms = comms
         self.__comms.setup()
         self.__lock = threading.Lock()
         self.__isPc = is_pc
+        self.__event = event
 
     # Comms to MCP methods
     # loop for waiting for user input
     def listen_to_user(self) -> None:
         while not self.is_shut_down:
-            time.sleep(1) #needed since it blocks processes from starting
+            time.sleep(1)  # needed since it blocks processes from starting
             command = self.__get_valid_input()
             self.__set_command(command)
 
@@ -54,6 +55,9 @@ class MessageManager:
         self.__stored_input = command
         self.input_received = True
         self.__lock.release()
+        self.__event.set()
+
+    #public methods used by MCP
 
     def get_destination(self) -> str:
         self.__lock.acquire()
@@ -84,17 +88,17 @@ class MessageManager:
     # note if status sleep interval is 0 then disabled
     # disabled battery check
     def status_loop(self) -> None:
-        counter = self.__status_counter_max #when counter > status_sleep_interval send one of commands
-        number = 0 #used to choose which of the two checks to do
+        counter = self.__status_counter_max  # when counter > status_sleep_interval send one of commands
+        number = 0  # used to choose which of the two checks to do
         while not self.is_shut_down and self.__status_counter_max > 0:
             # TODO check for battery status & implement as module or mcp command depending if it's using I2C bus
             # TODO add check for overheating
-            #wait for user to stop sending data
+            # wait for user to stop sending data
             while self.input_received:
                 time.sleep(self.__sleep_interval)
 
             if counter >= self.__status_counter_max:
-                if number % 2 == 0 and counter: #check if even
+                if number % 2 == 0 and counter:  # check if even
                     if self.__isPc:
                         self.__set_command("dummy battery")
                     else:
@@ -105,7 +109,7 @@ class MessageManager:
                 number += 1
                 counter = 0
 
-            counter += self.__status_sleep_interval #counter increase by waiting time
+            counter += self.__status_sleep_interval  # counter increase by waiting time
             time.sleep(self.__status_sleep_interval)
 
         return

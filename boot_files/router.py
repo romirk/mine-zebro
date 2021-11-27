@@ -107,6 +107,7 @@ class Router:
             has_process_completed)
         self.shared_data[Str.is_package_ready.value] = True
         self.lock.release()
+        self.shared_data[Str.event.value].set()
 
     # Use this method to remove all modules from the list
     def clear_modules_list(self) -> None:
@@ -163,6 +164,7 @@ class Submodules:
 # Class shows all internal states mcp can be active in
 class Str(Enum):
     lock = "routerLock"
+    event = "event"
     is_shut_down = "is_shut_down"
     is_halt = "is_halt"
     is_command_loaded = "is_command_loaded"
