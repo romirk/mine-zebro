@@ -23,10 +23,10 @@ class McpHelper:
         self.mcp = mcp
         self.leds = LEDs()
 
-        # checks to see if the program is run on pc or on the rover
+        # checks to see if the program is run on the rover and not a linux pc
         if not isinstance(self.leds, int):
             self.leds.start()  # turns on pwm, but at 0 power
-            self.mcp.isPc = False
+            self.mcp.is_host_pc = False
 
     def handle_command(self, prefix: str, command: str) -> None:
         data = ""
@@ -86,30 +86,30 @@ class McpHelper:
     def __lights(self, command: str) -> str:
         _, pwr = command.split(" ", 1)
         if pwr in ("0", "off"):
-            if not self.mcp.isPc:
+            if not self.mcp.is_host_pc:
                 self.leds.set_power(0)
             return "lights off"
         elif pwr in ("1", "on"):
-            if not self.mcp.isPc:
+            if not self.mcp.is_host_pc:
                 self.leds.set_power(1)
             return "lights on on lowest setting"
         elif pwr == "2":
-            if not self.mcp.isPc:
+            if not self.mcp.is_host_pc:
                 self.leds.set_power(2)
             return "lights on on 2nd power setting"
         elif pwr == "3":
-            if not self.mcp.isPc:
+            if not self.mcp.is_host_pc:
                 self.leds.set_power(3)
             return "lights on on 3nd power setting"
         elif pwr == "4":
-            if not self.mcp.isPc:
+            if not self.mcp.is_host_pc:
                 self.leds.set_power(4)
             return "lights on on 4th (maximum) power setting"
         else:
             return self._command_not_found_string
 
     def check_lights(self):
-        if not self.mcp.isPc:
+        if not self.mcp.is_host_pc:
             if self.leds.keep_safe():  # returns True if the power had to be decreased
                 package = messageManager.create_user_package("mcp", "Turned light power down to prevent overheating",
                                                              datetime.now().strftime("%H:%M:%S"),
@@ -183,7 +183,11 @@ class McpHelper:
         return
 
     def setup_router_thread(self) -> multiprocessing.Process:
-        self.mcp.router_data = multiprocessing.Manager().dict()
+        manager = multiprocessing.Manager()
+        self.mcp.routerLock = manager.Lock()
+
+        self.mcp.router_data = manager.dict()
+        self.mcp.router_data[Str.lock.value] = self.mcp.routerLock
         self.mcp.router_data[Str.is_shut_down.value] = False
         self.mcp.router_data[Str.is_halt.value] = False
         self.mcp.router_data[Str.is_command_loaded.value] = False

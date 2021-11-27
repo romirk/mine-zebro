@@ -24,7 +24,7 @@ class Router:
 
     def __init__(self, shared_data) -> None:
         self.__list = Submodules()  # list of submodules
-        self.lock = threading.Lock()
+        self.lock = shared_data[Str.lock.value]
         self.__bus = SMBus(1)  # create bus
         self.shared_data = shared_data
 
@@ -73,7 +73,7 @@ class Router:
                                              True)
                     self.__clean_up()
 
-    # Note: All functions that change attributes need to use lock to avoid deadlock
+    # Note: All functions that change attributes need to use routerLock to avoid deadlock
     # called before each command is executed
     def __prepare(self) -> None:
         self.lock.acquire()
@@ -162,6 +162,7 @@ class Submodules:
 
 # Class shows all internal states mcp can be active in
 class Str(Enum):
+    lock = "routerLock"
     is_shut_down = "is_shut_down"
     is_halt = "is_halt"
     is_command_loaded = "is_command_loaded"

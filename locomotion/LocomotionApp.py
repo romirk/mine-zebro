@@ -77,7 +77,7 @@ type:
                 s/safe #closest only when not turning backwards a lot
             [r/relax:]
                 relax
-                lock
+                routerLock
             [enable|disable]
                 enable|disable #turn off motor control for all movement related steps
     get
