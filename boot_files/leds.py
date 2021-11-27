@@ -44,6 +44,8 @@ class LEDs:
         self.update_cooldown()
         if self.power>1 and self.cooldown>=1:
             self.set_power(1)
+            return True
+        return False
 
 if __name__=="__main__":
     lights=LEDs()
