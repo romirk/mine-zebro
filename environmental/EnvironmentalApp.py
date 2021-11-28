@@ -229,6 +229,8 @@ if __name__=="__main__":
         halt_module_execution=False
         def send_package_to_mcp(self,package,_):
             pprint(package)
+        def check_halt_flag(self):
+            return self.halt_module_execution
     
     
     env=EnvironmentalApp(Router(),bus)
