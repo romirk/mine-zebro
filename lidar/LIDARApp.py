@@ -36,14 +36,14 @@ import RPi.GPIO as GPIO
 
 
 
-with open("commands.txt","r") as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),"commands.txt"),"r") as f:
     HELPTEXT=f.read()
 
 
 
-DEFAULT_DIST_MID=8
-DEFAULT_DIST_HALF=10
-DEFAULT_DIST_SIDE=12
+DEFAULT_DIST_MID=10
+DEFAULT_DIST_HALF=12
+DEFAULT_DIST_SIDE=15
 
 
 
