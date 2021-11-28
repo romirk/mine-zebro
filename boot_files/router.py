@@ -25,6 +25,8 @@ try:
     import LIDARApp
     sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"environmental"))
     import EnvironmentalApp
+    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"bms"))
+    import BMSApp
     isPc = False
 except:
     isPc = True
@@ -65,7 +67,7 @@ class Router:
         if isPc:
             self.__add_module(dummyModule.DummyManager(self, self.__bus))
         else:
-            for module_class in [dummyModule.DummyManager, LocomotionApp.LocomotionApp, LIDARApp.LIDARApp, EnvironmentalApp.EnvironmentalApp]:
+            for module_class in [dummyModule.DummyManager, BMSApp.BMSApp, LocomotionApp.LocomotionApp, LIDARApp.LIDARApp, EnvironmentalApp.EnvironmentalApp]:
                 self.__add_module(module_class(self, self.__bus))
 
         self.__list.setup()  # calls setup method in each module
@@ -145,7 +147,7 @@ class Router:
 
 # list of submodules contained in the router
 class Submodules:
-    __id_list = ["com", "loc", "lidar", "env", "dummy"]  # every module needs to implement a getter for their id
+    __id_list = ["com", "bms", "loc", "lidar", "env", "dummy"]  # every module needs to implement a getter for their id
     __predefined_max = len(__id_list)  # should be equal to the max number of modules
     __size = 0
 
