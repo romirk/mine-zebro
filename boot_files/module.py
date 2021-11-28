@@ -58,8 +58,7 @@ class Module(ABC):
 
     # method that check if module should stop execution
     def check_halt_flag(self) -> bool:
-        temp = self.__router.shared_data[router.Str.is_halt.value]
-        return temp
+        return self.__router.check_halt_flag()
 
     ### OUTPUT
 

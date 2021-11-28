@@ -130,6 +130,10 @@ class Router:
         self.__list.clear()
         return
 
+    #check halt flag
+    def check_halt_flag(self):
+        return self.shared_data[router.Str.is_halt.value]
+
 
 # list of submodules contained in the router
 class Submodules:
