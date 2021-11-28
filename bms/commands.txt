@@ -1,0 +1,2 @@
+read
+    reads battery level as a percentage
