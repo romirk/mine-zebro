@@ -22,7 +22,7 @@ if not os.path.exists(MEASUREMENT_PATH):
 
 
 
-with open("commands.txt","r") as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),"commands.txt"),"r") as f:
     HELPTEXT=f.read()
 
 
