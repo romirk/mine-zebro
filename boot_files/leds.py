@@ -32,16 +32,20 @@ class LEDs:
     def set_power(self,power):
         self.update_cooldown()
 
+        power=max(0,min(4,power))
+        
+        self.power=power
         self.pwm.ChangeDutyCycle(25*self.power)
-        self.update_cooldown() #disallow strong heat when suspecting overheated LEDs
+        
+        self.keep_safe() #disallow strong heat when suspecting overheated LEDs
 
     def update_cooldown(self):
         t=time.time()
         self.cooldown+=LED_HEAT[self.power]*(t-self.t)
-        self.cooldown=max(0,self.cooldown)
         self.t=t
 
         self.cooldown=max(0,self.cooldown)
+
 
     def keep_safe(self):
         self.update_cooldown()
@@ -60,7 +64,7 @@ if __name__=="__main__":
                 time.sleep(10)
                 
             for p in range(5):
-                print("power",p)
+                print("power",p,"cooldown",lights.cooldown)
                 lights.set_power(p)
                 time.sleep(1)
     except KeyboardInterrupt:
