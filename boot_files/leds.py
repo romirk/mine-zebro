@@ -32,7 +32,7 @@ class LEDs:
     def set_power(self,power):
         self.update_cooldown()
 
-        self.pwm.changeDutyCycle(25*self.power)
+        self.pwm.ChangeDutyCycle(25*self.power)
         self.update_cooldown() #disallow strong heat when suspecting overheated LEDs
 
     def update_cooldown(self):
