@@ -1,3 +1,5 @@
+
+import RPi.GPIO as gpio
 import time
 
 LED_PIN=18 #gpio18, connected to breakout "3"
@@ -5,10 +7,16 @@ LED_PIN=18 #gpio18, connected to breakout "3"
 
 LED_HEAT=[
     -1/40,  #power 0 - cool down in 30s from max temp
-    -1/90,  #power 1 - slowly cool down in 1m30
-     1/25,  #power 2 - max for 25s
-     1/15,  #power 3 - max for 12s
-     1/10   #power 4 - max for 10s
+    -1/60,  #power 1
+    -1/80,  #power 2
+    -1/90,  #power 3 - slowly cool down in 1m30
+        0,  #power 4
+     1/25,  #power 5 - max for 25s
+     1/22,  #power 6
+     1/18,  #power 7
+     1/15,  #power 8 - max for 12s
+     1/12,  #power 9
+     1/10   #power 10 - max for 10s
 ]
 
 gpio.setmode(gpio.BCM)
@@ -30,15 +38,20 @@ class LEDs:
     def set_power(self, power):
         self.update_cooldown()
 
-        self.pwm.changeDutyCycle(25*self.power)
-        self.update_cooldown() #disallow strong heat when suspecting overheated LEDs
+        power=max(0,min(100,power))
+        
+        self.power=power
+        self.pwm.ChangeDutyCycle(self.power)
+        
+        self.keep_safe() #disallow strong heat when suspecting overheated LEDs
 
     def update_cooldown(self):
         t=time.time()
-        self.cooldown+=LED_HEAT[self.power]*(t-self.t)
+        self.cooldown+=LED_HEAT[round(self.power/10)]*(t-self.t)
         self.t=t
 
         self.cooldown=max(0,self.cooldown)
+
 
     def keep_safe(self):
         self.update_cooldown()
@@ -52,10 +65,13 @@ if __name__=="__main__":
     lights.start()
     try:
         while True:
-            if lights.cooldown>0.7:
-                time.sleep(10)
-            for p in range(5):
-                lights.power(p)
+            for p in [0,1,10,100]:
+                while lights.cooldown>0.7:
+                    lights.set_power(0)
+                    print("cooldown",lights.cooldown)
+                    time.sleep(10)
+                print("power",p,"cooldown",lights.cooldown)
+                lights.set_power(p)
                 time.sleep(1)
     except KeyboardInterrupt:
         lights.stop()
