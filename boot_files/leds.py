@@ -57,7 +57,7 @@ if __name__=="__main__":
             if lights.cooldown>0.7:
                 time.sleep(10)
             for p in range(5):
-                lights.power(p)
+                lights.set_power(p)
                 time.sleep(1)
     except KeyboardInterrupt:
         lights.stop()
