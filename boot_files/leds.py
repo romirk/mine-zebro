@@ -38,6 +38,7 @@ class LEDs:
     def update_cooldown(self):
         t=time.time()
         self.cooldown+=LED_HEAT[self.power]*(t-self.t)
+        self.cooldown=max(0,self.cooldown)
         self.t=t
 
         self.cooldown=max(0,self.cooldown)
@@ -55,7 +56,9 @@ if __name__=="__main__":
     try:
         while True:
             if lights.cooldown>0.7:
+                print(lights.cooldown)
                 time.sleep(10)
+                
             for p in range(5):
                 lights.set_power(p)
                 time.sleep(1)
