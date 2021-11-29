@@ -30,7 +30,7 @@ function Tabs() {
         </div>
         <div class="itembig">
           <h1 className="titleBar"> CAMERA </h1>
-          <img src ="/video_feed"></img>
+          <img src ="/video_feed" className="video"></img>
           <button className="control button6" role="button">
             LIGHT 1
           </button>
@@ -82,7 +82,7 @@ function Tabs() {
           </button>
         </div>
         <div class="item2big">
-          <h1 className="titleBar"> GEOGRAPHICAL PAYLOADS </h1>
+          {/* <h1 className="titleBar"> GEOGRAPHICAL PAYLOADS </h1> */}
           <h2 className="titleBar subtitleOne"> GEOPHONE </h2>
           <h2 className="titleBar subtitleTwo"> HUMIDITY </h2>
           <h2 className="titleBar subtitleThree"> PRESSURE </h2>

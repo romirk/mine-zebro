@@ -6,15 +6,17 @@ li {
 }
 
 .navBar {
+    height: 8vh;
+    /* width: 100vw; */
     display: flex;
     justify-content: space-around;
-    min-height: 10vh;
+    min-height: 6vh;
     align-items: center;
     background-color: rgb(63, 77, 158);
 }
 
 .title{
-    font-size: 40px;
+    font-size: 26px;
     font-weight: 599;
     text-transform: uppercase;
     font-family:'Bebas Neue', cursive;
@@ -36,7 +38,7 @@ li {
   }
 
 .stats{
-    font-size: 20px;
+    font-size: 15px;
     font-weight: normal;
     font-family: 'Bebas Neue', cursive;
     display: flex;
@@ -48,9 +50,11 @@ li {
 }
 
 .logo{
+    /* height: 5vh;
+    width: 10vw; */
     cursor: pointer;
-    height: auto;
-    max-width: 100px;
+    height: 55px;
+    max-width: 65px;
     background-color: rgb(63, 77, 158);
     -webkit-transform: scale(1);
 	transform: scale(1);
@@ -69,7 +73,7 @@ li {
     color: rgb(95, 194, 29);
     background-color: rgb(63, 77, 158);
     width: 50px;
-    height: auto;
+    height: 42px;
     -webkit-transform: scale(1);
 	transform: scale(1);
 	-webkit-transition: .3s ease-in-out;

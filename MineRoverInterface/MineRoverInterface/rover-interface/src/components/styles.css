@@ -6,8 +6,10 @@
 .body {
   padding: 0;
   margin: 0;
+  
 }
 .container {
+  width: 100%;
   display: grid;
   grid-template-columns: 0.8fr 1fr 3fr 1fr 0.8fr;
   grid-template-rows: 50vh 0px;
@@ -26,12 +28,12 @@
   justify-content: center; */
 
   background-color: rgb(215, 219, 223);
-  padding: 5px;
-  resize: horizontal;
-  max-width: auto;
+  /* padding: 5px; */
+  /* resize: horizontal; */
+  /* max-width: auto; */
   /* max-height: auto; */
-  overflow-x: hidden;
-  min-width: 200px;
+  /* overflow-x: hidden; */
+  min-width: 12vw;
   max-width: auto;
   display: flex;
   justify-content: center;
@@ -52,11 +54,11 @@
 .itemlast {
   background-color: rgb(215, 219, 223);
   padding: 5px;
-  resize: horizontal;
+  /* resize: horizontal; */
   max-width: auto;
   max-height: auto;
-  min-width: 200px;
-  max-width: 400px;
+  min-width: 15vw;
+  max-width: auto;
   display: flex;
   justify-content: center;
   position: relative;
@@ -65,11 +67,11 @@
 .itembig {
   background-color: rgb(215, 219, 223);
   padding: 5px;
-  resize: horizontal;
+  /* resize: horizontal; */
   max-width: auto;
   max-height: auto;
   overflow-x: hidden;
-  min-width: 530px;
+  min-width: 23vw;
   display: flex;
   justify-content: center;
   position: relative;
@@ -78,24 +80,24 @@
 .container2 {
   display: grid;
   grid-template-columns: 1fr 3fr 1fr;
-  grid-template-rows: calc(50vh - 100px);
+  grid-template-rows: calc(54vh - 100px);
   gap: 5px;
   /* height: 34.2vh; */
   /* height: 200%; */
   /* max-height: calc(100vh - 510px); */
-  overflow: auto;
+  /* overflow: auto; */
 }
 
 .item2 {
   background-color: rgb(215, 219, 223);
-  padding: 5px;
-  resize: horizontal;
+  /* padding: 5px; */
+  /* resize: horizontal; */
   max-width: auto;
   /* max-height: 400px; */
-  min-width: 320px;
+  min-width: 20vw;
   position: relative;
-  min-height: 200px;
-  max-height: auto;
+  /* min-height: 200px;
+  max-height: auto; */
   display: flex;
   justify-content: center;
   /* padding: 40% 0; */
@@ -103,14 +105,14 @@
 
 .item2last {
   background-color: rgb(215, 219, 223);
-  padding: 5px;
-  resize: horizontal;
+  /* padding: 5px; */
+  /* resize: horizontal; */
   max-width: auto;
   /* max-height: 400px; */
-  min-width: 335px;
+  min-width: 22vw;
   position: relative;
-  min-height: 200px;
-  max-height: auto;
+  /* min-height: 200px;
+  max-height: auto; */
   display: flex;
   justify-content: center;
   /* padding: 40% 0; */
@@ -118,12 +120,12 @@
 
 .item2big {
   background-color: rgb(215, 219, 223);
-  padding: 5px;
-  resize: horizontal;
+  /* padding: 5px; */
+  /* resize: horizontal; */
   max-width: auto;
-  min-width: 800px;
-  max-height: auto;
-  min-height: 200px;
+  min-width: 28vw;
+  /* max-height: auto;
+  min-height: 200px; */
   display: flex;
   justify-content: center;
 }
@@ -167,7 +169,7 @@
   display: inline-flex;
   font-family: "JetBrains Mono", monospace;
   height: 15%;
-  width: 18%;
+  width: 21%;
   justify-content: center;
   line-height: 1;
   list-style: none;
@@ -185,7 +187,7 @@
   will-change: box-shadow, transform;
   font-size: 1.1vw;
 
-  top: 28%;
+  top: 20%;
 
   position: absolute;
 
@@ -222,7 +224,7 @@
   display: inline-flex;
   font-family: "JetBrains Mono", monospace;
   height: 15%;
-  width: 18%;
+  width: 21%;
   justify-content: center;
   line-height: 1;
   list-style: none;
@@ -241,7 +243,7 @@
   font-size: 1.1vw;
 
   left: 65%;
-  top: 44%;
+  top: 38%;
   position: absolute;
 
   /* width:20%;
@@ -277,7 +279,7 @@
   display: inline-flex;
   font-family: "JetBrains Mono", monospace;
   height: 15%;
-  width: 18%;
+  width: 21%;
   justify-content: center;
   line-height: 1;
   list-style: none;
@@ -295,7 +297,7 @@
   will-change: box-shadow, transform;
   font-size: 1.1vw;
 
-  top: 59%;
+  top: 55%;
   position: absolute;
 
   /* width:20%;
@@ -331,7 +333,7 @@
   display: inline-flex;
   font-family: "JetBrains Mono", monospace;
   height: 15%;
-  width: 18%;
+  width: 21%;
   justify-content: center;
   line-height: 1;
   list-style: none;
@@ -350,7 +352,7 @@
   font-size: 1.1vw;
 
   right: 65%;
-  top: 44%;
+  top: 38%;
   position: absolute;
 
   /* width:20%;
@@ -718,6 +720,7 @@
 }
 
 .titleBar {
+  top: 1%;
   position: absolute;
   font-size: 1.3vw;
   font-weight: bold;
@@ -811,36 +814,42 @@
 }
 
 .titleBar.subtitleOne{
-  font-size: 1.1vw;
+  font-size: 1.3vw;
   position: relative;
-  top: 15%;
+  top: 2%;
   right: 30%;
-  height: 6%;
+  height: 8%;
 }
 
 .titleBar.subtitleTwo{
-  font-size: 1.1vw;
+  font-size: 1.3vw;
   position: relative;
-  top: 15%;
+  top: 2%;
   right: 10%;
-  height: 6%;
+  height: 8%;
 }
 
 
 .titleBar.subtitleThree{
-  font-size: 1.1vw;
+  font-size: 1.3vw;
   position: relative;
-  top: 15%;
+  top: 2%;
   right: -10%;
-  height: 6%;
+  height: 8%;
 }
 
 
 .titleBar.subtitleFour{
-  font-size: 1.1vw;
+  font-size: 1.3vw;
   position: relative;
-  top: 15%;
+  top: 2%;
   right: -30%;
-  height: 6%;
+  height: 8%;
 }
 
+.video{
+  position: relative;
+  height: 75%;
+  width: 100%;
+  top: 7%;
+}
