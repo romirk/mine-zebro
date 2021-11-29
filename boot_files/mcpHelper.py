@@ -82,28 +82,16 @@ class McpHelper:
     # turns lights on/off
     def __lights(self, command: str) -> str:
         _, pwr = command.split(" ", 1)
-        if pwr in ("0", "off"):
-            if not self.mcp.is_host_pc:
-                self.leds.set_power(0)
-            return "lights off"
-        elif pwr in ("1", "on"):
-            if not self.mcp.is_host_pc:
-                self.leds.set_power(1)
-            return "lights on on lowest setting"
-        elif pwr == "2":
-            if not self.mcp.is_host_pc:
-                self.leds.set_power(2)
-            return "lights on on 2nd power setting"
-        elif pwr == "3":
-            if not self.mcp.is_host_pc:
-                self.leds.set_power(3)
-            return "lights on on 3nd power setting"
-        elif pwr == "4":
-            if not self.mcp.is_host_pc:
-                self.leds.set_power(4)
-            return "lights on on 4th (maximum) power setting"
-        else:
-            return self._command_not_found_string
+        try:
+            pwr=int(pwr)
+        except:
+            try:
+                pwr={"minimal":1,"on":1,"full":100,"max":100,"min":1}[pwr]
+            except:
+                return self._command_not_found_string
+        self.leds.set_power(pwr)
+        return "lights on %d%% power"%self.leds.power
+            
 
     def check_lights(self):
         if not self.mcp.is_host_pc:
