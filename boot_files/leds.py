@@ -56,10 +56,11 @@ if __name__=="__main__":
     try:
         while True:
             if lights.cooldown>0.7:
-                print(lights.cooldown)
+                print("cooldown",lights.cooldown)
                 time.sleep(10)
                 
             for p in range(5):
+                print("power",p)
                 lights.set_power(p)
                 time.sleep(1)
     except KeyboardInterrupt:
