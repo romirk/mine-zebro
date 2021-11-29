@@ -86,7 +86,7 @@ class McpHelper:
             pwr=int(pwr)
         except:
             try:
-                pwr={"minimal":1,"on":1,"full":100,"max":100,"min":1}[pwr]
+                pwr={"off":0,"minimal":1,"on":1,"full":100,"max":100,"min":1}[pwr]
             except:
                 return self._command_not_found_string
         self.leds.set_power(pwr)
