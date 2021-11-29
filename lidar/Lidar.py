@@ -95,7 +95,7 @@ class Lidar(VL53L1X):
         return {
             1:27, #GPIO27
             2:22, #GPIO22
-            3:18, #GPIO18
+            3:17, #GPIO17! not 18! lidar 3 connected to INT pin on breakout board
             4:23, #GPIO23
             5:24  #GPIO24
             }[self.num]
