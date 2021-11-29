@@ -1,3 +1,5 @@
+
+import RPi.GPIO as gpio
 import time
 
 LED_PIN=18 #gpio18, connected to breakout "3"
