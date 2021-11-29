@@ -41,3 +41,16 @@ I2C:
 
 Lidar:
 - `pip3 install python-vl53l1x` (I think)
+
+
+Camera:
+- `pip install python3-opencv`
+
+Communication:
+- `pip install flask`
+- `pip install flask-socketio`
+- `pip install flask-classful`
+
+Hosting Wifi Netowrk:
+Follow this documentation to setup the API.
+https://www.raspberrypi.com/documentation/computers/configuration.html#setting-up-a-routed-wireless-access-point
