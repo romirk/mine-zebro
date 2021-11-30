@@ -202,6 +202,7 @@ class Str(Enum):
     prefix = "prefix"
     command = "command"
     package = "package"
+    is_pc = "is_pc"
 
 
 def start(shared_data: DictProxy):
