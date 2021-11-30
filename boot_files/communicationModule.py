@@ -34,7 +34,7 @@ class CommunicationModule(commsApi.AbstractComms):
     
 
     def setup(self):
-        self.__app = Flask(__name__, static_folder="../MineRoverInterface/MineRoverInterface/rover-interface/build", static_url_path="/")
+        self.__app = Flask(__name__, static_folder="build", static_url_path="/")
         self.__data = ""
         self.received = False
         self.lock = False
