@@ -84,11 +84,11 @@ class Lidar(VL53L1X):
 
     def _address(self):
         return {
-            1:0x39,
-            2:0x49,
-            3:0x59,
-            4:0x69,
-            5:0x79
+            1:0x3a,
+            2:0x4a,
+            3:0x5a,
+            4:0x6a,
+            5:0x7a
             }[self.num]
     
     def _xshut_pin(self): #xshut, shuts down chip when low. this restores the address to the default (0x29)
