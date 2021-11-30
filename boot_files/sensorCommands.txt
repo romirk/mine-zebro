@@ -16,6 +16,8 @@ Sensors:
         gp:x (gp specifies the geophone period)
         bp:x (bp species CME sensor )
         wp: (wp specifies wp)
+        gl: x (how many seconds the geophone reads for)
+        onlygeo:true/false
 
     status
         command returns information about the current sensor setup.
