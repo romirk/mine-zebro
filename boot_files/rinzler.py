@@ -121,14 +121,16 @@ class State(Enum):
 
 if __name__ == "__main__":
     print("\nRINZLER STARTED")
+    multiprocessing.set_start_method("spawn")
+    mcp = Mcp(True)
 
-    #choose process creation method
-    if platform.system() == 'Windows':
-        multiprocessing.set_start_method("spawn")
-        mcp = Mcp(True)
-    else:
-        multiprocessing.set_start_method("forkserver")
-        mcp = Mcp(False)
+    ##choose process creation method
+    #if platform.system() == 'Windows':
+    #    multiprocessing.set_start_method("spawn")
+    #    mcp = Mcp(True)
+    #else:
+    #    multiprocessing.set_start_method("forkserver")
+    #    mcp = Mcp(False)
 
     #start all non mcp threads
     mcp.start()

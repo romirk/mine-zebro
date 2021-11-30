@@ -48,6 +48,7 @@ class Router:
         self.lock = shared_data[Str.lock.value]
         self.__bus = SMBus(1)  # create bus
         self.shared_data = shared_data
+        self.isPc = shared_data[Str.is_pc.value]
 
     # initialisation before entering listening loop
     def start(self) -> None:
@@ -64,7 +65,7 @@ class Router:
     # Use this method to add all modules to the current router instance
     def __setup_all_modules(self) -> None:
         # TODO start all other modules here
-        if isPc:
+        if self.isPc:
             self.__add_module(dummyModule.DummyManager(self, self.__bus))
         else:
             for module_class in [dummyModule.DummyManager, BMSApp.BMSApp, LocomotionApp.LocomotionApp, LIDARApp.LIDARApp, EnvironmentalApp.EnvironmentalApp]:
@@ -202,6 +203,7 @@ class Str(Enum):
     prefix = "prefix"
     command = "command"
     package = "package"
+    is_pc = "is_pc"
 
 
 def start(shared_data: DictProxy):

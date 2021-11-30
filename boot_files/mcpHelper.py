@@ -163,6 +163,7 @@ class McpHelper:
         self.mcp.routerLock = self.manager.Lock()
 
         self.mcp.router_data = self.manager.dict()
+        self.mcp.router_data[Str.is_pc.value] = self.mcp.is_host_pc
         self.mcp.router_data[Str.lock.value] = self.mcp.routerLock
         self.mcp.router_data[Str.event.value] = self.mcp.event
         self.mcp.router_data[Str.is_shut_down.value] = False
