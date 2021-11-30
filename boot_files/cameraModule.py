@@ -1,30 +1,81 @@
-import cv2 as cv
+from cv2 import triangulatePoints
+
+
+usePicamera = False
+
+try:
+    import cv2 as cv
+except:
+    import picamera
+    usePicamera = True
 import cameraApi
 import os
 
+class StreamingOutput(object):
+    def __init__(self):
+        self.frame = None
+        self.buffer = io.BytesIO()
+        self.condition = Condition()
+
+    def write(self, buf):
+        if buf.startswith(b'\xff\xd8'):
+            # New frame, copy the existing buffer's content and notify all
+            # clients it's available
+            self.buffer.truncate()
+            with self.condition:
+                self.frame = self.buffer.getvalue()
+                self.condition.notify_all()
+            self.buffer.seek(0)
+        return self.buffer.write(buf)
+
+
+
+
 class camera():
     def setup(self):
-        self.camera = cv.VideoCapture(0)
+        if(not usePicamera):
+            self.camera = cv.VideoCapture(0)
+        else:
+            self.camera = picamera.PiCamera(resolution='640x480', framerate=24)
+            self.output = StreamingOutput()
+            camera.start_recording(self.output, format = 'mjpeg')
+
         self.isOn = True
         self.takeScreenshot = False
         self.counter = 0
     
 
     def generateImage(self):
-        while True:
-            success, frame = self.camera.read()
-            if (not success) or (not (self.isOn)):
-                pass
-            else:
+        if(not usePicamera):
+            while True:
+                success, frame = self.camera.read()
+                if (not success) or (not (self.isOn)):
+                    pass
+                else:
+                    if(self.takeScreenshot):
+                        self.takeScreenshot = False
+                        path = os.getcwd()
+                        cv.imwrite(path+'\\screenshots\\pic'+str(self.counter)+'.jpg', frame)
+                        self.counter += 1
+                    ret, buffer = cv.imencode('.jpg', frame)
+                    frame = buffer.tobytes()
+                    yield (b'--frame\r\n' 
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        else:
+            while True:
+                frame = self.output.frame
                 if(self.takeScreenshot):
                     self.takeScreenshot = False
                     path = os.getcwd()
-                    cv.imwrite(path+'\\screenshots\\pic'+str(self.counter)+'.jpg', frame)
+                    self.camera.capture(path+'\\screenshots\\pic'+str(self.counter)+'.jpg')
                     self.counter += 1
-                ret, buffer = cv.imencode('.jpg', frame)
-                frame = buffer.tobytes()
+
                 yield (b'--frame\r\n' 
-              b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+
+
 
     def screenshot(self):
         #this command enables the user to take a screen shot of the current frame which is 
