@@ -32,10 +32,10 @@ class MessageManager:
     # loop for waiting for user input
     def listen_to_user(self) -> None:
         while not self.is_shut_down:
-            time.sleep(1)  # needed since it blocks processes from starting
             if not self.is_shut_down:
                 command = self.__get_valid_input()
                 self.__set_command(command)
+                time.sleep(2)  # needed since it blocks processes from starting
 
     # Get valid input from comms
     def __get_valid_input(self) -> str:

@@ -34,13 +34,14 @@ class McpHelper:
         data = ""
         has_process_completed = True
         if command == "terminate":
+            self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.Terminate.value
 
         elif command == "shutdown":
             self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.ShutDown.value
             
-        elif command.startswith("lights"):
+        elif command.split(" ", 1)[0] == "lights":
             data = self.__lights(command)
 
         elif command == "help":

@@ -1,4 +1,5 @@
 import os
+import threading
 from datetime import datetime
 from enum import Enum
 
@@ -27,15 +28,14 @@ class Mcp:
 
     # setup all required objects and threads for execution
     def __init__(self, is_host_pc) -> None:
-        self.routerLock = None
-        self.event = None
-
-        self.internal_state = State.Running.value
+        self.routerLock = threading.Lock()
+        self.event = threading.Event()
         self.is_host_pc = is_host_pc
+        self.internal_state = State.Running.value
 
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
-        self.router = router.Router()
+        self.router = router.Router(self.is_host_pc, self.routerLock, self.event)
         #self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule(), self.is_host_pc, self.event)  # TODO change this to real Comms
         self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc, self.event)
 
@@ -87,9 +87,9 @@ class Mcp:
             #check lights by Marijn
             self.mcp_helper.check_lights()
 
-            #self.event.wait()
-            #self.event.clear()
-            time.sleep(self.__sleep_interval)
+            self.event.wait()
+            self.event.clear()
+            #time.sleep(self.__sleep_interval)
         return
 
     # wait for all threads to finish before shutdown
@@ -134,4 +134,4 @@ if __name__ == "__main__":
 
     # command given to the terminal to restart __main__
     if mcp.internal_state == State.Restart.value:
-        os.system("Python rinzler.py")
+        os.system("Python3 rinzler.py")

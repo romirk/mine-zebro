@@ -9,18 +9,22 @@ import time
 
 from datetime import datetime
 
-import os,sys
+import os, sys
 
-#MODULE IMPORTS
+# MODULE IMPORTS
 try:  # prevent errors when testing on computer
     from smbus2 import SMBus
-    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"locomotion"))
+
+    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "locomotion"))
     import LocomotionApp
-    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"lidar"))
+
+    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lidar"))
     import LIDARApp
-    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"environmental"))
+
+    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "environmental"))
     import EnvironmentalApp
-    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"bms"))
+
+    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bms"))
     import BMSApp
 except:
     SMBus = int
@@ -30,11 +34,11 @@ except:
 # only one module can communicate with the MCP throughout the bus at a time thus only one connection used
 # Establishes connection between module(server) and MCP
 class Router:
-    #Private Variables only accessed by Router
+    # Private Variables only accessed by Router
     __sleep_interval = 3  # used by thread to sleep after seeing no command was given (in seconds)
     __command = ""
     __prefix = ""
-    
+
     # Public Variables & Flags
     package = ""  # package data from modules read by MCP from here
     is_command_loaded = False
@@ -42,11 +46,12 @@ class Router:
     is_shut_down = False
     halt_module_execution = False
 
-    def __init__(self) -> None:
+    def __init__(self, isPc: bool, lock: threading.Lock.__class__, event: threading.Event.__class__) -> None:
         self.__list = Submodules()  # list of submodules
-        self.lock = threading.Lock()
+        self.lock = lock
         self.__bus = SMBus(1)  # create bus
-        self.isPc = True
+        self.isPc = isPc
+        self.mcp_event = event
 
     # initialisation before entering listening loop
     def start(self) -> None:
@@ -66,7 +71,8 @@ class Router:
         if self.isPc:
             self.__add_module(dummyModule.DummyManager(self, self.__bus))
         else:
-            for module_class in [dummyModule.DummyManager, BMSApp.BMSApp, LocomotionApp.LocomotionApp, LIDARApp.LIDARApp, EnvironmentalApp.EnvironmentalApp]:
+            for module_class in [dummyModule.DummyManager, BMSApp.BMSApp, LocomotionApp.LocomotionApp,
+                                 LIDARApp.LIDARApp, EnvironmentalApp.EnvironmentalApp]:
                 self.__add_module(module_class(self, self.__bus))
 
         self.__list.setup()  # calls setup method in each module
@@ -118,7 +124,7 @@ class Router:
             time.sleep(1)
         self.lock.acquire()
 
-        #in case of automated call to check battery or motors place the appropriate prefix
+        # in case of automated call to check battery or motors place the appropriate prefix
         if self.__command == "battery":
             self.__prefix = "battery"
         elif self.__command == "motors":
@@ -130,7 +136,8 @@ class Router:
                                                           has_process_completed)
         self.is_package_loaded = True
         self.lock.release()
-        
+        self.mcp_event.set()
+
     # called by mcp to load a command to be executed
     def load_command(self, prefix: str, command: str) -> None:
         self.lock.acquire()
