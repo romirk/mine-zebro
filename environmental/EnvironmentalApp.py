@@ -1,5 +1,6 @@
 
 
+
 MEASUREMENT_PATH="/home/pi/local/measurements/env"
 
 
@@ -12,7 +13,7 @@ from time import sleep, time, strftime
 import traceback
 
 import bme280 as bme
-
+from WindSensor import WindSensor
 
 
 
@@ -33,6 +34,8 @@ class EnvironmentalApp(Module):
         
         self.bme=bme
         bme.setBus(self.bus)
+
+        self.wind_sensor=WindSensor()
 
 
     def setup(self):
@@ -193,17 +196,18 @@ class EnvironmentalApp(Module):
         #save measurement data on disk
         fname=strftime("%y%m%d%H%M%S") #YYMMDDHHMMSS
         with open(os.path.join(MEASUREMENT_PATH,fname),"w") as file:
-            file.write("\n".join(["\t".join([str(t)]+[str(v) for v in d]) for t,d in data])) #lines in time<tab>temp<tab>press<tab>hum format
+            file.write("\n".join(["\t".join([str(t)]+[str(v) for v in d]) for t,d in data])) #lines in time<>temp<>press<>hum<>wind format
         
 
     def read(self,args=[]): #take a single measurement
 
         temperature,pressure,humidity = bme.readBME280All()#flush old measurement
         temperature,pressure,humidity = bme.readBME280All()
+        wind_speed=self.wind_sensor.read()
 
-        self.send_output(self._data(dict(temperature=temperature,pressure=pressure,humidity=humidity)))
+        self.send_output(self._data(dict(temperature=temperature,pressure=pressure,humidity=humidity,wind_speed=wind_speed)))
 
-        return temperature,pressure,humidity
+        return temperature,pressure,humidity,wind_speed
 
 
 
