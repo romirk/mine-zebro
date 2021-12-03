@@ -1,15 +1,13 @@
+import os
+import sys
 import threading
-from enum import Enum
-from typing import List, Union
+import time
+from datetime import datetime
+from typing import Union
 
 import dummyModule
 import messageManager
 import module
-import time
-
-from datetime import datetime
-
-import os, sys
 
 # MODULE IMPORTS
 try:  # prevent errors when testing on computer
