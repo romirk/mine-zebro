@@ -21,7 +21,7 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),"commands.txt"
     HELPTEXT=f.read()
 
 
-class EnvironmentalApp(Module):
+class BMSApp(Module):
     def __init__(self,router,bus):
         super().__init__(router,bus)
         self.bus=bus
@@ -73,7 +73,7 @@ class EnvironmentalApp(Module):
     def read(self,args=[]): #take a single measurement
 
         #read voltage from adc
-        x=self.chan.value #value automatically read by accessing variable
+        x=self.chan.voltage #value automatically read by accessing variable
 
         voltage=x/BMS_VOLTAGE_DIVISION/ads.gain
 

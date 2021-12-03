@@ -55,7 +55,7 @@ class ZebroLeg:
 
         #correction angles - multiples of 3 are preferred because they correspond to whole position changes, making them consistent
         self.DELTA_ANGLE = 12 #leeway
-        self.DELTA_RIGHT = 6 #correction for right leg
+        self.DELTA_RIGHT = 3 #correction for right leg
 
         #timing        
         self.TIME_DIVISOR = 0.02 #50Hz timing
