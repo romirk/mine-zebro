@@ -14,6 +14,10 @@ import traceback
 
 from Geophone import Geophone
 
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"environmental"))
+from EnvironmentalApp import EnvironmentalApp
+
+
 
 
 if not os.path.exists(MEASUREMENT_PATH):
@@ -161,7 +165,7 @@ if __name__=="__main__":
             return self.halt_module_execution
     
     
-    env=EnvironmentalApp(Router(),bus)
+    env=GeoApp(Router(),bus)
     env.init()
     print("Locomotion app testing environment - enter locomotion commands or 'exit'")
     while True:#(i:=input("> "))!="exit":#walrus operator is python 3.8, pi runs 3.7
