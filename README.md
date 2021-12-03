@@ -43,6 +43,9 @@ I2C:
 Lidar:
 - `sudo pip3 install vl53l1x`
 
+ADC:
+- `sudo pip3 install adafruit-circuitpython-ads1x15`
+
 
 Camera:
 - `sudo apt install python3-opencv`
