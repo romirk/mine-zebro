@@ -9,7 +9,9 @@ import time
 from adafruit_ads1x15.analog_in import AnalogIn
 import traceback
 
-i2c = busio.I2C(board.SCL, board.SDA)
+import os,sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from shared_ads import ads,Channel,ADS
 
 
 class sensors(module.Module):
@@ -27,10 +29,8 @@ class sensors(module.Module):
 
 
     def __init__(self):
-        self.__ads = ADS.ADS1115(i2c)
-        self.__ads.mode = Mode.CONTINUOUS
-        self.geo = AnalogIn(self.__ads, ADS.P0) # Geophone analog input
-        self.wind = AnalogIn(self.__ads, ADS.P1) # Wind sensor analog input.
+        self.geo = Channel(ads,ADS.P2,ADS.P3)#AnalogIn(self.__ads, ADS.P0) # Geophone analog input
+        self.wind = Channel(ads,ADS.P1)#AnalogIn(self.__ads, ADS.P1) # Wind sensor analog input.
 
         
         
