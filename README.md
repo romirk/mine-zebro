@@ -35,16 +35,19 @@ Python3:
 I2C:
 - Turn on I2C in `sudo raspi-config` > Interfacing Options > I2C > Enable
 - Reboot
-- `sudo apt install python-smbus`???? (I did this, but don't think we need it)
+
+[comment]: # (- `sudo apt install python-smbus`???? (I did this, but don't think we need it))
 - `sudo apt install i2c-tools` (so we can see connected devices using `sudo i2cdetect -y 1`)
 - `pip3 install smbus2`
 
 Lidar:
-- `pip3 install python-vl53l1x` (I think)
+- `sudo pip3 install vl53l1x`
 
 
 Camera:
-- `pip install python3-opencv`
+- `sudo apt install python3-opencv`
+
+[comment]: # (- `pip install python3-opencv`)
 
 Communication:
 - `pip install flask`
