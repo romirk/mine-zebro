@@ -10,7 +10,7 @@ class WindSensor:
     def __init__(self):
         self.chan=Channel(ads,ADS.P2)
     def read(self):
-        x=self.chan.value
+        x=self.chan.voltage
 
         wind_speed=(x-0.4)/(2.0-0.4)*32.4
         return round(wind_speed,1)
