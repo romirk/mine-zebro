@@ -1,0 +1,9 @@
+
+
+read [t/time/d/duration:<duration>]
+    reads sensor values
+    t/time/d/duration
+        total duration of measurement
+        <duration>
+            integer (seconds), possibly prefixed with "s" (seconds) or "m" for minutes
+
