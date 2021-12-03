@@ -1,16 +1,12 @@
-import multiprocessing
 import os
-import platform
 import threading
 from datetime import datetime
 from enum import Enum
 
-from router import Str
 import router
 import module
 import messageManager
 import time
-import commsApi
 import communicationModule
 import mcpHelper
 
@@ -23,7 +19,6 @@ except:
 
 # TODO use this for regular commms socket.emit('command', {command: 'dummy count'});
 
-
 # Boot procedure
 # 1)setup all essential objects (router,messenger,camera,mcp_helper)
 # 2)setup all threads and place then in a list
@@ -33,19 +28,16 @@ class Mcp:
 
     # setup all required objects and threads for execution
     def __init__(self, is_host_pc) -> None:
-        self.routerLock = None
-        self.event = None
-
-        self.internal_state = State.Running.value
+        self.routerLock = threading.Lock()
+        self.event = threading.Event()
         self.is_host_pc = is_host_pc
-
-        # shared router variables
-        self.router_data = None
+        self.internal_state = State.Running.value
 
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
-        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule(), self.is_host_pc, self.event)  # TODO change this to real Comms
-        #self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc, self.event)
+        self.router = router.Router(self.is_host_pc, self.routerLock, self.event)
+        #self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule(), self.is_host_pc, self.event)  # TODO change this to real Comms
+        self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc, self.event)
 
         # setup threads and place in a list
         self.threads = list()
@@ -74,7 +66,7 @@ class Mcp:
                 if prefix.startswith("mcp"):
                     self.mcp_helper.handle_command(prefix, command)
 
-                elif self.router_data[Str.is_command_loaded.value]:
+                elif self.router.is_command_loaded:
                     self.messenger.send_to_user_package(
                         messageManager.create_user_package(prefix,
                                                            datetime.now().strftime("%H:%M:%S"),
@@ -83,20 +75,16 @@ class Mcp:
                                                                "Router command already executing, retry later"),
                                                            False))
                 else:
-                    self.routerLock.acquire()
-                    self.router_data[Str.command.value] = command
-                    self.router_data[Str.prefix.value] = prefix
-                    self.router_data[Str.command.value] = command
-                    self.router_data[Str.is_command_loaded.value] = True
-                    self.routerLock.release()
+                    self.router.load_command(prefix,command)
 
             # move package from router to message manager
-            if self.router_data[Str.is_package_ready.value]:
-                self.routerLock.acquire()
-                self.messenger.send_to_user_package(self.router_data[Str.package.value])
-                self.router_data[Str.is_package_ready.value] = False
-                self.routerLock.release()
+            if self.router.is_package_loaded:
+                self.router.lock.acquire()
+                self.messenger.send_to_user_package(self.router.package)
+                self.router.is_package_loaded = False
+                self.router.lock.release()
 
+            #check lights by Marijn
             self.mcp_helper.check_lights()
 
             self.event.wait()
@@ -121,7 +109,6 @@ class State(Enum):
 
 if __name__ == "__main__":
     print("\nRINZLER STARTED")
-    multiprocessing.set_start_method("spawn")
     mcp = Mcp(True)
 
     ##choose process creation method
@@ -147,4 +134,4 @@ if __name__ == "__main__":
 
     # command given to the terminal to restart __main__
     if mcp.internal_state == State.Restart.value:
-        os.system("Python rinzler.py")
+        os.system("Python3 rinzler.py")

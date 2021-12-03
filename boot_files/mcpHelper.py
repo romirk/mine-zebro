@@ -1,19 +1,19 @@
-import multiprocessing
 import threading
 import time
 from datetime import datetime
 
+import messageManager
+import router
 import rinzler
-from router import Str
 
 try:
     from leds import LEDs
 except:
     LEDs = int
 
+
 # Class holds mcp functionality relating to handling commands, setting up threads
 # Note all methods that receive parameters from commands check if they are valid and if not send respond back to the user
-import messageManager, router
 
 
 class McpHelper:
@@ -21,9 +21,8 @@ class McpHelper:
 
     def __init__(self, mcp) -> None:
         self.mcp = mcp
-        #setting up some important multithreading objects
-        self.manager = multiprocessing.Manager()
-        self.mcp.event = self.manager.Event()
+        # setting up some important multithreading objects
+        self.mcp.event = threading.Event()
         self.leds = LEDs()
 
         # checks to see if the program is run on the rover and not a linux pc
@@ -35,16 +34,14 @@ class McpHelper:
         data = ""
         has_process_completed = True
         if command == "terminate":
+            self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.Terminate.value
 
         elif command == "shutdown":
             self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.ShutDown.value
-
-        elif command == "halt":
-            self.mcp.router_data[router.Str.is_halt.value] = True
-
-        elif command.startswith("lights"):
+            
+        elif command.split(" ", 1)[0] == "lights":
             data = self.__lights(command)
 
         elif command == "help":
@@ -73,25 +70,24 @@ class McpHelper:
 
     # stops all loops so all threads can join the main thread
     def __shutdown_procedure(self) -> None:
-        self.mcp.router_data[router.Str.is_shut_down.value] = True
-        self.mcp.router_data[router.Str.is_halt.value] = True
+        self.mcp.router.is_shut_down = True
+        self.mcp.router.halt_module_execution = True
         self.mcp.messenger.is_shut_down = True
-        self.mcp.event.set() #wake up sleeping thread
+        self.mcp.event.set()  # wake up sleeping thread
         return
 
     # turns lights on/off
     def __lights(self, command: str) -> str:
         _, pwr = command.split(" ", 1)
         try:
-            pwr=int(pwr)
+            pwr = int(pwr)
         except:
             try:
-                pwr={"off":0,"minimal":1,"on":1,"full":100,"max":100,"min":1}[pwr]
+                pwr = {"off": 0, "minimal": 1, "on": 1, "full": 100, "max": 100, "min": 1}[pwr]
             except:
                 return self._command_not_found_string
         self.leds.set_power(pwr)
-        return "lights on %d%% power"%self.leds.power
-            
+        return "lights on %d%% power" % self.leds.power
 
     def check_lights(self):
         if not self.mcp.is_host_pc:
@@ -107,41 +103,26 @@ class McpHelper:
         text += " terminate:        force stops execution of the program immediately:\n"
         text += " shutdown:         stops execution safely by stopping all threads:\n"
         text += " restart:          stops execution safely and restarts the program:\n"
-        text += " hold:             stops execution of active module safely:\n"
         text += " lightsON or OFF:  turns lights on or off respectively:\n"
         text += " cameraON or OFF:  turns camera on or off respectively:\n"
         text += " reset:            kills current process and restarts all modules and router\n"
 
         return text
 
-
-    ## turns camera on/off
-    #def __camera(self, command: str) -> str:
-    #    if command == "cameraOn".lower():
-    #        self.mcp.cameraManager.is_shut_down = False
-    #        self.setup_camera_thread().start()
-    #        return "Camera is on"
-
-    #    elif command == "cameraOff".lower():
-    #        # find thread
-    #        for thread in self.mcp.threads:
-    #            if thread.name == "CameraThread":
-    #                # set to off and wait
-    #                self.mcp.cameraManager.is_shut_down = True
-    #                while thread.is_alive():
-    #                    time.sleep(1)
-    #                # remove and give feedback
-    #                self.mcp.threads.remove(thread)
-    #        return "Camera is off"
-    #    else:
-    #        return self._command_not_found_string
-
     # in case router of router error hold all module processes and reset all attributes (including modules)
     def __router_reset(self) -> bool:
         # find thread
         for thread in self.mcp.threads:
             if thread.name == "RouterThread":
-                thread.kill()
+                # set to off and wait
+                self.mcp.router.halt_module_execution = True
+                self.mcp.router.is_shut_down = True
+                while thread.is_alive():
+                    time.sleep(1)
+                # remove thread and clear router object and give feedback
+                self.mcp.threads.remove(thread)
+                self.mcp.router.clear_modules_list()
+
                 self.setup_router_thread().start()
                 break
         return True
@@ -158,25 +139,9 @@ class McpHelper:
 
         return
 
-    def setup_router_thread(self) -> multiprocessing.Process:
-
-        self.mcp.routerLock = self.manager.Lock()
-
-        self.mcp.router_data = self.manager.dict()
-        self.mcp.router_data[Str.is_pc.value] = self.mcp.is_host_pc
-        self.mcp.router_data[Str.lock.value] = self.mcp.routerLock
-        self.mcp.router_data[Str.event.value] = self.mcp.event
-        self.mcp.router_data[Str.is_shut_down.value] = False
-        self.mcp.router_data[Str.is_halt.value] = False
-        self.mcp.router_data[Str.is_command_loaded.value] = False
-        self.mcp.router_data[Str.is_package_ready.value] = False
-        self.mcp.router_data[Str.prefix.value] = ""
-        self.mcp.router_data[Str.command.value] = ""
-        self.mcp.router_data[Str.package.value] = dict
-
-        router_thread = multiprocessing.Process(target=router.start, args=(self.mcp.router_data,))
+    def setup_router_thread(self) -> threading.Thread:
+        router_thread = threading.Thread(target=self.mcp.router.start)
         router_thread.daemon = True
-        router_thread.name = "RouterThread"
+        router_thread.setName("RouterThread")
         self.mcp.threads.append(router_thread)
         return router_thread
-
