@@ -32,16 +32,22 @@ function Tabs() {
           <h1 className="titleBar"> CAMERA </h1>
           <img src ="/video_feed" className="video"></img>
           <button className="control button6" role="button">
-            LIGHT 1
+            ON
           </button>
           <button className="control button7" role="button">
-            LIGHT 2
+            OFF
           </button>
           <button className="control button8" role="button">
-            POS 1
+            SCREENSHOT
           </button>
-          <button className="control button9" role="button">
-            POS 2
+          <button className="control button81" role="button">
+            LIGHTS ON
+          </button>
+          <button className="control button82" role="button">
+            LIGHTS OFF
+          </button>
+          <button className="control button83" role="button">
+            LIGHTS MAX
           </button>
         </div>
         <div class="item">

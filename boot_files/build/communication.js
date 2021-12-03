@@ -70,3 +70,44 @@ riseButton.onclick = function(event) {
 
 }
 
+var cameraOn = document.getElementsByClassName("control button6")[0];
+cameraOn.onclick = function(event) {
+    console.log("camera on");
+    socket.emit('command', {command: "camera on"});
+
+}
+
+var cameraOff = document.getElementsByClassName("control button7")[0];
+cameraOff.onclick = function(event) {
+    console.log("camera off");
+    socket.emit('command', {command: "camera off"});
+
+}
+
+var cameraScreenShot = document.getElementsByClassName("control button8")[0];
+cameraScreenShot.onclick = function(event) {
+    console.log("camera screenshot");
+    socket.emit('command', {command: "camera screenshot"});
+
+}
+
+var lightsOn = document.getElementsByClassName("control button81")[0];
+lightsOn.onclick = function(event) {
+    console.log("lights on");
+    socket.emit('command', {command: "lights on"});
+
+}
+
+var lightsOff = document.getElementsByClassName("control button82")[0];
+lightsOff.onclick = function(event) {
+    console.log("lights off");
+    socket.emit('command', {command: "lights off"});
+
+}
+
+var lightsMax = document.getElementsByClassName("control button83")[0];
+lightsMax.onclick = function(event) {
+    console.log("lights max");
+    socket.emit('command', {command: "lights max"});
+
+}
