@@ -73,7 +73,7 @@ class BMSApp(Module):
     def read(self,args=[]): #take a single measurement
 
         #read voltage from adc
-        x=self.chan.value #value automatically read by accessing variable
+        x=self.chan.voltage #value automatically read by accessing variable
 
         voltage=x/BMS_VOLTAGE_DIVISION/ads.gain
 
