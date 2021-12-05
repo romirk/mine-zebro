@@ -910,13 +910,13 @@
 
 .queue > * {
   margin-bottom: 3%;
-  background-color: #333;
+  background-color: #577bad;
   color: white;
 }
 
 .queue_list {
   flex-grow: 10;
-  font-size: large;
+  /* font-size: ; */
   overflow-y: hidden;
 }
 
@@ -924,6 +924,7 @@
   flex-basis: 5%;
   min-height: 5%;
   font-family: monospace;
+  border-color: #577bad;
 }
 
 .history {
@@ -931,9 +932,9 @@
   height: 75%;
   width: 100%;
   top: 7%;
-  background-color: #333;
+  background-color: #577bad;
   color: white;
-  font-size: large;
+  /* font-size: large; */
 }
 
 /* make scrollable without scrollbar */
