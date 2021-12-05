@@ -97,6 +97,7 @@ sendCommandToQueue.onclick = function (event) {
   const command_prompt = document.getElementsByClassName("command_prompt")[0];
   const command = command_prompt.value.trim();
   command_prompt.value = "";
+  QUEUE.push(command);
   console.log("Command: " + command);
   socket.emit("command", { command: command });
 };

@@ -29,7 +29,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build-and-copy": "npm run build && Xcopy /E /I .\\build ..\\..\\..\\boot_files\\build"
+    "build-and-copy": "npm run build && Xcopy /Y /E /I .\\build ..\\..\\..\\boot_files\\build"
   },
   "eslintConfig": {
     "extends": [

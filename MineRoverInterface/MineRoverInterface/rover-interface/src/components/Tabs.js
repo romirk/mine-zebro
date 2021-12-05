@@ -30,7 +30,7 @@ function Tabs() {
         </div>
         <div class="itembig">
           <h1 className="titleBar"> CAMERA </h1>
-          <img src ="/video_feed" className="video"></img>
+          <img src="/video_feed" className="video"></img>
           <button className="control button6" role="button">
             ON
           </button>
@@ -52,6 +52,7 @@ function Tabs() {
         </div>
         <div class="item">
           <h1 className="titleBar"> HISTORY </h1>
+          <code className="history scrollable"></code>
           <button className="control button10" role="button">
             ACTION
           </button>
@@ -61,6 +62,10 @@ function Tabs() {
         </div>
         <div class="itemlast">
           <h1 className="titleBar"> QUEUE </h1>
+          <div class="queue">
+            <code className="queue_list scrollable"></code>
+            <input className="command_prompt" type="text" />
+          </div>
           <button className="control button12" role="button">
             ACTION
           </button>
@@ -68,7 +73,7 @@ function Tabs() {
             ACTION
           </button>
           <button className="control button14" role="button">
-            ACTION
+            GO
           </button>
         </div>
       </div>

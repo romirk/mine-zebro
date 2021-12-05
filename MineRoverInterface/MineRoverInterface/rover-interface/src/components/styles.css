@@ -6,7 +6,6 @@
 .body {
   padding: 0;
   margin: 0;
-  
 }
 .container {
   width: 100%;
@@ -688,7 +687,7 @@
   right: 5%;
   height: 11%;
   width: 14%;
-} 
+}
 
 .control.button9 {
   top: 85%;
@@ -735,6 +734,10 @@
   height: 9%;
   width: 30%;
   font-size: 0.8vw;
+  background-color: #1f9944; /* GO */
+  box-shadow: 0 4px 8px rgb(45 35 66 / 40%), 0 7px 13px -3px rgb(45 35 66 / 30%),
+    inset 0 -3px 0 #198a3b;
+  color: white;
 }
 
 .control.button15 {
@@ -855,7 +858,7 @@
   background-color: rgb(215, 219, 223);
 }
 
-.titleBar.subtitleOne{
+.titleBar.subtitleOne {
   font-size: 1.3vw;
   position: relative;
   top: 2%;
@@ -863,7 +866,7 @@
   height: 8%;
 }
 
-.titleBar.subtitleTwo{
+.titleBar.subtitleTwo {
   font-size: 1.3vw;
   position: relative;
   top: 2%;
@@ -871,8 +874,7 @@
   height: 8%;
 }
 
-
-.titleBar.subtitleThree{
+.titleBar.subtitleThree {
   font-size: 1.3vw;
   position: relative;
   top: 2%;
@@ -880,8 +882,7 @@
   height: 8%;
 }
 
-
-.titleBar.subtitleFour{
+.titleBar.subtitleFour {
   font-size: 1.3vw;
   position: relative;
   top: 2%;
@@ -889,9 +890,61 @@
   height: 8%;
 }
 
-.video{
+.video {
   position: relative;
   height: 75%;
   width: 100%;
   top: 7%;
+}
+
+/* Queue and History */
+.queue {
+  background-color: inherit;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 78%;
+  width: 100%;
+  top: 6.1%;
+}
+
+.queue > * {
+  margin-bottom: 3%;
+  background-color: #333;
+  color: white;
+}
+
+.queue_list {
+  flex-grow: 10;
+  font-size: large;
+  overflow-y: hidden;
+}
+
+.command_prompt {
+  flex-basis: 5%;
+  font-family: monospace;
+}
+
+.history {
+  position: relative;
+  height: 75%;
+  width: 100%;
+  top: 7%;
+  background-color: #333;
+  color: white;
+  font-size: large;
+}
+
+/* make scrollable without scrollbar */
+.scrollable {
+  overflow-y: scroll; /* Add the ability to scroll y axis*/
+}
+
+.scrollable::-webkit-scrollbar {
+    display: none; /* chrome and safari */
+}
+
+.scrollable {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
