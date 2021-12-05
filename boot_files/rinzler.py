@@ -36,8 +36,8 @@ class Mcp:
         # initialise all objects
         self.mcp_helper = mcpHelper.McpHelper(self)
         self.router = router.Router(self.is_host_pc, self.routerLock, self.event)
-        #self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule(), self.is_host_pc, self.event)  # TODO change this to real Comms
-        self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc, self.event)
+        self.messenger = messageManager.MessageManager(communicationModule.CommunicationModule(), self.is_host_pc, self.event)  # TODO change this to real Comms
+        # self.messenger = messageManager.MessageManager(messageManager.CommsMock(), self.is_host_pc, self.event)
 
         # setup threads and place in a list
         self.threads = list()

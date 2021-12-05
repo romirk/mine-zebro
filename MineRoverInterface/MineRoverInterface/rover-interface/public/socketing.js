@@ -9,5 +9,7 @@ socket.on('connect', function(){
 
 
 socket.on('output', function(message){
-    console.log(message)
+    // console.log(message);
+    let data = JSON.parse(message);
+    console.log(data);
 });
