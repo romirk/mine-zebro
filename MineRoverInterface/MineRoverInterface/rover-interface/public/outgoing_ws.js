@@ -113,6 +113,8 @@ command_prompt.addEventListener("keyup", function (event) {
 function sendcommandToQueue(event) {
   let command = command_prompt.value.trim();
   lastCommand = 0;
+  if (command === "") return;
+
   command_prompt.value = "";
   enqueue(command);
   console.log(">>> " + command);

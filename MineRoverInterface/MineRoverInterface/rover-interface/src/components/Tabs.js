@@ -11,9 +11,18 @@ function Tabs() {
           <div id="LOC_CANVAS_WRAPPER" className="canvasWrap">
             <canvas id="LOC_CANVAS" className="canvas"></canvas>
           </div>
-          <h1 className="listElem one"> ROVER NAME: </h1>
-          <h1 className="listElem two"> CONNECTION: </h1>
-          <h1 className="listElem three"> IP ADDRESS: </h1>
+          <h1 className="listElem one">
+            {" "}
+            ROVER NAME: <span id="rname"></span>
+          </h1>
+          <h1 className="listElem two">
+            {" "}
+            CONNECTION: <span id="rconn"></span>
+          </h1>
+          <h1 className="listElem three">
+            {" "}
+            IP ADDRESS: <span id="rip"></span>
+          </h1>
           <h1 className="listElem four"> MEMORY: </h1>
         </div>
         <div class="item">
@@ -64,7 +73,7 @@ function Tabs() {
           <h1 className="titleBar"> QUEUE </h1>
           <div class="queue">
             <code className="queue_list scrollable"></code>
-            <input className="command_prompt" type="text" placeholder=">>>"/>
+            <input className="command_prompt" type="text" placeholder=">>>" />
           </div>
           <button className="control button12" role="button">
             CLEAR
@@ -95,8 +104,13 @@ function Tabs() {
         <div class="item2big">
           {/* <h1 className="titleBar"> GEOGRAPHICAL PAYLOADS </h1> */}
           <h2 className="titleBar subtitleOne"> GEOPHONE </h2>
+          <div id="chartdiv">
+            <canvas id="geochart"></canvas>
+          </div>
           <h2 className="titleBar subtitleTwo"> HUMIDITY </h2>
+          <span id="rhum" class="data hum"></span>
           <h2 className="titleBar subtitleThree"> PRESSURE </h2>
+          <span id="rpress" class="data pres"></span>
           <h2 className="titleBar subtitleFour"> WIND </h2>
         </div>
         <div class="item2last">

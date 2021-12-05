@@ -897,6 +897,32 @@
   top: 7%;
 }
 
+#rtemp {
+  background-color: inherit;
+}
+
+.data {
+  position: absolute;
+  bottom: 31%;
+  background: inherit;
+  font-family: "Bebas Neue", cursive;
+}
+
+.data.hum {
+  left: 43%;
+}
+
+.data.pres {
+  left: 58.5%;
+}
+
+#chartdiv {
+  position: absolute;
+  top: 65%;
+  left: 22%;
+  width: 15%;
+}
+
 /* Queue and History */
 .queue {
   background-color: inherit;
@@ -916,7 +942,7 @@
 
 .queue_list {
   flex-grow: 10;
-  /* font-size: ; */
+  font-size: 0.9vw;
   overflow-y: hidden;
 }
 
@@ -934,7 +960,7 @@
   top: 7%;
   background-color: #577bad;
   color: white;
-  /* font-size: large; */
+  font-size: 0.9vw;
 }
 
 /* make scrollable without scrollbar */
@@ -943,10 +969,10 @@
 }
 
 .scrollable::-webkit-scrollbar {
-    display: none; /* chrome and safari */
+  display: none; /* chrome and safari */
 }
 
 .scrollable {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }

@@ -40,7 +40,7 @@ class McpHelper:
         elif command == "shutdown":
             self.__shutdown_procedure()
             self.mcp.internal_state = rinzler.State.ShutDown.value
-            
+
         elif command.split(" ", 1)[0] == "lights":
             data = self.__lights(command)
 
@@ -62,7 +62,7 @@ class McpHelper:
 
         if data == self._command_not_found_string:
             has_process_completed = False
-        package = messageManager.create_user_package(prefix, data, datetime.now().strftime("%H:%M:%S"),
+        package = messageManager.create_user_package(prefix, datetime.now().strftime("%H:%M:%S"), data,
                                                      has_process_completed)
         self.mcp.messenger.send_to_user_package(package)
 
@@ -83,7 +83,8 @@ class McpHelper:
             pwr = int(pwr)
         except:
             try:
-                pwr = {"off": 0, "minimal": 1, "on": 1, "full": 100, "max": 100, "min": 1}[pwr]
+                pwr = {"off": 0, "minimal": 1, "on": 1,
+                       "full": 100, "max": 100, "min": 1}[pwr]
             except:
                 return self._command_not_found_string
         self.leds.set_power(pwr)
@@ -129,7 +130,8 @@ class McpHelper:
 
     # Setup threads methods
     def setup_non_restartable_threads(self) -> None:
-        listen_to_user_thread = threading.Thread(target=self.mcp.messenger.listen_to_user)
+        listen_to_user_thread = threading.Thread(
+            target=self.mcp.messenger.listen_to_user)
         listen_to_user_thread.setName("UserInputThread")
         self.mcp.threads.append(listen_to_user_thread)
 

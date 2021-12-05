@@ -1,5 +1,30 @@
 const QUEUE = [];
 const HISTORY = [];
+const STATS = {
+  name: "LZ",
+  connection: "",
+  ip: "0.0.0.0",
+  env: {
+    temperature: 0,
+    pressure: 0,
+    humidity: 0,
+  },
+  battery: 0,
+  geo: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8 },
+  lidar: {},
+};
+
+const chartsByCanvasId = {};
+
+const destroyChartIfNecessary = (canvasId) => {
+  if (chartsByCanvasId[canvasId]) {
+    chartsByCanvasId[canvasId].destroy();
+  }
+};
+
+const registerNewChart = (canvasId, chart) => {
+  chartsByCanvasId[canvasId] = chart;
+};
 
 const QueueElement = document.getElementsByClassName("queue_list")[0];
 const HistoryElement = document.getElementsByClassName("history")[0];
@@ -26,8 +51,15 @@ function clear_history() {
 }
 
 function update_ui() {
-  let qstr = "";
+  document.getElementsByClassName("batt_level")[0].innerText = STATS.battery;
+  document.getElementById("rname").innerText = STATS.name;
+  document.getElementById("rconn").innerText = STATS.connection;
+  document.getElementById("rip").innerText = STATS.ip;
+  document.getElementById("rtemp").innerText = STATS.env.temperature;
+  document.getElementById("rpress").innerText = STATS.env.pressure + " Pa";
+  document.getElementById("rhum").innerText = STATS.env.humidity;
 
+  let qstr = "";
   QUEUE.forEach((command, index) => {
     let split = command.split(" ");
     if (split.length < 1) return;
@@ -40,6 +72,39 @@ function update_ui() {
   });
   QueueElement.innerHTML = qstr;
   HistoryElement.innerHTML = HISTORY.join("<br>");
+
+  // document.getElementById("geochart").remove();
+  // let chart = document.createElement("canvas");
+  // chart.id = "geochart";
+  // document.getElementById("chartdiv").appendChild(chart);
+
+  const labels = Object.keys(STATS.geo);
+  const data = {
+    labels: labels,
+    datasets: [
+      {
+        label: "GeoPhone",
+        data: Object.values(STATS.geo),
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const config = {
+    type: "bar",
+    data: data,
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  };
+
+  destroyChartIfNecessary("geochart");
+  const geochart = new Chart("geochart", config);
+  registerNewChart("geochart", geochart);
 }
 
 // non-ws event listeners
@@ -52,3 +117,5 @@ var clearhistoryBtn = document.getElementsByClassName("control button10")[0];
 clearhistoryBtn.onclick = function (event) {
   clear_history();
 };
+
+update_ui(); //initialize
