@@ -54,7 +54,7 @@ function Tabs() {
           <h1 className="titleBar"> HISTORY </h1>
           <code className="history scrollable"></code>
           <button className="control button10" role="button">
-            ACTION
+            CLEAR
           </button>
           <button className="control button11" role="button">
             ACTION
@@ -64,10 +64,10 @@ function Tabs() {
           <h1 className="titleBar"> QUEUE </h1>
           <div class="queue">
             <code className="queue_list scrollable"></code>
-            <input className="command_prompt" type="text" />
+            <input className="command_prompt" type="text" placeholder=">>>"/>
           </div>
           <button className="control button12" role="button">
-            ACTION
+            CLEAR
           </button>
           <button className="control button13" role="button">
             ACTION

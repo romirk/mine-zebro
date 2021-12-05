@@ -92,12 +92,39 @@ lightsMax.onclick = function (event) {
 };
 
 //Queue Commands
-var sendCommandToQueue = document.getElementsByClassName("control button14")[0];
-sendCommandToQueue.onclick = function (event) {
-  const command_prompt = document.getElementsByClassName("command_prompt")[0];
-  const command = command_prompt.value.trim();
+var goBtn = document.getElementsByClassName("control button14")[0];
+const command_prompt = document.getElementsByClassName("command_prompt")[0];
+command_prompt.addEventListener("keyup", function (event) {
+  if (event.keyCode === 13) {
+    // enter key
+    event.preventDefault();
+    sendcommandToQueue(event);
+  }
+  if (event.keyCode === 38) {
+    // up key
+    event.preventDefault();
+    if (lastCommand < QUEUE.length) {
+      command_prompt.value = QUEUE[QUEUE.length - lastCommand - 1];
+      lastCommand++;
+    }
+  }
+});
+
+function sendcommandToQueue(event) {
+  let command = command_prompt.value.trim();
+  lastCommand = 0;
   command_prompt.value = "";
-  QUEUE.push(command);
-  console.log("Command: " + command);
+  enqueue(command);
+  console.log(">>> " + command);
+  if (command.startsWith("clear")) {
+    clear_queue();
+    clear_history();
+    return;
+  }
+  //TODO remove completed commands from queue
+
   socket.emit("command", { command: command });
-};
+
+  if (command.startsWith("clear")) clear_queue();
+}
+goBtn.onclick = sendcommandToQueue;

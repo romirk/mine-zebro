@@ -3,17 +3,23 @@
 const socket = io();
 
 socket.on("connect", function () {
-  socket.emit("command", { command: "" });
+  console.log("Connected to server");
 });
 
 socket.on("output", function (message) {
   let data = JSON.parse(message);
   console.log(data);
-  if (data.has_process_completed) {
-    HISTORY.push(data.command_id + ": " + data.package.msg);
-  } else {
-    QUEUE.push(data.command_id + ": " + data.package.msg);
-  }
+  // TODO figure out how to add backend to queue
+  // if (data.has_process_completed) {
+  log_history(
+    "<span style='color:yellow;background-color:inherit;'>" +
+      data.command_id +
+      "</span>: " +
+      data.package.msg
+  );
+  // } else {
+  // enqueue(data.command_id + ": " + data.package.msg);
+  // }
   switch (data.command_id) {
     case "battery":
       // ??? where to put this?

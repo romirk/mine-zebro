@@ -922,6 +922,7 @@
 
 .command_prompt {
   flex-basis: 5%;
+  min-height: 5%;
   font-family: monospace;
 }
 
