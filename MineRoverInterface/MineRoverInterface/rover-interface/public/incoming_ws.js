@@ -44,7 +44,8 @@ socket.on("output", function (message) {
       STATS.lidar = data.package.data;
       log_history(prefix + data.package);
       break;
-        
+    default:
+      log_history(prefix + data.package.msg);
   }
 
   // update the UI

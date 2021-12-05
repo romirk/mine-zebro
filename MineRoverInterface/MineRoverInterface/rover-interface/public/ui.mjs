@@ -73,11 +73,6 @@ function update_ui() {
   QueueElement.innerHTML = qstr;
   HistoryElement.innerHTML = HISTORY.join("<br>");
 
-  // document.getElementById("geochart").remove();
-  // let chart = document.createElement("canvas");
-  // chart.id = "geochart";
-  // document.getElementById("chartdiv").appendChild(chart);
-
   const labels = Object.keys(STATS.geo);
   const data = {
     labels: labels,
@@ -86,6 +81,7 @@ function update_ui() {
         label: "GeoPhone",
         data: Object.values(STATS.geo),
         borderWidth: 1,
+        color: "#cc65fe",
       },
     ],
   };
